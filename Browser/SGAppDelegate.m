@@ -85,9 +85,10 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [Appirater appLaunched:YES];
     
     [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" andUrlSchema:@"com.fillr.foxbrowser"];
-    [Fillr sharedInstance].overlayInputAccessoryView = YES;
+    //[Fillr sharedInstance].overlayInputAccessoryView = YES;
     [[Fillr sharedInstance] setEnabled:YES];
     [Fillr sharedInstance].delegate = self;
+    //[Fillr sharedInstance].rootViewController = self.browserViewController;
     
     return YES;
 }
