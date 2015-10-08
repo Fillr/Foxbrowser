@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		21AFFEC91B4B922800D2EB84 /* libFillrSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFEBC1B4B902700D2EB84 /* libFillrSDK.a */; };
+		212359CB1BC5EEC200B1A5D6 /* libFillrSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
@@ -104,30 +104,30 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		21AFFEBB1B4B902700D2EB84 /* PBXContainerItemProxy */ = {
+		212359C31BC5EEAA00B1A5D6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */;
+			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 21FD5CB71AEF51AE00300809;
 			remoteInfo = FillrSDK;
 		};
-		21AFFEBD1B4B902700D2EB84 /* PBXContainerItemProxy */ = {
+		212359C51BC5EEAA00B1A5D6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */;
+			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 21FD5CC21AEF51AE00300809;
 			remoteInfo = FillrSDKTests;
 		};
-		21AFFEBF1B4B902700D2EB84 /* PBXContainerItemProxy */ = {
+		212359C71BC5EEAA00B1A5D6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */;
+			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 211CCA021AF1E2DD00B13FBD;
 			remoteInfo = FillrSDKBundle;
 		};
-		21AFFEC11B4B904100D2EB84 /* PBXContainerItemProxy */ = {
+		212359C91BC5EEBB00B1A5D6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */;
+			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 21FD5CB61AEF51AE00300809;
 			remoteInfo = FillrSDK;
@@ -135,7 +135,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = FillrSDK.xcodeproj; path = ../PopAnyFormiOS/FillrSDK/FillrSDK.xcodeproj; sourceTree = "<group>"; };
+		212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = FillrSDK.xcodeproj; path = ../FillriOS/FillrSDK/FillrSDK.xcodeproj; sourceTree = "<group>"; };
 		21AFFECA1B4B927100D2EB84 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
 		BD9CA4ADA7D5460BAA5BBD6D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -370,8 +370,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				212359CB1BC5EEC200B1A5D6 /* libFillrSDK.a in Frameworks */,
 				21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */,
-				21AFFEC91B4B922800D2EB84 /* libFillrSDK.a in Frameworks */,
 				F4ADE13F19AFC00900A5B380 /* libsqlite3.0.dylib in Frameworks */,
 				F42CC123195652D8005411EA /* CoreGraphics.framework in Frameworks */,
 				F419E75818423E75007EE996 /* AVFoundation.framework in Frameworks */,
@@ -396,12 +396,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		21AFFEB51B4B902600D2EB84 /* Products */ = {
+		212359BD1BC5EEAA00B1A5D6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				21AFFEBC1B4B902700D2EB84 /* libFillrSDK.a */,
-				21AFFEBE1B4B902700D2EB84 /* FillrSDKTests.xctest */,
-				21AFFEC01B4B902700D2EB84 /* FillrSDKBundle.bundle */,
+				212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */,
+				212359C61BC5EEAA00B1A5D6 /* FillrSDKTests.xctest */,
+				212359C81BC5EEAA00B1A5D6 /* FillrSDKBundle.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -795,8 +795,8 @@
 		F4FE2C3A159B6C58001B04D7 = {
 			isa = PBXGroup;
 			children = (
+				212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */,
 				21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */,
-				21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */,
 				F406C000195F25A300A84C76 /* FXSync */,
 				F45516E315A47B8A00E0B54E /* External */,
 				F4FE2C4F159B6C58001B04D7 /* Browser */,
@@ -882,7 +882,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				21AFFEC21B4B904100D2EB84 /* PBXTargetDependency */,
+				212359CA1BC5EEBB00B1A5D6 /* PBXTargetDependency */,
 			);
 			name = Foxbrowser;
 			productName = Foxbrowser;
@@ -952,8 +952,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 21AFFEB51B4B902600D2EB84 /* Products */;
-					ProjectRef = 21AFFEB41B4B902600D2EB84 /* FillrSDK.xcodeproj */;
+					ProductGroup = 212359BD1BC5EEAA00B1A5D6 /* Products */;
+					ProjectRef = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -964,25 +964,25 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		21AFFEBC1B4B902700D2EB84 /* libFillrSDK.a */ = {
+		212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libFillrSDK.a;
-			remoteRef = 21AFFEBB1B4B902700D2EB84 /* PBXContainerItemProxy */;
+			remoteRef = 212359C31BC5EEAA00B1A5D6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		21AFFEBE1B4B902700D2EB84 /* FillrSDKTests.xctest */ = {
+		212359C61BC5EEAA00B1A5D6 /* FillrSDKTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = FillrSDKTests.xctest;
-			remoteRef = 21AFFEBD1B4B902700D2EB84 /* PBXContainerItemProxy */;
+			remoteRef = 212359C51BC5EEAA00B1A5D6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		21AFFEC01B4B902700D2EB84 /* FillrSDKBundle.bundle */ = {
+		212359C81BC5EEAA00B1A5D6 /* FillrSDKBundle.bundle */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = FillrSDKBundle.bundle;
-			remoteRef = 21AFFEBF1B4B902700D2EB84 /* PBXContainerItemProxy */;
+			remoteRef = 212359C71BC5EEAA00B1A5D6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1082,10 +1082,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		21AFFEC21B4B904100D2EB84 /* PBXTargetDependency */ = {
+		212359CA1BC5EEBB00B1A5D6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = FillrSDK;
-			targetProxy = 21AFFEC11B4B904100D2EB84 /* PBXContainerItemProxy */;
+			targetProxy = 212359C91BC5EEBB00B1A5D6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

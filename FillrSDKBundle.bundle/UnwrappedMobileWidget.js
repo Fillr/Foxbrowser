@@ -1,4 +1,4 @@
-//version:1.1.57
+//version:1.2.15
 (function() {
 'use strict';
 
@@ -109,11 +109,12 @@ module.exports = {
 });
 
 require.register("widget/config/preferences", function(exports, require, module) {
-var Environment;
+var Environment, _ref;
 
 Environment = require('widget/config/environment');
 
 module.exports = {
+  browserType: typeof window !== "undefined" && window !== null ? (_ref = window.navigator) != null ? _ref.product : void 0 : void 0,
   name: 'Fillr widget',
   mappings: {
     countries: function() {
@@ -213,19 +214,24 @@ module.exports = Domains = {
 });
 
 require.register("widget/fields", function(exports, require, module) {
-var FormInput, IsVisible;
+var FormInput, IsVisible, jQuery;
 
 FormInput = require('widget/fields/input');
 
 IsVisible = require('widget/lib/isvisible');
 
+jQuery = require('widget/lib/jquery');
+
 module.exports = {
   fields: void 0,
+  groups: {},
+  sectionHints: {},
+  nextGroup: 0,
   detect: function() {
     return this.fields = this._detect(document);
   },
   _detect: function(searchRoot) {
-    var field, fields, newField;
+    var field, fields, group, newField;
     fields = (function() {
       var _i, _len, _ref, _results;
       _ref = this._allFields();
@@ -236,6 +242,8 @@ module.exports = {
         if (newField.ignore()) {
           continue;
         } else {
+          group = this._findGroup(field);
+          newField.metadata.section_hint = this.sectionHints[group];
           _results.push(newField);
         }
       }
@@ -247,9 +255,49 @@ module.exports = {
       return fields;
     }
   },
+  _findGroup: function(el) {
+    var e, initial, key, nextEl, result, totalFieldsCount, val, _i, _len, _ref;
+    _ref = this.groups;
+    for (key in _ref) {
+      val = _ref[key];
+      for (_i = 0, _len = val.length; _i < _len; _i++) {
+        e = val[_i];
+        if (el === e) {
+          return key;
+        }
+      }
+    }
+    this.nextGroup++;
+    if (document.getElementById('specinator-ui')) {
+      totalFieldsCount = document.querySelectorAll('select,input').length - document.getElementById('specinator-ui').querySelectorAll('select,input').length;
+    } else {
+      totalFieldsCount = document.querySelectorAll('select,input').length;
+    }
+    nextEl = el.parentElement;
+    initial = el.parentElement.querySelectorAll('select,input');
+    result = initial;
+    if (result.length === 1) {
+      while (nextEl = nextEl.parentElement) {
+        if (nextEl.parentElement.tagName.toLowerCase() === 'body') {
+          break;
+        }
+        result = nextEl.querySelectorAll('select,input');
+        if (result.length >= totalFieldsCount) {
+          result = initial;
+          break;
+        }
+        if (result.length > initial.length) {
+          break;
+        }
+      }
+    }
+    this.groups[this.nextGroup] = Array.prototype.slice.call(result);
+    this.sectionHints[this.nextGroup] = this._sectionHint(el);
+    return this.nextGroup;
+  },
   _allFields: function() {
     var div, doc, e, element, elements, field, fieldset, form, i, selectors, things, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
-    selectors = ['input:not([type=button]):not([type=submit]):not([type=reset]):not([type=password]):not([type=radio]):not([type=checkbox])', 'select', 'textarea'].join(', ');
+    selectors = ['input:not([type=button]):not([type=submit]):not([type=reset]):not([type=password]):not([type=radio]):not([type=checkbox]):not([type=image])', 'select', 'textarea'].join(', ');
     things = [];
     elements = document.querySelectorAll(selectors);
     for (_i = 0, _len = elements.length; _i < _len; _i++) {
@@ -307,6 +355,10 @@ module.exports = {
         things.splice(i, 1);
         continue;
       }
+      if (field.clientWidth === 0 && field.clientHeight === 0 && (field.tagName === 'INPUT' || field.tagName === 'SELECT')) {
+        things.splice(i, 1);
+        continue;
+      }
     }
     return things;
   },
@@ -329,6 +381,56 @@ module.exports = {
       return true;
     }
     return a.hostname === loc.hostname && a.port === loc.port && a.protocol === loc.protocol;
+  },
+  _sectionHint: function(el) {
+    var $dom, best, dom, error, hint, hints, lineRgx, p, search, sel, specialCharacterRgx, splitterToken, text, txt, winner, _i, _len;
+    hints = ['bill', 'ship', 'postal', 'delivery', 'residential', 'payment'];
+    specialCharacterRgx = /([ #;&,.+*~\':"!^$[\]()=>|\/])/g;
+    lineRgx = /\s{2,}/gi;
+    splitterToken = 'FILLRSECTIONSPLIT';
+    p = el.parentElement;
+    while (p.tagName.toLowerCase() !== 'body') {
+      try {
+        dom = p.cloneNode(true);
+        $dom = jQuery(dom);
+        if (!!el.id) {
+          sel = el.id.replace(specialCharacterRgx, '\\$1');
+          $dom.find("#" + sel).replaceWith(splitterToken);
+        } else if (!!el.name) {
+          sel = el.name.replace(specialCharacterRgx, '\\$1');
+          $dom.find("[name=" + sel + "]").replaceWith(splitterToken);
+        } else {
+          $dom.find('input,select').filter(function(i, e) {
+            return e.isEqualNode(el);
+          }).replaceWith(splitterToken);
+        }
+        $dom.find('select,option,script,input,style').each(function(i, theEl) {
+          return theEl.parentNode.removeChild(theEl);
+        });
+        text = $dom.text().replace(lineRgx, '\n');
+        text = text.split(splitterToken).shift();
+        winner = void 0;
+        best = 999999;
+        txt = text.toLowerCase();
+        for (_i = 0, _len = hints.length; _i < _len; _i++) {
+          hint = hints[_i];
+          search = txt.indexOf(hint);
+          if (search >= 0 && search < best) {
+            best = search;
+            winner = hint;
+          }
+        }
+        if (winner != null) {
+          return winner;
+        }
+        p = p.parentElement;
+      } catch (_error) {
+        error = _error;
+        console.log("Section Error:", error);
+        break;
+      }
+    }
+    return void 0;
   }
 };
 
@@ -369,36 +471,40 @@ jQuery = require('widget/lib/jquery');
 
 module.exports = LabelHelper = (function() {
   LabelHelper.detect = function(el) {
-    var e, labels, _i, _len, _ref;
-    labels = [];
-    if (el.labels !== null) {
-      _ref = el.labels;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        e = _ref[_i];
-        labels.push(e.textContent);
-      }
-    }
-    if (labels.length > 0) {
-      return labels.join(' ');
-    } else {
-      return (new LabelHelper(el)).label;
-    }
+    return new LabelHelper(el);
   };
 
   function LabelHelper(el) {
     this.el = jQuery(el);
     this.selector = null;
-    this.label = this.process();
+    this.process();
   }
 
   LabelHelper.prototype.process = function() {
-    var label, strategy, _i, _len, _ref;
-    _ref = this.strategies();
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      strategy = _ref[_i];
-      if (label = this.trim(strategy.call(this))) {
-        console.log("Label", this.el, label, strategy);
-        return label;
+    var e, label, labels, strategy, _i, _j, _len, _len1, _ref, _ref1;
+    labels = [];
+    if (this.el.labels !== null && typeof this.el.labels !== 'undefined') {
+      _ref = this.el.labels;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        e = _ref[_i];
+        labels.push(this.labelTextContent(e));
+      }
+    }
+    if (labels.length > 0) {
+      this.confidence = 1;
+      return this.label = labels.join(' ');
+    } else {
+      _ref1 = this.strategies();
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        strategy = _ref1[_j];
+        if (label = this.trim(strategy.call(this))) {
+          if (label.length <= 30) {
+            console.log("Label", this.el, label, strategy);
+            this.confidence = 0.1;
+            this.label = label;
+            return;
+          }
+        }
       }
     }
   };
@@ -416,6 +522,7 @@ module.exports = LabelHelper = (function() {
       }
       val = val.trim();
       val = val.replace(/[&\/\\#,+()$~%.'"*?<>{}]/g, '');
+      val = val.replace(/[\*\:\s]*$/g, '').trim();
       if (val !== '') {
         this.selector = el.selector;
         return val;
@@ -437,8 +544,58 @@ module.exports = LabelHelper = (function() {
       function() {
         return jQuery('label[for="' + this.el.attr('name') + '"]');
       }, function() {
+        var cloned, lbl, txt;
+        lbl = this.el.closest('label');
+        if (lbl.length > 0) {
+          cloned = lbl.clone();
+          cloned.find('select,option,script,input,style').remove();
+          txt = cloned.text().trim();
+          if (txt.length > 0 && txt.length < 30) {
+            return txt;
+          }
+        }
+      }, function() {
         if (this.el.prev().prop('tagName') === "LABEL") {
           return this.el.prev();
+        }
+      }, function() {
+        if (this.el.parent().find('label').length === 1) {
+          if (this.el.next().prop('tagName') === "LABEL") {
+            return this.el.next();
+          }
+        }
+      }, function() {
+        if (this.el.prev().prop('tagName') === "P") {
+          if (this.el.prev().contents().length === 1) {
+            return this.el.prev().contents().first();
+          }
+        }
+      }, function() {
+        var chunks, cloned, prior, sel, text;
+        cloned = this.el.closest('body').clone();
+        if (cloned.length === 0) {
+          return null;
+        }
+        if (typeof this.el.attr('id') !== 'undefined') {
+          sel = this.el.attr('id').replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g, '\\$1');
+          cloned.find("#" + sel).replaceWith('FILLRSPLIT');
+        } else if (typeof this.el.attr('name') !== 'undefined') {
+          sel = this.el.attr('name').replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g, '\\$1');
+          cloned.find("[name=" + sel + "]").replaceWith('FILLRSPLIT');
+        } else {
+          return null;
+        }
+        cloned.find('script,input,select,style').each(function(i, theEl) {
+          return theEl.parentNode.removeChild(theEl);
+        });
+        if (cloned.length === 0) {
+          return null;
+        }
+        text = cloned.text().replace(/\s{2,}/gi, '\n');
+        chunks = text.split('FILLRSPLIT');
+        if (chunks.length === 2) {
+          prior = chunks[0].trim().split('\n');
+          return prior.pop();
         }
       }, function() {
         return this.el.closest('dd').prev('dt');
@@ -461,7 +618,7 @@ module.exports = LabelHelper = (function() {
           return td;
         }
       }, function() {
-        return this.el.parent().find(':not(script)');
+        return this.el.parent().find(':not(script):not(select):not(input):not(br):not(option)');
       }, function() {
         return this.el.parent().find('label');
       }, function() {
@@ -474,6 +631,15 @@ module.exports = LabelHelper = (function() {
         }
       }
     ];
+  };
+
+  LabelHelper.labelTextContent = function(el) {
+    var clone;
+    clone = jQuery(el).clone();
+    clone.find('input,select').each(function(index, el) {
+      return el.parentNode.removeChild(el);
+    });
+    return clone[0].textContent;
   };
 
   return LabelHelper;
@@ -506,14 +672,17 @@ module.exports = LegendHelper = (function() {
 });
 
 require.register("widget/fields/metadata", function(exports, require, module) {
-var Label, Legend, MetaData;
+var Label, Legend, MetaData, jQuery;
 
 Label = require('widget/fields/label');
 
 Legend = require('widget/fields/legend');
 
+jQuery = require('widget/lib/jquery');
+
 module.exports = MetaData = (function() {
   function MetaData(el) {
+    var lh;
     this.id = this._value(el, 'id');
     this.name = this._value(el, 'name');
     this.placeholder = this._value(el, 'placeholder');
@@ -523,11 +692,16 @@ module.exports = MetaData = (function() {
         this.placeholder = el.options[0].text;
       }
     }
+    if (!this.placeholder) {
+      this.placeholder = this._value(el, 'value');
+    }
     this.type = this._buildType(el);
     this.tag_name = this._tagName(el);
     this.pop_id = this._popID();
     if (!(this.ignore = this._buildIgnore(el))) {
-      this.label = Label.detect(el);
+      lh = Label.detect(el);
+      this.label = lh.label;
+      this.label_confidence = lh.confidence;
       this.legend = Legend.detect(el);
       this.autocompletetype = this._value(el, 'x-autocompletetype');
       this.autocomplete = this._value(el, 'autocomplete');
@@ -622,4448 +796,2431 @@ require.register("widget/lib/countries", function(exports, require, module) {
   var Countries, root;
   Countries = [
     {
-      'name': 'Afghanistan',
-      'nativeName': 'Afġānistān',
-      'tld': '.af',
-      'cca2': 'AF',
-      'ccn3': '004',
-      'cca3': 'AFG',
-      'currency': 'AFN',
-      'callingCode': '93',
-      'capital': 'Kabul',
-      'altSpellings': ['AF', 'Afġānistān'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': ['Pashto', 'Dari'],
-      'population': 25500100,
-      'latlng': [33, 65],
-      'demonym': 'Afghan'
-    }, {
-      'name': 'Åland Islands',
-      'nativeName': 'Åland',
-      'tld': '.ax',
-      'cca2': 'AX',
-      'ccn3': '248',
-      'cca3': 'ALA',
-      'currency': 'EUR',
-      'callingCode': '358',
-      'capital': 'Mariehamn',
-      'altSpellings': ['AX', 'Aaland', 'Aland', 'Ahvenanmaa'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Swedish',
-      'population': 28502,
-      'latlng': [60.116667, 19.9],
-      'demonym': 'Ålandish'
-    }, {
-      'name': 'Albania',
-      'nativeName': 'Shqipëria',
-      'tld': '.al',
-      'cca2': 'AL',
-      'ccn3': '008',
-      'cca3': 'ALB',
-      'currency': 'ALL',
-      'callingCode': '355',
-      'capital': 'Tirana',
-      'altSpellings': ['AL', 'Shqipëri', 'Shqipëria', 'Shqipnia'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Albanian',
-      'population': 2821977,
-      'latlng': [41, 20],
-      'demonym': 'Albanian'
-    }, {
-      'name': 'Algeria',
-      'nativeName': 'al-Jazāʼir',
-      'tld': '.dz',
-      'cca2': 'DZ',
-      'ccn3': '012',
-      'cca3': 'DZA',
-      'currency': 'DZD',
-      'callingCode': '213',
-      'capital': 'Algiers',
-      'altSpellings': ['DZ', 'Dzayer', 'Algérie'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': 'Arabic',
-      'population': 37900000,
-      'latlng': [28, 3],
-      'demonym': 'Algerian'
-    }, {
-      'name': 'American Samoa',
-      'nativeName': 'American Samoa',
-      'tld': '.as',
-      'cca2': 'AS',
-      'ccn3': '016',
-      'cca3': 'ASM',
-      'currency': 'USD',
-      'callingCode': '1684',
-      'capital': 'Pago Pago',
-      'altSpellings': ['AS', 'Amerika Sāmoa', 'Amelika Sāmoa', 'Sāmoa Amelika'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['English', 'Samoan'],
-      'population': 55519,
-      'latlng': [-14.33333333, -170],
-      'demonym': 'American Samoan'
-    }, {
-      'name': 'Andorra',
-      'nativeName': 'Andorra',
-      'tld': '.ad',
-      'cca2': 'AD',
-      'ccn3': '020',
-      'cca3': 'AND',
-      'currency': 'EUR',
-      'callingCode': '376',
-      'capital': 'Andorra la Vella',
-      'altSpellings': ['AD', 'Principality of Andorra', 'Principat d\'Andorra'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Catalan',
-      'population': 76246,
-      'latlng': [42.5, 1.5],
-      'demonym': 'Andorran'
-    }, {
-      'name': 'Angola',
-      'nativeName': 'Angola',
-      'tld': '.ao',
-      'cca2': 'AO',
-      'ccn3': '024',
-      'cca3': 'AGO',
-      'currency': 'AOA',
-      'callingCode': '244',
-      'capital': 'Luanda',
-      'altSpellings': ['AO', 'República de Angola', 'ʁɛpublika de an\'ɡɔla'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'Portuguese',
-      'population': 20609294,
-      'latlng': [-12.5, 18.5],
-      'demonym': 'Angolan'
-    }, {
-      'name': 'Anguilla',
-      'nativeName': 'Anguilla',
-      'tld': '.ai',
-      'cca2': 'AI',
-      'ccn3': '660',
-      'cca3': 'AIA',
-      'currency': 'XCD',
-      'callingCode': '1264',
-      'capital': 'The Valley',
-      'altSpellings': 'AI',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 13452,
-      'latlng': [18.25, -63.16666666],
-      'demonym': 'Anguillian'
-    }, {
-      'name': 'Antarctica',
-      'nativeName': '',
-      'tld': '.aq',
-      'cca2': 'AQ',
-      'ccn3': '010',
-      'cca3': 'ATA',
-      'currency': '',
-      'callingCode': '',
-      'capital': '',
-      'altSpellings': 'AQ',
-      'relevance': '0',
-      'region': '',
-      'subregion': '',
-      'language': '',
-      'latlng': [-90, 0],
-      'demonym': ''
-    }, {
-      'name': 'Antigua and Barbuda',
-      'nativeName': 'Antigua and Barbuda',
-      'tld': '.ag',
-      'cca2': 'AG',
-      'ccn3': '028',
-      'cca3': 'ATG',
-      'currency': 'XCD',
-      'callingCode': '1268',
-      'capital': 'Saint John\'s',
-      'altSpellings': 'AG',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 86295,
-      'latlng': [17.05, -61.8],
-      'demonym': 'Antiguan, Barbudan'
-    }, {
-      'name': 'Argentina',
-      'nativeName': 'Argentina',
-      'tld': '.ar',
-      'cca2': 'AR',
-      'ccn3': '032',
-      'cca3': 'ARG',
-      'currency': 'ARS',
-      'callingCode': '54',
-      'capital': 'Buenos Aires',
-      'altSpellings': ['AR', 'Argentine Republic', 'República Argentina'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 40117096,
-      'latlng': [-34, -64],
-      'demonym': 'Argentinean'
-    }, {
-      'name': 'Armenia',
-      'nativeName': 'Հայաստան',
-      'tld': '.am',
-      'cca2': 'AM',
-      'ccn3': '051',
-      'cca3': 'ARM',
-      'currency': 'AMD',
-      'callingCode': '374',
-      'capital': 'Yerevan',
-      'altSpellings': ['AM', 'Hayastan', 'Republic of Armenia', 'Հայաստանի Հանրապետություն'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Armenian',
-      'population': 3024100,
-      'latlng': [40, 45],
-      'demonym': 'Armenian'
-    }, {
-      'name': 'Aruba',
-      'nativeName': 'Aruba',
-      'tld': '.aw',
-      'cca2': 'AW',
-      'ccn3': '533',
-      'cca3': 'ABW',
-      'currency': 'AWG',
-      'callingCode': '297',
-      'capital': 'Oranjestad',
-      'altSpellings': 'AW',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': ['Dutch', 'Papiamento'],
-      'population': 101484,
-      'latlng': [12.5, -69.96666666],
-      'demonym': 'Aruban'
-    }, {
-      'name': 'Australia',
-      'nativeName': 'Australia',
-      'tld': '.au',
-      'cca2': 'AU',
-      'ccn3': '036',
-      'cca3': 'AUS',
-      'currency': 'AUD',
-      'callingCode': '61',
-      'capital': 'Canberra',
-      'altSpellings': 'AU',
-      'relevance': '1.5',
-      'region': 'Oceania',
-      'subregion': ['Australia', 'New Zealand'],
-      'language': 'English',
-      'population': 23254142,
-      'latlng': [-27, 133],
-      'demonym': 'Australian'
-    }, {
-      'name': 'Austria',
-      'nativeName': 'Österreich',
-      'tld': '.at',
-      'cca2': 'AT',
-      'ccn3': '040',
-      'cca3': 'AUT',
-      'currency': 'EUR',
-      'callingCode': '43',
-      'capital': 'Vienna',
-      'altSpellings': ['AT', 'Österreich', 'Osterreich', 'Oesterreich'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'German',
-      'population': 8501502,
-      'latlng': [47.33333333, 13.33333333],
-      'demonym': 'Austrian'
-    }, {
-      'name': 'Azerbaijan',
-      'nativeName': 'Azərbaycan',
-      'tld': '.az',
-      'cca2': 'AZ',
-      'ccn3': '031',
-      'cca3': 'AZE',
-      'currency': 'AZN',
-      'callingCode': '994',
-      'capital': 'Baku',
-      'altSpellings': ['AZ', 'Republic of Azerbaijan', 'Azərbaycan Respublikası'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Azerbaijani',
-      'population': 9235100,
-      'latlng': [40.5, 47.5],
-      'demonym': 'Azerbaijani'
-    }, {
-      'name': 'Bahamas',
-      'nativeName': 'Bahamas',
-      'tld': '.bs',
-      'cca2': 'BS',
-      'ccn3': '044',
-      'cca3': 'BHS',
-      'currency': 'BSD',
-      'callingCode': '1242',
-      'capital': 'Nassau',
-      'altSpellings': ['BS', 'Commonwealth of the Bahamas'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'latlng': [24.25, -76],
-      'demonym': 'Bahamian'
-    }, {
-      'name': 'Bahrain',
-      'nativeName': 'al-Baḥrayn',
-      'tld': '.bh',
-      'cca2': 'BH',
-      'ccn3': '048',
-      'cca3': 'BHR',
-      'currency': 'BHD',
-      'callingCode': '973',
-      'capital': 'Manama',
-      'altSpellings': ['BH', 'Kingdom of Bahrain', 'Mamlakat al-Baḥrayn'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 1234571,
-      'latlng': [26, 50.55],
-      'demonym': 'Bahraini'
-    }, {
-      'name': 'Bangladesh',
-      'nativeName': 'Bangladesh',
-      'tld': '.bd',
-      'cca2': 'BD',
-      'ccn3': '050',
-      'cca3': 'BGD',
-      'currency': 'BDT',
-      'callingCode': '880',
-      'capital': 'Dhaka',
-      'altSpellings': ['BD', 'People\'s Republic of Bangladesh', 'Gônôprôjatôntri Bangladesh'],
-      'relevance': '2',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': 'Bangla',
-      'population': 152518015,
-      'latlng': [24, 90],
-      'demonym': 'Bangladeshi'
-    }, {
-      'name': 'Barbados',
-      'nativeName': 'Barbados',
-      'tld': '.bb',
-      'cca2': 'BB',
-      'ccn3': '052',
-      'cca3': 'BRB',
-      'currency': 'BBD',
-      'callingCode': '1246',
-      'capital': 'Bridgetown',
-      'altSpellings': 'BB',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 274200,
-      'latlng': [13.16666666, -59.53333333],
-      'demonym': 'Barbadian'
-    }, {
-      'name': 'Belarus',
-      'nativeName': 'Белару́сь',
-      'tld': '.by',
-      'cca2': 'BY',
-      'ccn3': '112',
-      'cca3': 'BLR',
-      'currency': 'BYR',
-      'callingCode': '375',
-      'capital': 'Minsk',
-      'altSpellings': ['BY', 'Bielaruś', 'Republic of Belarus', 'Белоруссия', 'Республика Беларусь', 'Belorussiya', 'Respublika Belarus’'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': ['Belarusian', 'Russian'],
-      'population': 9465500,
-      'latlng': [53, 28],
-      'demonym': 'Belarusian'
-    }, {
-      'name': 'Belgium',
-      'nativeName': 'België',
-      'tld': '.be',
-      'cca2': 'BE',
-      'ccn3': '056',
-      'cca3': 'BEL',
-      'currency': 'EUR',
-      'callingCode': '32',
-      'capital': 'Brussels',
-      'altSpellings': ['BE', 'België', 'Belgie', 'Belgien', 'Belgique', 'Kingdom of Belgium', 'Koninkrijk België', 'Royaume de Belgique', 'Königreich Belgien'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': ['Dutch', 'French', 'German'],
-      'population': 11175653,
-      'latlng': [50.83333333, 4],
-      'demonym': 'Belgian'
-    }, {
-      'name': 'Belize',
-      'nativeName': 'Belize',
-      'tld': '.bz',
-      'cca2': 'BZ',
-      'ccn3': '084',
-      'cca3': 'BLZ',
-      'currency': 'BZD',
-      'callingCode': '501',
-      'capital': 'Belmopan',
-      'altSpellings': 'BZ',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'English',
-      'population': 312971,
-      'latlng': [17.25, -88.75],
-      'demonym': 'Belizean'
-    }, {
-      'name': 'Benin',
-      'nativeName': 'Bénin',
-      'tld': '.bj',
-      'cca2': 'BJ',
-      'ccn3': '204',
-      'cca3': 'BEN',
-      'currency': 'XOF',
-      'callingCode': '229',
-      'capital': 'Porto-Novo',
-      'altSpellings': ['BJ', 'Republic of Benin', 'République du Bénin'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 10323000,
-      'latlng': [9.5, 2.25],
-      'demonym': 'Beninese'
-    }, {
-      'name': 'Bermuda',
-      'nativeName': 'Bermuda',
-      'tld': '.bm',
-      'cca2': 'BM',
-      'ccn3': '060',
-      'cca3': 'BMU',
-      'currency': 'BMD',
-      'callingCode': '1441',
-      'capital': 'Hamilton',
-      'altSpellings': ['BM', 'The Islands of Bermuda', 'The Bermudas', 'Somers Isles'],
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': 'English',
-      'population': 64237,
-      'latlng': [32.33333333, -64.75],
-      'demonym': 'Bermudian'
-    }, {
-      'name': 'Bhutan',
-      'nativeName': 'ʼbrug-yul',
-      'tld': '.bt',
-      'cca2': 'BT',
-      'ccn3': '064',
-      'cca3': 'BTN',
-      'currency': ['BTN', 'INR'],
-      'callingCode': '975',
-      'capital': 'Thimphu',
-      'altSpellings': ['BT', 'Kingdom of Bhutan'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': 'Dzongkha',
-      'population': 740990,
-      'latlng': [27.5, 90.5],
-      'demonym': 'Bhutanese'
-    }, {
-      'name': 'Bolivia',
-      'nativeName': 'Bolivia',
-      'tld': '.bo',
-      'cca2': 'BO',
-      'ccn3': '068',
-      'cca3': 'BOL',
-      'currency': ['BOB', 'BOV'],
-      'callingCode': '591',
-      'capital': 'Sucre',
-      'altSpellings': ['BO', 'Buliwya', 'Wuliwya', 'Plurinational State of Bolivia', 'Estado Plurinacional de Bolivia', 'Buliwya Mamallaqta', 'Wuliwya Suyu', 'Tetã Volívia'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': ['Spanish', 'Quechua', 'Aymara', 'Guaraní'],
-      'population': 10027254,
-      'latlng': [-17, -65],
-      'demonym': 'Bolivian'
-    }, {
-      'name': 'Bonaire',
-      'nativeName': 'Bonaire',
-      'tld': ['.an', '.nl'],
-      'cca2': 'BQ',
-      'ccn3': '535',
-      'cca3': 'BES',
-      'currency': 'USD',
-      'callingCode': '5997',
-      'capital': 'Kralendijk',
-      'altSpellings': ['BQ', 'Boneiru'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'Dutch',
-      'latlng': [12.15, -68.266667],
-      'demonym': 'Dutch'
-    }, {
-      'name': 'Bosnia and Herzegovina',
-      'nativeName': 'Bosna i Hercegovina',
-      'tld': '.ba',
-      'cca2': 'BA',
-      'ccn3': '070',
-      'cca3': 'BIH',
-      'currency': 'BAM',
-      'callingCode': '387',
-      'capital': 'Sarajevo',
-      'altSpellings': ['BA', 'Bosnia-Herzegovina', 'Босна и Херцеговина'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': ['Bosnian', 'Croatian', 'Serbian'],
-      'population': 3791622,
-      'latlng': [44, 18],
-      'demonym': 'Bosnian, Herzegovinian'
-    }, {
-      'name': 'Botswana',
-      'nativeName': 'Botswana',
-      'tld': '.bw',
-      'cca2': 'BW',
-      'ccn3': '072',
-      'cca3': 'BWA',
-      'currency': 'BWP',
-      'callingCode': '267',
-      'capital': 'Gaborone',
-      'altSpellings': ['BW', 'Republic of Botswana', 'Lefatshe la Botswana'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Southern Africa',
-      'language': ['English', 'Setswana'],
-      'population': 2024904,
-      'latlng': [-22, 24],
-      'demonym': 'Motswana'
-    }, {
-      'name': 'Bouvet Island',
-      'nativeName': 'Bouvetøya',
-      'tld': '.bv',
-      'cca2': 'BV',
-      'ccn3': '074',
-      'cca3': 'BVT',
-      'currency': 'NOK',
-      'callingCode': '',
-      'capital': '',
-      'altSpellings': ['BV', 'Bouvetøya', 'Bouvet-øya'],
-      'relevance': '0',
-      'region': '',
-      'subregion': '',
-      'language': '',
-      'latlng': [-54.43333333, 3.4],
-      'demonym': ''
-    }, {
-      'name': 'Brazil',
-      'nativeName': 'Brasil',
-      'tld': '.br',
-      'cca2': 'BR',
-      'ccn3': '076',
-      'cca3': 'BRA',
-      'currency': 'BRL',
-      'callingCode': '55',
-      'capital': 'Brasília',
-      'altSpellings': ['BR', 'Brasil', 'Federative Republic of Brazil', 'República Federativa do Brasil'],
-      'relevance': '2',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Portuguese',
-      'population': 201032714,
-      'latlng': [-10, -55],
-      'demonym': 'Brazilian'
-    }, {
-      'name': 'British Indian Ocean Territory',
-      'nativeName': 'British Indian Ocean Territory',
-      'tld': '.io',
-      'cca2': 'IO',
-      'ccn3': '086',
-      'cca3': 'IOT',
-      'currency': 'USD',
-      'callingCode': '246',
-      'capital': 'Diego Garcia',
-      'altSpellings': 'IO',
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'English',
-      'latlng': [-6, 71.5],
-      'demonym': 'Indian'
-    }, {
-      'name': 'British Virgin Islands',
-      'nativeName': 'British Virgin Islands',
-      'tld': '.vg',
-      'cca2': 'VG',
-      'ccn3': '092',
-      'cca3': 'VGB',
-      'currency': 'USD',
-      'callingCode': '1284',
-      'capital': 'Road Town',
-      'altSpellings': 'VG',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 29537,
-      'latlng': [18.431383, -64.62305],
-      'demonym': 'Virgin Islander'
-    }, {
-      'name': 'Brunei',
-      'nativeName': 'Negara Brunei Darussalam',
-      'tld': '.bn',
-      'cca2': 'BN',
-      'ccn3': '096',
-      'cca3': 'BRN',
-      'currency': 'BND',
-      'callingCode': '673',
-      'capital': 'Bandar Seri Begawan',
-      'altSpellings': ['BN', 'Nation of Brunei', ' the Abode of Peace'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Malay',
-      'population': 393162,
-      'latlng': [4.5, 114.66666666],
-      'demonym': 'Bruneian'
-    }, {
-      'name': 'Bulgaria',
-      'nativeName': 'България',
-      'tld': '.bg',
-      'cca2': 'BG',
-      'ccn3': '100',
-      'cca3': 'BGR',
-      'currency': 'BGN',
-      'callingCode': '359',
-      'capital': 'Sofia',
-      'altSpellings': ['BG', 'Republic of Bulgaria', 'Република България'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Bulgarian',
-      'population': 7282041,
-      'latlng': [43, 25],
-      'demonym': 'Bulgarian'
-    }, {
-      'name': 'Burkina Faso',
-      'nativeName': 'Burkina Faso',
-      'tld': '.bf',
-      'cca2': 'BF',
-      'ccn3': '854',
-      'cca3': 'BFA',
-      'currency': 'XOF',
-      'callingCode': '226',
-      'capital': 'Ouagadougou',
-      'altSpellings': 'BF',
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 17322796,
-      'latlng': [13, -2],
-      'demonym': 'Burkinabe'
-    }, {
-      'name': 'Burundi',
-      'nativeName': 'Burundi',
-      'tld': '.bi',
-      'cca2': 'BI',
-      'ccn3': '108',
-      'cca3': 'BDI',
-      'currency': 'BIF',
-      'callingCode': '257',
-      'capital': 'Bujumbura',
-      'altSpellings': ['BI', 'Republic of Burundi', 'Republika y\'Uburundi', 'République du Burundi'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Kirundi', 'French'],
-      'population': 10163000,
-      'latlng': [-3.5, 30],
-      'demonym': 'Burundian'
-    }, {
-      'name': 'Cambodia',
-      'nativeName': 'Kâmpŭchéa',
-      'tld': '.kh',
-      'cca2': 'KH',
-      'ccn3': '116',
-      'cca3': 'KHM',
-      'currency': 'KHR',
-      'callingCode': '855',
-      'capital': 'Phnom Penh',
-      'altSpellings': ['KH', 'Kingdom of Cambodia'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Khmer',
-      'population': 15135000,
-      'latlng': [13, 105],
-      'demonym': 'Cambodian'
-    }, {
-      'name': 'Cameroon',
-      'nativeName': 'Cameroon',
-      'tld': '.cm',
-      'cca2': 'CM',
-      'ccn3': '120',
-      'cca3': 'CMR',
-      'currency': 'XAF',
-      'callingCode': '237',
-      'capital': 'Yaoundé',
-      'altSpellings': ['CM', 'Republic of Cameroon', 'République du Cameroun'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': ['French', 'English'],
-      'population': 20386799,
-      'latlng': [6, 12],
-      'demonym': 'Cameroonian'
-    }, {
-      'name': 'Canada',
-      'nativeName': 'Canada',
-      'tld': '.ca',
-      'cca2': 'CA',
-      'ccn3': '124',
-      'cca3': 'CAN',
-      'currency': 'CAD',
-      'callingCode': '1',
-      'capital': 'Ottawa',
-      'altSpellings': 'CA',
-      'relevance': '2',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': ['English', 'French'],
-      'population': 35158304,
-      'latlng': [60, -95],
-      'demonym': 'Canadian'
-    }, {
-      'name': 'Cape Verde',
-      'nativeName': 'Cabo Verde',
-      'tld': '.cv',
-      'cca2': 'CV',
-      'ccn3': '132',
-      'cca3': 'CPV',
-      'currency': 'CVE',
-      'callingCode': '238',
-      'capital': 'Praia',
-      'altSpellings': ['CV', 'Republic of Cabo Verde', 'República de Cabo Verde'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'Portuguese',
-      'population': 491875,
-      'latlng': [16, -24],
-      'demonym': 'Cape Verdian'
-    }, {
-      'name': 'Cayman Islands',
-      'nativeName': 'Cayman Islands',
-      'tld': '.ky',
-      'cca2': 'KY',
-      'ccn3': '136',
-      'cca3': 'CYM',
-      'currency': 'KYD',
-      'callingCode': '1345',
-      'capital': 'George Town',
-      'altSpellings': 'KY',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 55456,
-      'latlng': [19.5, -80.5],
-      'demonym': 'Caymanian'
-    }, {
-      'name': 'Central African Republic',
-      'nativeName': 'Ködörösêse tî Bêafrîka',
-      'tld': '.cf',
-      'cca2': 'CF',
-      'ccn3': '140',
-      'cca3': 'CAF',
-      'currency': 'XAF',
-      'callingCode': '236',
-      'capital': 'Bangui',
-      'altSpellings': ['CF', 'Central African Republic', 'République centrafricaine'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': ['Sango', 'French'],
-      'population': 4616000,
-      'latlng': [7, 21],
-      'demonym': 'Central African'
-    }, {
-      'name': 'Chad',
-      'nativeName': 'Tchad',
-      'tld': '.td',
-      'cca2': 'TD',
-      'ccn3': '148',
-      'cca3': 'TCD',
-      'currency': 'XAF',
-      'callingCode': '235',
-      'capital': 'N\'Djamena',
-      'altSpellings': ['TD', 'Tchad', 'Republic of Chad', 'République du Tchad'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': ['French', 'Arabic'],
-      'population': 12825000,
-      'latlng': [15, 19],
-      'demonym': 'Chadian'
-    }, {
-      'name': 'Chile',
-      'nativeName': 'Chile',
-      'tld': '.cl',
-      'cca2': 'CL',
-      'ccn3': '152',
-      'cca3': 'CHL',
-      'currency': ['CLF', 'CLP'],
-      'callingCode': '56',
-      'capital': 'Santiago',
-      'altSpellings': ['CL', 'Republic of Chile', 'República de Chile'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 16634603,
-      'latlng': [-30, -71],
-      'demonym': 'Chilean'
-    }, {
-      'name': 'China',
-      'nativeName': '中国',
-      'tld': '.cn',
-      'cca2': 'CN',
-      'ccn3': '156',
-      'cca3': 'CHN',
-      'currency': 'CNY',
-      'callingCode': '86',
-      'capital': 'Beijing',
-      'altSpellings': ['CN', 'Zhōngguó', 'Zhongguo', 'Zhonghua', 'People\'s Republic of China', '中华人民共和国', 'Zhōnghuá Rénmín Gònghéguó'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Standard Chinese',
-      'population': 1361170000,
-      'latlng': [35, 105],
-      'demonym': 'Chinese'
-    }, {
-      'name': 'Colombia',
-      'nativeName': 'Colombia',
-      'tld': '.co',
-      'cca2': 'CO',
-      'ccn3': '170',
-      'cca3': 'COL',
-      'currency': ['COP', 'COU'],
-      'callingCode': '57',
-      'capital': 'Bogotá',
-      'altSpellings': ['CO', 'Republic of Colombia', 'República de Colombia'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 47330000,
-      'latlng': [4, -72],
-      'demonym': 'Colombian'
-    }, {
-      'name': 'Comoros',
-      'nativeName': 'Komori',
-      'tld': '.km',
-      'cca2': 'KM',
-      'ccn3': '174',
-      'cca3': 'COM',
-      'currency': 'KMF',
-      'callingCode': '269',
-      'capital': 'Moroni',
-      'altSpellings': ['KM', 'Union of the Comoros', 'Union des Comores', 'Udzima wa Komori', 'al-Ittiḥād al-Qumurī'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Comorian', 'Arabic', 'French'],
-      'population': 724300,
-      'latlng': [-12.16666666, 44.25],
-      'demonym': 'Comoran'
-    }, {
-      'name': 'Republic of the Congo',
-      'nativeName': 'République du Congo',
-      'tld': '.cg',
-      'cca2': 'CG',
-      'ccn3': '178',
-      'cca3': 'COG',
-      'currency': 'XAF',
-      'callingCode': '242',
-      'capital': 'Brazzaville',
-      'altSpellings': ['CG', 'Congo-Brazzaville'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'French',
-      'population': 4448000,
-      'latlng': [-1, 15],
-      'demonym': 'Congolese'
-    }, {
-      'name': 'Democratic Republic of the Congo',
-      'nativeName': 'République démocratique du Congo',
-      'tld': '.cd',
-      'cca2': 'CD',
-      'ccn3': '180',
-      'cca3': 'COD',
-      'currency': 'CDF',
-      'callingCode': '243',
-      'capital': 'Kinshasa',
-      'altSpellings': ['CD', 'DR Congo', 'Congo-Kinshasa', 'DRC'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'French',
-      'population': 67514000,
-      'latlng': [0, 25],
-      'demonym': 'Congolese'
-    }, {
-      'name': 'Cook Islands',
-      'nativeName': 'Cook Islands',
-      'tld': '.ck',
-      'cca2': 'CK',
-      'ccn3': '184',
-      'cca3': 'COK',
-      'currency': 'NZD',
-      'callingCode': '682',
-      'capital': 'Avarua',
-      'altSpellings': ['CK', 'Kūki \'Āirani'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['English', 'Cook Islands Māori'],
-      'population': 14974,
-      'latlng': [-21.23333333, -159.76666666],
-      'demonym': 'Cook Islander'
-    }, {
-      'name': 'Costa Rica',
-      'nativeName': 'Costa Rica',
-      'tld': '.cr',
-      'cca2': 'CR',
-      'ccn3': '188',
-      'cca3': 'CRI',
-      'currency': 'CRC',
-      'callingCode': '506',
-      'capital': 'San José',
-      'altSpellings': ['CR', 'Republic of Costa Rica', 'República de Costa Rica'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 4667096,
-      'latlng': [10, -84],
-      'demonym': 'Costa Rican'
-    }, {
-      'name': 'Côte d\'Ivoire',
-      'nativeName': 'Côte d\'Ivoire',
-      'tld': '.ci',
-      'cca2': 'CI',
-      'ccn3': '384',
-      'cca3': 'CIV',
-      'currency': 'XOF',
-      'callingCode': '225',
-      'capital': 'Yamoussoukro',
-      'altSpellings': ['CI', 'Ivory Coast', 'Republic of Côte d\'Ivoire', 'République de Côte d\'Ivoire'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'latlng': [8, -5],
-      'demonym': 'Ivorian'
-    }, {
-      'name': 'Croatia',
-      'nativeName': 'Hrvatska',
-      'tld': '.hr',
-      'cca2': 'HR',
-      'ccn3': '191',
-      'cca3': 'HRV',
-      'currency': 'HRK',
-      'callingCode': '385',
-      'capital': 'Zagreb',
-      'altSpellings': ['HR', 'Hrvatska', 'Republic of Croatia', 'Republika Hrvatska'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Croatian',
-      'population': 4290612,
-      'latlng': [45.16666666, 15.5],
-      'demonym': 'Croatian'
-    }, {
-      'name': 'Cuba',
-      'nativeName': 'Cuba',
-      'tld': '.cu',
-      'cca2': 'CU',
-      'ccn3': '192',
-      'cca3': 'CUB',
-      'currency': ['CUC', 'CUP'],
-      'callingCode': '53',
-      'capital': 'Havana',
-      'altSpellings': ['CU', 'Republic of Cuba', 'República de Cuba'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'Spanish',
-      'population': 11167325,
-      'latlng': [21.5, -80],
-      'demonym': 'Cuban'
-    }, {
-      'name': 'Curaçao',
-      'nativeName': 'Curaçao',
-      'tld': '.cw',
-      'cca2': 'CW',
-      'ccn3': '531',
-      'cca3': 'CUW',
-      'currency': 'ANG',
-      'callingCode': '5999',
-      'capital': 'Willemstad',
-      'altSpellings': ['CW', 'Curacao', 'Kòrsou', 'Country of Curaçao', 'Land Curaçao', 'Pais Kòrsou'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': ['Dutch', 'Papiamentu', 'English'],
-      'population': 150563,
-      'latlng': [12.116667, -68.933333],
-      'demonym': 'Dutch'
-    }, {
-      'name': 'Cyprus',
-      'nativeName': 'Κύπρος',
-      'tld': '.cy',
-      'cca2': 'CY',
-      'ccn3': '196',
-      'cca3': 'CYP',
-      'currency': 'EUR',
-      'callingCode': '357',
-      'capital': 'Nicosia',
-      'altSpellings': ['CY', 'Kýpros', 'Kıbrıs', 'Republic of Cyprus', 'Κυπριακή Δημοκρατία', 'Kıbrıs Cumhuriyeti'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': ['Greek', 'Turkish'],
-      'population': 865878,
-      'latlng': [35, 33],
-      'demonym': 'Cypriot'
-    }, {
-      'name': 'Czech Republic',
-      'nativeName': 'Česká republika',
-      'tld': '.cz',
-      'cca2': 'CZ',
-      'ccn3': '203',
-      'cca3': 'CZE',
-      'currency': 'CZK',
-      'callingCode': '420',
-      'capital': 'Prague',
-      'altSpellings': ['CZ', 'Česká republika', 'Česko'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Czech',
-      'population': 10512900,
-      'latlng': [49.75, 15.5],
-      'demonym': 'Czech'
-    }, {
-      'name': 'Denmark',
-      'nativeName': 'Danmark',
-      'tld': '.dk',
-      'cca2': 'DK',
-      'ccn3': '208',
-      'cca3': 'DNK',
-      'currency': 'DKK',
-      'callingCode': '45',
-      'capital': 'Copenhagen',
-      'altSpellings': ['DK', 'Danmark', 'Kingdom of Denmark', 'Kongeriget Danmark'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Danish',
-      'population': 5623501,
-      'latlng': [56, 10],
-      'demonym': 'Danish'
-    }, {
-      'name': 'Djibouti',
-      'nativeName': 'Djibouti',
-      'tld': '.dj',
-      'cca2': 'DJ',
-      'ccn3': '262',
-      'cca3': 'DJI',
-      'currency': 'DJF',
-      'callingCode': '253',
-      'capital': 'Djibouti',
-      'altSpellings': ['DJ', 'Jabuuti', 'Gabuuti', 'Republic of Djibouti', 'République de Djibouti', 'Gabuutih Ummuuno', 'Jamhuuriyadda Jabuuti'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['French', 'Arabic'],
-      'population': 864618,
-      'latlng': [11.5, 43],
-      'demonym': 'Djibouti'
-    }, {
-      'name': 'Dominica',
-      'nativeName': 'Dominica',
-      'tld': '.dm',
-      'cca2': 'DM',
-      'ccn3': '212',
-      'cca3': 'DMA',
-      'currency': 'XCD',
-      'callingCode': '1767',
-      'capital': 'Roseau',
-      'altSpellings': ['DM', 'Dominique', 'Wai‘tu kubuli', 'Commonwealth of Dominica'],
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 71293,
-      'latlng': [15.41666666, -61.33333333],
-      'demonym': 'Dominican'
-    }, {
-      'name': 'Dominican Republic',
-      'nativeName': 'República Dominicana',
-      'tld': '.do',
-      'cca2': 'DO',
-      'ccn3': '214',
-      'cca3': 'DOM',
-      'currency': 'DOP',
-      'callingCode': ['1809', '1829', '1849'],
-      'capital': 'Santo Domingo',
-      'altSpellings': 'DO',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'Spanish',
-      'population': 9445281,
-      'latlng': [19, -70.66666666],
-      'demonym': 'Dominican'
-    }, {
-      'name': 'Ecuador',
-      'nativeName': 'Ecuador',
-      'tld': '.ec',
-      'cca2': 'EC',
-      'ccn3': '218',
-      'cca3': 'ECU',
-      'currency': 'USD',
-      'callingCode': '593',
-      'capital': 'Quito',
-      'altSpellings': ['EC', 'Republic of Ecuador', 'República del Ecuador'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 15617900,
-      'latlng': [-2, -77.5],
-      'demonym': 'Ecuadorean'
-    }, {
-      'name': 'Egypt',
-      'nativeName': 'Miṣr',
-      'tld': '.eg',
-      'cca2': 'EG',
-      'ccn3': '818',
-      'cca3': 'EGY',
-      'currency': 'EGP',
-      'callingCode': '20',
-      'capital': 'Cairo',
-      'altSpellings': ['EG', 'Arab Republic of Egypt'],
-      'relevance': '1.5',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': 'Egyptian Arabic',
-      'population': 83661000,
-      'latlng': [27, 30],
-      'demonym': 'Egyptian'
-    }, {
-      'name': 'El Salvador',
-      'nativeName': 'El Salvador',
-      'tld': '.sv',
-      'cca2': 'SV',
-      'ccn3': '222',
-      'cca3': 'SLV',
-      'currency': ['SVC', 'USD'],
-      'callingCode': '503',
-      'capital': 'San Salvador',
-      'altSpellings': ['SV', 'Republic of El Salvador', 'República de El Salvador'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Castilian',
-      'population': 6340000,
-      'latlng': [13.83333333, -88.91666666],
-      'demonym': 'Salvadoran'
-    }, {
-      'name': 'Equatorial Guinea',
-      'nativeName': 'Guinea Ecuatorial',
-      'tld': '.gq',
-      'cca2': 'GQ',
-      'ccn3': '226',
-      'cca3': 'GNQ',
-      'currency': 'XAF',
-      'callingCode': '240',
-      'capital': 'Malabo',
-      'altSpellings': ['GQ', 'Republic of Equatorial Guinea', 'República de Guinea Ecuatorial', 'République de Guinée équatoriale', 'República da Guiné Equatorial'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': ['Spanish', 'French', 'Portuguese'],
-      'population': 1622000,
-      'latlng': [2, 10],
-      'demonym': 'Equatorial Guinean'
-    }, {
-      'name': 'Eritrea',
-      'nativeName': 'ኤርትራ',
-      'tld': '.er',
-      'cca2': 'ER',
-      'ccn3': '232',
-      'cca3': 'ERI',
-      'currency': 'ERN',
-      'callingCode': '291',
-      'capital': 'Asmara',
-      'altSpellings': ['ER', 'State of Eritrea', 'ሃገረ ኤርትራ', 'Dawlat Iritriyá', 'ʾErtrā', 'Iritriyā', ''],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Tigrinya', 'Arabic', 'English'],
-      'population': 6333000,
-      'latlng': [15, 39],
-      'demonym': 'Eritrean'
-    }, {
-      'name': 'Estonia',
-      'nativeName': 'Eesti',
-      'tld': '.ee',
-      'cca2': 'EE',
-      'ccn3': '233',
-      'cca3': 'EST',
-      'currency': 'EUR',
-      'callingCode': '372',
-      'capital': 'Tallinn',
-      'altSpellings': ['EE', 'Eesti', 'Republic of Estonia', 'Eesti Vabariik'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Estonian',
-      'population': 1286540,
-      'latlng': [59, 26],
-      'demonym': 'Estonian'
-    }, {
-      'name': 'Ethiopia',
-      'nativeName': 'ኢትዮጵያ',
-      'tld': '.et',
-      'cca2': 'ET',
-      'ccn3': '231',
-      'cca3': 'ETH',
-      'currency': 'ETB',
-      'callingCode': '251',
-      'capital': 'Addis Ababa',
-      'altSpellings': ['ET', 'ʾĪtyōṗṗyā', 'Federal Democratic Republic of Ethiopia', 'የኢትዮጵያ ፌዴራላዊ ዲሞክራሲያዊ ሪፐብሊክ'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'Amharic',
-      'population': 86613986,
-      'latlng': [8, 38],
-      'demonym': 'Ethiopian'
-    }, {
-      'name': 'Falkland Islands',
-      'nativeName': 'Falkland Islands',
-      'tld': '.fk',
-      'cca2': 'FK',
-      'ccn3': '238',
-      'cca3': 'FLK',
-      'currency': 'FKP',
-      'callingCode': '500',
-      'capital': 'Stanley',
-      'altSpellings': ['FK', 'Islas Malvinas'],
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'English',
-      'population': 2563,
-      'latlng': [-51.75, -59],
-      'demonym': 'Falkland Islander'
-    }, {
-      'name': 'Faroe Islands',
-      'nativeName': 'Føroyar',
-      'tld': '.fo',
-      'cca2': 'FO',
-      'ccn3': '234',
-      'cca3': 'FRO',
-      'currency': 'DKK',
-      'callingCode': '298',
-      'capital': 'Tórshavn',
-      'altSpellings': ['FO', 'Føroyar', 'Færøerne'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['Faroese', 'Danish'],
-      'population': 48509,
-      'latlng': [62, -7],
-      'demonym': 'Faroese'
-    }, {
-      'name': 'Fiji',
-      'nativeName': 'Fiji',
-      'tld': '.fj',
-      'cca2': 'FJ',
-      'ccn3': '242',
-      'cca3': 'FJI',
-      'currency': 'FJD',
-      'callingCode': '679',
-      'capital': 'Suva',
-      'altSpellings': ['FJ', 'Viti', 'Republic of Fiji', 'Matanitu ko Viti', 'Fijī Gaṇarājya'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Melanesia',
-      'language': ['English', 'Fijian', 'Fiji Hindi'],
-      'population': 858038,
-      'latlng': [-18, 175],
-      'demonym': 'Fijian'
-    }, {
-      'name': 'Finland',
-      'nativeName': 'Suomi',
-      'tld': '.fi',
-      'cca2': 'FI',
-      'ccn3': '246',
-      'cca3': 'FIN',
-      'currency': 'EUR',
-      'callingCode': '358',
-      'capital': 'Helsinki',
-      'altSpellings': ['FI', 'Suomi', 'Republic of Finland', 'Suomen tasavalta', 'Republiken Finland'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['Finnish', 'Swedish'],
-      'population': 5445883,
-      'latlng': [64, 26],
-      'demonym': 'Finnish'
-    }, {
-      'name': 'France',
-      'nativeName': 'France',
-      'tld': '.fr',
-      'cca2': 'FR',
-      'ccn3': '250',
-      'cca3': 'FRA',
-      'currency': 'EUR',
-      'callingCode': '33',
-      'capital': 'Paris',
-      'altSpellings': ['FR', 'French Republic', 'République française'],
-      'relevance': '2.5',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'French',
-      'population': 65806000,
-      'latlng': [46, 2],
-      'demonym': 'French'
-    }, {
-      'name': 'French Guiana',
-      'nativeName': 'Guyane française',
-      'tld': '.gf',
-      'cca2': 'GF',
-      'ccn3': '254',
-      'cca3': 'GUF',
-      'currency': 'EUR',
-      'callingCode': '594',
-      'capital': 'Cayenne',
-      'altSpellings': ['GF', 'Guiana', 'Guyane'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'French',
-      'population': 229040,
-      'latlng': [4, -53],
-      'demonym': ''
-    }, {
-      'name': 'French Polynesia',
-      'nativeName': 'Polynésie française',
-      'tld': '.pf',
-      'cca2': 'PF',
-      'ccn3': '258',
-      'cca3': 'PYF',
-      'currency': 'XPF',
-      'callingCode': '689',
-      'capital': 'Papeetē',
-      'altSpellings': ['PF', 'Polynésie française', 'French Polynesia', 'Pōrīnetia Farāni'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': 'French',
-      'population': 268270,
-      'latlng': [-15, -140],
-      'demonym': 'French Polynesian'
-    }, {
-      'name': 'French Southern and Antarctic Lands',
-      'nativeName': 'Territoire des Terres australes et antarctiques françaises',
-      'tld': '.tf',
-      'cca2': 'TF',
-      'ccn3': '260',
-      'cca3': 'ATF',
-      'currency': 'EUR',
-      'callingCode': '',
-      'capital': 'Port-aux-Français',
-      'altSpellings': 'TF',
-      'relevance': '0',
-      'region': '',
-      'subregion': '',
-      'language': 'French',
-      'latlng': [],
-      'demonym': 'French'
-    }, {
-      'name': 'Gabon',
-      'nativeName': 'Gabon',
-      'tld': '.ga',
-      'cca2': 'GA',
-      'ccn3': '266',
-      'cca3': 'GAB',
-      'currency': 'XAF',
-      'callingCode': '241',
-      'capital': 'Libreville',
-      'altSpellings': ['GA', 'Gabonese Republic', 'République Gabonaise'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'French',
-      'population': 1672000,
-      'latlng': [-1, 11.75],
-      'demonym': 'Gabonese'
-    }, {
-      'name': 'Gambia',
-      'nativeName': 'Gambia',
-      'tld': '.gm',
-      'cca2': 'GM',
-      'ccn3': '270',
-      'cca3': 'GMB',
-      'currency': 'GMD',
-      'callingCode': '220',
-      'capital': 'Banjul',
-      'altSpellings': ['GM', 'Republic of the Gambia'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'latlng': [13.46666666, -16.56666666],
-      'demonym': 'Gambian'
-    }, {
-      'name': 'Georgia',
-      'nativeName': 'საქართველო',
-      'tld': '.ge',
-      'cca2': 'GE',
-      'ccn3': '268',
-      'cca3': 'GEO',
-      'currency': 'GEL',
-      'callingCode': '995',
-      'capital': 'Tbilisi',
-      'altSpellings': ['GE', 'Sakartvelo'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Georgian',
-      'latlng': [42, 43.5],
-      'demonym': 'Georgian'
-    }, {
-      'name': 'Germany',
-      'nativeName': 'Deutschland',
-      'tld': '.de',
-      'cca2': 'DE',
-      'ccn3': '276',
-      'cca3': 'DEU',
-      'currency': 'EUR',
-      'callingCode': '49',
-      'capital': 'Berlin',
-      'altSpellings': ['DE', 'Federal Republic of Germany', 'Bundesrepublik Deutschland'],
-      'relevance': '3',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'German',
-      'population': 80523700,
-      'latlng': [51, 9],
-      'demonym': 'German'
-    }, {
-      'name': 'Ghana',
-      'nativeName': 'Ghana',
-      'tld': '.gh',
-      'cca2': 'GH',
-      'ccn3': '288',
-      'cca3': 'GHA',
-      'currency': 'GHS',
-      'callingCode': '233',
-      'capital': 'Accra',
-      'altSpellings': 'GH',
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'population': 24658823,
-      'latlng': [8, -2],
-      'demonym': 'Ghanaian'
-    }, {
-      'name': 'Gibraltar',
-      'nativeName': 'Gibraltar',
-      'tld': '.gi',
-      'cca2': 'GI',
-      'ccn3': '292',
-      'cca3': 'GIB',
-      'currency': 'GIP',
-      'callingCode': '350',
-      'capital': 'Gibraltar',
-      'altSpellings': 'GI',
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'English',
-      'population': 29752,
-      'latlng': [36.13333333, -5.35],
-      'demonym': 'Gibraltar'
-    }, {
-      'name': 'Greece',
-      'nativeName': 'Ελλάδα',
-      'tld': '.gr',
-      'cca2': 'GR',
-      'ccn3': '300',
-      'cca3': 'GRC',
-      'currency': 'EUR',
-      'callingCode': '30',
-      'capital': 'Athens',
-      'altSpellings': ['GR', 'Elláda', 'Hellenic Republic', 'Ελληνική Δημοκρατία'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Greek',
-      'population': 10815197,
-      'latlng': [39, 22],
-      'demonym': 'Greek'
-    }, {
-      'name': 'Greenland',
-      'nativeName': 'Kalaallit Nunaat',
-      'tld': '.gl',
-      'cca2': 'GL',
-      'ccn3': '304',
-      'cca3': 'GRL',
-      'currency': 'DKK',
-      'callingCode': '299',
-      'capital': 'Nuuk',
-      'altSpellings': ['GL', 'Grønland'],
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': 'Greenlandic',
-      'population': 56370,
-      'latlng': [72, -40],
-      'demonym': 'Greenlandic'
-    }, {
-      'name': 'Grenada',
-      'nativeName': 'Grenada',
-      'tld': '.gd',
-      'cca2': 'GD',
-      'ccn3': '308',
-      'cca3': 'GRD',
-      'currency': 'XCD',
-      'callingCode': '1473',
-      'capital': 'St. George\'s',
-      'altSpellings': 'GD',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 103328,
-      'latlng': [12.11666666, -61.66666666],
-      'demonym': 'Grenadian'
-    }, {
-      'name': 'Guadeloupe',
-      'nativeName': 'Guadeloupe',
-      'tld': '.gp',
-      'cca2': 'GP',
-      'ccn3': '312',
-      'cca3': 'GLP',
-      'currency': 'EUR',
-      'callingCode': '590',
-      'capital': 'Basse-Terre',
-      'altSpellings': ['GP', 'Gwadloup'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'French',
-      'population': 403355,
-      'latlng': [16.25, -61.583333],
-      'demonym': 'Guadeloupian'
-    }, {
-      'name': 'Guam',
-      'nativeName': 'Guam',
-      'tld': '.gu',
-      'cca2': 'GU',
-      'ccn3': '316',
-      'cca3': 'GUM',
-      'currency': 'USD',
-      'callingCode': '1671',
-      'capital': 'Hagåtña',
-      'altSpellings': ['GU', 'Guåhån'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['English', 'Chamorro'],
-      'population': 159358,
-      'latlng': [13.46666666, 144.78333333],
-      'demonym': 'Guamanian'
-    }, {
-      'name': 'Guatemala',
-      'nativeName': 'Guatemala',
-      'tld': '.gt',
-      'cca2': 'GT',
-      'ccn3': '320',
-      'cca3': 'GTM',
-      'currency': 'GTQ',
-      'callingCode': '502',
-      'capital': 'Guatemala City',
-      'altSpellings': 'GT',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 15438384,
-      'latlng': [15.5, -90.25],
-      'demonym': 'Guatemalan'
-    }, {
-      'name': 'Guernsey',
-      'nativeName': 'Guernsey',
-      'tld': '.gg',
-      'cca2': 'GG',
-      'ccn3': '831',
-      'cca3': 'GGY',
-      'currency': 'GBP',
-      'callingCode': '44',
-      'capital': 'St. Peter Port',
-      'altSpellings': ['GG', 'Bailiwick of Guernsey', 'Bailliage de Guernesey'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['English', 'French'],
-      'population': 62431,
-      'latlng': [49.46666666, -2.58333333],
-      'demonym': 'Channel Islander'
-    }, {
-      'name': 'Guinea',
-      'nativeName': 'Guinée',
-      'tld': '.gn',
-      'cca2': 'GN',
-      'ccn3': '324',
-      'cca3': 'GIN',
-      'currency': 'GNF',
-      'callingCode': '224',
-      'capital': 'Conakry',
-      'altSpellings': ['GN', 'Republic of Guinea', 'République de Guinée'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 10824200,
-      'latlng': [11, -10],
-      'demonym': 'Guinean'
-    }, {
-      'name': 'Guinea-Bissau',
-      'nativeName': 'Guiné-Bissau',
-      'tld': '.gw',
-      'cca2': 'GW',
-      'ccn3': '624',
-      'cca3': 'GNB',
-      'currency': 'XOF',
-      'callingCode': '245',
-      'capital': 'Bissau',
-      'altSpellings': ['GW', 'Republic of Guinea-Bissau', 'República da Guiné-Bissau'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'Portuguese',
-      'population': 1704000,
-      'latlng': [12, -15],
-      'demonym': 'Guinea-Bissauan'
-    }, {
-      'name': 'Guyana',
-      'nativeName': 'Guyana',
-      'tld': '.gy',
-      'cca2': 'GY',
-      'ccn3': '328',
-      'cca3': 'GUY',
-      'currency': 'GYD',
-      'callingCode': '592',
-      'capital': 'Georgetown',
-      'altSpellings': ['GY', 'Co-operative Republic of Guyana'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'English',
-      'population': 784894,
-      'latlng': [5, -59],
-      'demonym': 'Guyanese'
-    }, {
-      'name': 'Haiti',
-      'nativeName': 'Haïti',
-      'tld': '.ht',
-      'cca2': 'HT',
-      'ccn3': '332',
-      'cca3': 'HTI',
-      'currency': ['HTG', 'USD'],
-      'callingCode': '509',
-      'capital': 'Port-au-Prince',
-      'altSpellings': ['HT', 'Republic of Haiti', 'République d\'Haïti', 'Repiblik Ayiti'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': ['French', 'Haitian Creole'],
-      'population': 10413211,
-      'latlng': [19, -72.41666666],
-      'demonym': 'Haitian'
-    }, {
-      'name': 'Heard Island and McDonald Islands',
-      'nativeName': 'Heard Island and McDonald Islands',
-      'tld': ['.hm', '.aq'],
-      'cca2': 'HM',
-      'ccn3': '334',
-      'cca3': 'HMD',
-      'currency': 'AUD',
-      'callingCode': '',
-      'capital': '',
-      'altSpellings': 'HM',
-      'relevance': '0',
-      'region': '',
-      'subregion': '',
-      'language': '',
-      'latlng': [-53.1, 72.51666666],
-      'demonym': 'Heard and McDonald Islander'
-    }, {
-      'name': 'Vatican City',
-      'nativeName': 'Vaticano',
-      'tld': '.va',
-      'cca2': 'VA',
-      'ccn3': '336',
-      'cca3': 'VAT',
-      'currency': 'EUR',
-      'callingCode': ['39066', '379'],
-      'capital': 'Vatican City',
-      'altSpellings': ['VA', 'Vatican City State', 'Stato della Città del Vaticano'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Italian',
-      'population': 800,
-      'latlng': [41.9, 12.45],
-      'demonym': 'Italian'
-    }, {
-      'name': 'Honduras',
-      'nativeName': 'Honduras',
-      'tld': '.hn',
-      'cca2': 'HN',
-      'ccn3': '340',
-      'cca3': 'HND',
-      'currency': 'HNL',
-      'callingCode': '504',
-      'capital': 'Tegucigalpa',
-      'altSpellings': ['HN', 'Republic of Honduras', 'República de Honduras'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 8555072,
-      'latlng': [15, -86.5],
-      'demonym': 'Honduran'
-    }, {
-      'name': 'Hong Kong',
-      'nativeName': 'Hong Kong',
-      'tld': '.hk',
-      'cca2': 'HK',
-      'ccn3': '344',
-      'cca3': 'HKG',
-      'currency': 'HKD',
-      'callingCode': '852',
-      'capital': 'City of Victoria',
-      'altSpellings': ['HK', '香港'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': ['English', 'Chinese'],
-      'population': 7184000,
-      'latlng': [22.25, 114.16666666],
-      'demonym': 'Chinese'
-    }, {
-      'name': 'Hungary',
-      'nativeName': 'Magyarország',
-      'tld': '.hu',
-      'cca2': 'HU',
-      'ccn3': '348',
-      'cca3': 'HUN',
-      'currency': 'HUF',
-      'callingCode': '36',
-      'capital': 'Budapest',
-      'altSpellings': 'HU',
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Hungarian',
-      'population': 9906000,
-      'latlng': [47, 20],
-      'demonym': 'Hungarian'
-    }, {
-      'name': 'Iceland',
-      'nativeName': 'Ísland',
-      'tld': '.is',
-      'cca2': 'IS',
-      'ccn3': '352',
-      'cca3': 'ISL',
-      'currency': 'ISK',
-      'callingCode': '354',
-      'capital': 'Reykjavik',
-      'altSpellings': ['IS', 'Island', 'Republic of Iceland', 'Lýðveldið Ísland'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Icelandic',
-      'population': 325010,
-      'latlng': [65, -18],
-      'demonym': 'Icelander'
-    }, {
-      'name': 'India',
-      'nativeName': 'भारत',
-      'tld': '.in',
-      'cca2': 'IN',
-      'ccn3': '356',
-      'cca3': 'IND',
-      'currency': 'INR',
-      'callingCode': '91',
-      'capital': 'New Delhi',
-      'altSpellings': ['IN', 'Bhārat', 'Republic of India', 'Bharat Ganrajya'],
-      'relevance': '3',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': ['Hindi', 'English'],
-      'population': 1236670000,
-      'latlng': [20, 77],
-      'demonym': 'Indian'
-    }, {
-      'name': 'Indonesia',
-      'nativeName': 'Indonesia',
-      'tld': '.id',
-      'cca2': 'ID',
-      'ccn3': '360',
-      'cca3': 'IDN',
-      'currency': 'IDR',
-      'callingCode': '62',
-      'capital': 'Jakarta',
-      'altSpellings': ['ID', 'Republic of Indonesia', 'Republik Indonesia'],
-      'relevance': '2',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Indonesian',
-      'population': 237641326,
-      'latlng': [-5, 120],
-      'demonym': 'Indonesian'
-    }, {
-      'name': 'Iran',
-      'nativeName': 'Irān',
-      'tld': '.ir',
-      'cca2': 'IR',
-      'ccn3': '364',
-      'cca3': 'IRN',
-      'currency': 'IRR',
-      'callingCode': '98',
-      'capital': 'Tehran',
-      'altSpellings': ['IR', 'Islamic Republic of Iran', 'Jomhuri-ye Eslāmi-ye Irān'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': 'Persian',
-      'population': 77068000,
-      'latlng': [32, 53],
-      'demonym': 'Iranian'
-    }, {
-      'name': 'Iraq',
-      'nativeName': 'Irāq',
-      'tld': '.iq',
-      'cca2': 'IQ',
-      'ccn3': '368',
-      'cca3': 'IRQ',
-      'currency': 'IQD',
-      'callingCode': '964',
-      'capital': 'Baghdad',
-      'altSpellings': ['IQ', 'Republic of Iraq', 'Jumhūriyyat al-‘Irāq'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': ['Arabic', 'Kurdish'],
-      'population': 34035000,
-      'latlng': [33, 44],
-      'demonym': 'Iraqi'
-    }, {
-      'name': 'Ireland',
-      'nativeName': 'Éire',
-      'tld': '.ie',
-      'cca2': 'IE',
-      'ccn3': '372',
-      'cca3': 'IRL',
-      'currency': 'EUR',
-      'callingCode': '353',
-      'capital': 'Dublin',
-      'altSpellings': ['IE', 'Éire', 'Republic of Ireland', 'Poblacht na hÉireann'],
-      'relevance': '1.2',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['Irish', 'English'],
-      'latlng': [53, -8],
-      'demonym': 'Irish'
-    }, {
-      'name': 'Isle of Man',
-      'nativeName': 'Isle of Man',
-      'tld': '.im',
-      'cca2': 'IM',
-      'ccn3': '833',
-      'cca3': 'IMN',
-      'currency': 'GBP',
-      'callingCode': '44',
-      'capital': 'Douglas',
-      'altSpellings': ['IM', 'Ellan Vannin', 'Mann', 'Mannin'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['English', 'Manx'],
-      'population': 84497,
-      'latlng': [54.25, -4.5],
-      'demonym': 'Manx'
-    }, {
-      'name': 'Israel',
-      'nativeName': 'Yisrā\'el',
-      'tld': '.il',
-      'cca2': 'IL',
-      'ccn3': '376',
-      'cca3': 'ISR',
-      'currency': 'ILS',
-      'callingCode': '972',
-      'capital': 'Jerusalem',
-      'altSpellings': ['IL', 'State of Israel', 'Medīnat Yisrā\'el'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': ['Hebrew', 'Arabic'],
-      'population': 8092700,
-      'latlng': [31.5, 34.75],
-      'demonym': 'Israeli'
-    }, {
-      'name': 'Italy',
-      'nativeName': 'Italia',
-      'tld': '.it',
-      'cca2': 'IT',
-      'ccn3': '380',
-      'cca3': 'ITA',
-      'currency': 'EUR',
-      'callingCode': '39',
-      'capital': 'Rome',
-      'altSpellings': ['IT', 'Italian Republic', 'Repubblica italiana'],
-      'relevance': '2',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Italian',
-      'population': 59829079,
-      'latlng': [42.83333333, 12.83333333],
-      'demonym': 'Italian'
-    }, {
-      'name': 'Jamaica',
-      'nativeName': 'Jamaica',
-      'tld': '.jm',
-      'cca2': 'JM',
-      'ccn3': '388',
-      'cca3': 'JAM',
-      'currency': 'JMD',
-      'callingCode': '1876',
-      'capital': 'Kingston',
-      'altSpellings': 'JM',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'Jamaican English',
-      'population': 2711476,
-      'latlng': [18.25, -77.5],
-      'demonym': 'Jamaican'
-    }, {
-      'name': 'Japan',
-      'nativeName': '日本',
-      'tld': '.jp',
-      'cca2': 'JP',
-      'ccn3': '392',
-      'cca3': 'JPN',
-      'currency': 'JPY',
-      'callingCode': '81',
-      'capital': 'Tokyo',
-      'altSpellings': ['JP', 'Nippon', 'Nihon'],
-      'relevance': '2.5',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Japanese',
-      'population': 127290000,
-      'latlng': [36, 138],
-      'demonym': 'Japanese'
-    }, {
-      'name': 'Jersey',
-      'nativeName': 'Jersey',
-      'tld': '.je',
-      'cca2': 'JE',
-      'ccn3': '832',
-      'cca3': 'JEY',
-      'currency': 'GBP',
-      'callingCode': '44',
-      'capital': 'Saint Helier',
-      'altSpellings': ['JE', 'Bailiwick of Jersey', 'Bailliage de Jersey', 'Bailliage dé Jèrri'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': ['English', 'French'],
-      'population': 97857,
-      'latlng': [49.25, -2.16666666],
-      'demonym': 'Channel Islander'
-    }, {
-      'name': 'Jordan',
-      'nativeName': 'al-Urdun',
-      'tld': '.jo',
-      'cca2': 'JO',
-      'ccn3': '400',
-      'cca3': 'JOR',
-      'currency': 'JOD',
-      'callingCode': '962',
-      'capital': 'Amman',
-      'altSpellings': ['JO', 'Hashemite Kingdom of Jordan', 'al-Mamlakah al-Urdunīyah al-Hāshimīyah'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 6512600,
-      'latlng': [31, 36],
-      'demonym': 'Jordanian'
-    }, {
-      'name': 'Kazakhstan',
-      'nativeName': 'Қазақстан',
-      'tld': ['.kz', '.қаз'],
-      'cca2': 'KZ',
-      'ccn3': '398',
-      'cca3': 'KAZ',
-      'currency': 'KZT',
-      'callingCode': ['76', '77'],
-      'capital': 'Astana',
-      'altSpellings': ['KZ', 'Qazaqstan', 'Казахстан', 'Republic of Kazakhstan', 'Қазақстан Республикасы', 'Qazaqstan Respublïkası', 'Республика Казахстан', 'Respublika Kazakhstan'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Central Asia',
-      'language': ['Kazakh', 'Russian'],
-      'population': 17099000,
-      'latlng': [48, 68],
-      'demonym': 'Kazakhstani'
-    }, {
-      'name': 'Kenya',
-      'nativeName': 'Kenya',
-      'tld': '.ke',
-      'cca2': 'KE',
-      'ccn3': '404',
-      'cca3': 'KEN',
-      'currency': 'KES',
-      'callingCode': '254',
-      'capital': 'Nairobi',
-      'altSpellings': ['KE', 'Republic of Kenya', 'Jamhuri ya Kenya'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Swahili', 'English'],
-      'population': 44354000,
-      'latlng': [1, 38],
-      'demonym': 'Kenyan'
-    }, {
-      'name': 'Kiribati',
-      'nativeName': 'Kiribati',
-      'tld': '.ki',
-      'cca2': 'KI',
-      'ccn3': '296',
-      'cca3': 'KIR',
-      'currency': 'AUD',
-      'callingCode': '686',
-      'capital': 'South Tarawa',
-      'altSpellings': ['KI', 'Republic of Kiribati', 'Ribaberiki Kiribati'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['English', 'Gilbertese'],
-      'population': 106461,
-      'latlng': [1.41666666, 173],
-      'demonym': 'I-Kiribati'
-    }, {
-      'name': 'Kuwait',
-      'nativeName': 'al-Kuwayt',
-      'tld': '.kw',
-      'cca2': 'KW',
-      'ccn3': '414',
-      'cca3': 'KWT',
-      'currency': 'KWD',
-      'callingCode': '965',
-      'capital': 'Kuwait City',
-      'altSpellings': ['KW', 'State of Kuwait', 'Dawlat al-Kuwait'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 3582054,
-      'latlng': [29.5, 45.75],
-      'demonym': 'Kuwaiti'
-    }, {
-      'name': 'Kyrgyzstan',
-      'nativeName': 'Кыргызстан',
-      'tld': '.kg',
-      'cca2': 'KG',
-      'ccn3': '417',
-      'cca3': 'KGZ',
-      'currency': 'KGS',
-      'callingCode': '996',
-      'capital': 'Bishkek',
-      'altSpellings': ['KG', 'Киргизия', 'Kyrgyz Republic', 'Кыргыз Республикасы', 'Kyrgyz Respublikasy'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Central Asia',
-      'language': ['Kyrgyz', 'Russian'],
-      'population': 5551900,
-      'latlng': [41, 75],
-      'demonym': 'Kirghiz'
-    }, {
-      'name': 'Laos',
-      'nativeName': 'ສປປລາວ',
-      'tld': '.la',
-      'cca2': 'LA',
-      'ccn3': '418',
-      'cca3': 'LAO',
-      'currency': 'LAK',
-      'callingCode': '856',
-      'capital': 'Vientiane',
-      'altSpellings': ['LA', 'Lao', 'Lao People\'s Democratic Republic', 'Sathalanalat Paxathipatai Paxaxon Lao'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Lao',
-      'population': 6580800,
-      'latlng': [18, 105],
-      'demonym': 'Laotian'
-    }, {
-      'name': 'Latvia',
-      'nativeName': 'Latvija',
-      'tld': '.lv',
-      'cca2': 'LV',
-      'ccn3': '428',
-      'cca3': 'LVA',
-      'currency': 'LVL',
-      'callingCode': '371',
-      'capital': 'Riga',
-      'altSpellings': ['LV', 'Republic of Latvia', 'Latvijas Republika'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Latvian',
-      'population': 2014000,
-      'latlng': [57, 25],
-      'demonym': 'Latvian'
-    }, {
-      'name': 'Lebanon',
-      'nativeName': 'Libnān',
-      'tld': '.lb',
-      'cca2': 'LB',
-      'ccn3': '422',
-      'cca3': 'LBN',
-      'currency': 'LBP',
-      'callingCode': '961',
-      'capital': 'Beirut',
-      'altSpellings': ['LB', 'Lebanese Republic', 'Al-Jumhūrīyah Al-Libnānīyah'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': ['Arabic', 'French'],
-      'population': 4822000,
-      'latlng': [33.83333333, 35.83333333],
-      'demonym': 'Lebanese'
-    }, {
-      'name': 'Lesotho',
-      'nativeName': 'Lesotho',
-      'tld': '.ls',
-      'cca2': 'LS',
-      'ccn3': '426',
-      'cca3': 'LSO',
-      'currency': ['LSL', 'ZAR'],
-      'callingCode': '266',
-      'capital': 'Maseru',
-      'altSpellings': ['LS', 'Kingdom of Lesotho', 'Muso oa Lesotho'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Southern Africa',
-      'language': ['Sesotho', 'English'],
-      'population': 2074000,
-      'latlng': [-29.5, 28.5],
-      'demonym': 'Mosotho'
-    }, {
-      'name': 'Liberia',
-      'nativeName': 'Liberia',
-      'tld': '.lr',
-      'cca2': 'LR',
-      'ccn3': '430',
-      'cca3': 'LBR',
-      'currency': 'LRD',
-      'callingCode': '231',
-      'capital': 'Monrovia',
-      'altSpellings': ['LR', 'Republic of Liberia'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'population': 4294000,
-      'latlng': [6.5, -9.5],
-      'demonym': 'Liberian'
-    }, {
-      'name': 'Libya',
-      'nativeName': 'Lībyā',
-      'tld': '.ly',
-      'cca2': 'LY',
-      'ccn3': '434',
-      'cca3': 'LBY',
-      'currency': 'LYD',
-      'callingCode': '218',
-      'capital': 'Tripoli',
-      'altSpellings': ['LY', 'State of Libya', 'Dawlat Libya'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': 'Arabic',
-      'population': 6202000,
-      'latlng': [25, 17],
-      'demonym': 'Libyan'
-    }, {
-      'name': 'Liechtenstein',
-      'nativeName': 'Liechtenstein',
-      'tld': '.li',
-      'cca2': 'LI',
-      'ccn3': '438',
-      'cca3': 'LIE',
-      'currency': 'CHF',
-      'callingCode': '423',
-      'capital': 'Vaduz',
-      'altSpellings': ['LI', 'Principality of Liechtenstein', 'Fürstentum Liechtenstein'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'German',
-      'population': 36842,
-      'latlng': [47.26666666, 9.53333333],
-      'demonym': 'Liechtensteiner'
-    }, {
-      'name': 'Lithuania',
-      'nativeName': 'Lietuva',
-      'tld': '.lt',
-      'cca2': 'LT',
-      'ccn3': '440',
-      'cca3': 'LTU',
-      'currency': 'LTL',
-      'callingCode': '370',
-      'capital': 'Vilnius',
-      'altSpellings': ['LT', 'Republic of Lithuania', 'Lietuvos Respublika'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Lithuanian',
-      'population': 2950684,
-      'latlng': [56, 24],
-      'demonym': 'Lithuanian'
-    }, {
-      'name': 'Luxembourg',
-      'nativeName': 'Luxembourg',
-      'tld': '.lu',
-      'cca2': 'LU',
-      'ccn3': '442',
-      'cca3': 'LUX',
-      'currency': 'EUR',
-      'callingCode': '352',
-      'capital': 'Luxembourg',
-      'altSpellings': ['LU', 'Grand Duchy of Luxembourg', 'Grand-Duché de Luxembourg', 'Großherzogtum Luxemburg', 'Groussherzogtum Lëtzebuerg'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': ['French', 'German', 'Luxembourgish'],
-      'population': 537000,
-      'latlng': [49.75, 6.16666666],
-      'demonym': 'Luxembourger'
-    }, {
-      'name': 'Macao',
-      'nativeName': '澳門',
-      'tld': '.mo',
-      'cca2': 'MO',
-      'ccn3': '446',
-      'cca3': 'MAC',
-      'currency': 'MOP',
-      'callingCode': '853',
-      'capital': '',
-      'altSpellings': ['MO', '澳门', 'Macao Special Administrative Region of the People\'s Republic of China', '中華人民共和國澳門特別行政區', 'Região Administrativa Especial de Macau da República Popular da China'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': ['Traditional Chinese', 'Portuguese'],
-      'latlng': [22.16666666, 113.55],
-      'demonym': 'Chinese'
-    }, {
-      'name': 'Macedonia',
-      'nativeName': 'Македонија',
-      'tld': '.mk',
-      'cca2': 'MK',
-      'ccn3': '807',
-      'cca3': 'MKD',
-      'currency': 'MKD',
-      'callingCode': '389',
-      'capital': 'Skopje',
-      'altSpellings': ['MK', 'Republic of Macedonia', 'Република Македонија'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Macedonian',
-      'latlng': [41.83333333, 22],
-      'demonym': 'Macedonian'
-    }, {
-      'name': 'Madagascar',
-      'nativeName': 'Madagasikara',
-      'tld': '.mg',
-      'cca2': 'MG',
-      'ccn3': '450',
-      'cca3': 'MDG',
-      'currency': 'MGA',
-      'callingCode': '261',
-      'capital': 'Antananarivo',
-      'altSpellings': ['MG', 'Republic of Madagascar', 'Repoblikan\'i Madagasikara', 'République de Madagascar'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Malagasy', 'French'],
-      'population': 20696070,
-      'latlng': [-20, 47],
-      'demonym': 'Malagasy'
-    }, {
-      'name': 'Malawi',
-      'nativeName': 'Malawi',
-      'tld': '.mw',
-      'cca2': 'MW',
-      'ccn3': '454',
-      'cca3': 'MWI',
-      'currency': 'MWK',
-      'callingCode': '265',
-      'capital': 'Lilongwe',
-      'altSpellings': ['MW', 'Republic of Malawi'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Chichewa', 'English'],
-      'population': 16363000,
-      'latlng': [-13.5, 34],
-      'demonym': 'Malawian'
-    }, {
-      'name': 'Malaysia',
-      'nativeName': 'Malaysia',
-      'tld': '.my',
-      'cca2': 'MY',
-      'ccn3': '458',
-      'cca3': 'MYS',
-      'currency': 'MYR',
-      'callingCode': '60',
-      'capital': 'Kuala Lumpur',
-      'altSpellings': 'MY',
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Malaysian',
-      'population': 29793600,
-      'latlng': [2.5, 112.5],
-      'demonym': 'Malaysian'
-    }, {
-      'name': 'Maldives',
-      'nativeName': 'Maldives',
-      'tld': '.mv',
-      'cca2': 'MV',
-      'ccn3': '462',
-      'cca3': 'MDV',
-      'currency': 'MVR',
-      'callingCode': '960',
-      'capital': 'Malé',
-      'altSpellings': ['MV', 'Maldive Islands', 'Republic of the Maldives', 'Dhivehi Raajjeyge Jumhooriyya'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': 'Maldivian',
-      'population': 317280,
-      'latlng': [3.25, 73],
-      'demonym': 'Maldivan'
-    }, {
-      'name': 'Mali',
-      'nativeName': 'Mali',
-      'tld': '.ml',
-      'cca2': 'ML',
-      'ccn3': '466',
-      'cca3': 'MLI',
-      'currency': 'XOF',
-      'callingCode': '223',
-      'capital': 'Bamako',
-      'altSpellings': ['ML', 'Republic of Mali', 'République du Mali'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 15302000,
-      'latlng': [17, -4],
-      'demonym': 'Malian'
-    }, {
-      'name': 'Malta',
-      'nativeName': 'Malta',
-      'tld': '.mt',
-      'cca2': 'MT',
-      'ccn3': '470',
-      'cca3': 'MLT',
-      'currency': 'EUR',
-      'callingCode': '356',
-      'capital': 'Valletta',
-      'altSpellings': ['MT', 'Republic of Malta', 'Repubblika ta\' Malta'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': ['Maltese', 'English'],
-      'population': 416055,
-      'latlng': [35.83333333, 14.58333333],
-      'demonym': 'Maltese'
-    }, {
-      'name': 'Marshall Islands',
-      'nativeName': 'M̧ajeļ',
-      'tld': '.mh',
-      'cca2': 'MH',
-      'ccn3': '584',
-      'cca3': 'MHL',
-      'currency': 'USD',
-      'callingCode': '692',
-      'capital': 'Majuro',
-      'altSpellings': ['MH', 'Republic of the Marshall Islands', 'Aolepān Aorōkin M̧ajeļ'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['Marshallese', 'English'],
-      'population': 56086,
-      'latlng': [9, 168],
-      'demonym': 'Marshallese'
-    }, {
-      'name': 'Martinique',
-      'nativeName': 'Martinique',
-      'tld': '.mq',
-      'cca2': 'MQ',
-      'ccn3': '474',
-      'cca3': 'MTQ',
-      'currency': 'EUR',
-      'callingCode': '596',
-      'capital': 'Fort-de-France',
-      'altSpellings': 'MQ',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'French',
-      'population': 394173,
-      'latlng': [14.666667, -61],
-      'demonym': 'French'
-    }, {
-      'name': 'Mauritania',
-      'nativeName': 'Mūrītānyā',
-      'tld': '.mr',
-      'cca2': 'MR',
-      'ccn3': '478',
-      'cca3': 'MRT',
-      'currency': 'MRO',
-      'callingCode': '222',
-      'capital': 'Nouakchott',
-      'altSpellings': ['MR', 'Islamic Republic of Mauritania', 'al-Jumhūriyyah al-ʾIslāmiyyah al-Mūrītāniyyah'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'Arabic',
-      'population': 3461041,
-      'latlng': [20, -12],
-      'demonym': 'Mauritanian'
-    }, {
-      'name': 'Mauritius',
-      'nativeName': 'Maurice',
-      'tld': '.mu',
-      'cca2': 'MU',
-      'ccn3': '480',
-      'cca3': 'MUS',
-      'currency': 'MUR',
-      'callingCode': '230',
-      'capital': 'Port Louis',
-      'altSpellings': ['MU', 'Republic of Mauritius', 'République de Maurice'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'French',
-      'population': 1257900,
-      'latlng': [-20.28333333, 57.55],
-      'demonym': 'Mauritian'
-    }, {
-      'name': 'Mayotte',
-      'nativeName': 'Mayotte',
-      'tld': '.yt',
-      'cca2': 'YT',
-      'ccn3': '175',
-      'cca3': 'MYT',
-      'currency': 'EUR',
-      'callingCode': '262',
-      'capital': 'Mamoudzou',
-      'altSpellings': ['YT', 'Department of Mayotte', 'Département de Mayotte'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'French',
-      'population': 212600,
-      'latlng': [-12.83333333, 45.16666666],
-      'demonym': 'French'
-    }, {
-      'name': 'Mexico',
-      'nativeName': 'México',
-      'tld': '.mx',
-      'cca2': 'MX',
-      'ccn3': '484',
-      'cca3': 'MEX',
-      'currency': ['MXN', 'MXV'],
-      'callingCode': '52',
-      'capital': 'Mexico City',
-      'altSpellings': ['MX', 'Mexicanos', 'United Mexican States', 'Estados Unidos Mexicanos'],
-      'relevance': '1.5',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 118395054,
-      'latlng': [23, -102],
-      'demonym': 'Mexican'
-    }, {
-      'name': 'Micronesia',
-      'nativeName': 'Micronesia',
-      'tld': '.fm',
-      'cca2': 'FM',
-      'ccn3': '583',
-      'cca3': 'FSM',
-      'currency': 'USD',
-      'callingCode': '691',
-      'capital': 'Palikir',
-      'altSpellings': ['FM', 'Federated States of Micronesia'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': 'English',
-      'latlng': [6.91666666, 158.25],
-      'demonym': 'Micronesian'
-    }, {
-      'name': 'Moldova',
-      'nativeName': 'Moldova',
-      'tld': '.md',
-      'cca2': 'MD',
-      'ccn3': '498',
-      'cca3': 'MDA',
-      'currency': 'MDL',
-      'callingCode': '373',
-      'capital': 'Chișinău',
-      'altSpellings': ['MD', 'Republic of Moldova', 'Republica Moldova'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Moldovan',
-      'population': 3559500,
-      'latlng': [47, 29],
-      'demonym': 'Moldovan'
-    }, {
-      'name': 'Monaco',
-      'nativeName': 'Monaco',
-      'tld': '.mc',
-      'cca2': 'MC',
-      'ccn3': '492',
-      'cca3': 'MCO',
-      'currency': 'EUR',
-      'callingCode': '377',
-      'capital': 'Monaco',
-      'altSpellings': ['MC', 'Principality of Monaco', 'Principauté de Monaco'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'French',
-      'population': 36136,
-      'latlng': [43.73333333, 7.4],
-      'demonym': 'Monegasque'
-    }, {
-      'name': 'Mongolia',
-      'nativeName': 'Монгол улс',
-      'tld': '.mn',
-      'cca2': 'MN',
-      'ccn3': '496',
-      'cca3': 'MNG',
-      'currency': 'MNT',
-      'callingCode': '976',
-      'capital': 'Ulan Bator',
-      'altSpellings': 'MN',
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Mongolian',
-      'population': 2754685,
-      'latlng': [46, 105],
-      'demonym': 'Mongolian'
-    }, {
-      'name': 'Montenegro',
-      'nativeName': 'Црна Гора',
-      'tld': '.me',
-      'cca2': 'ME',
-      'ccn3': '499',
-      'cca3': 'MNE',
-      'currency': 'EUR',
-      'callingCode': '382',
-      'capital': 'Podgorica',
-      'altSpellings': ['ME', 'Crna Gora'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Montenegrin',
-      'population': 620029,
-      'latlng': [42.5, 19.3],
-      'demonym': 'Montenegrin'
-    }, {
-      'name': 'Montserrat',
-      'nativeName': 'Montserrat',
-      'tld': '.ms',
-      'cca2': 'MS',
-      'ccn3': '500',
-      'cca3': 'MSR',
-      'currency': 'XCD',
-      'callingCode': '1664',
-      'capital': 'Plymouth',
-      'altSpellings': 'MS',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 4922,
-      'latlng': [16.75, -62.2],
-      'demonym': 'Montserratian'
-    }, {
-      'name': 'Morocco',
-      'nativeName': 'al-Maġrib',
-      'tld': '.ma',
-      'cca2': 'MA',
-      'ccn3': '504',
-      'cca3': 'MAR',
-      'currency': 'MAD',
-      'callingCode': '212',
-      'capital': 'Rabat',
-      'altSpellings': ['MA', 'Kingdom of Morocco', 'Al-Mamlakah al-Maġribiyah'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': ['Arabic', 'Tamazight'],
-      'population': 33087700,
-      'latlng': [32, -5],
-      'demonym': 'Moroccan'
-    }, {
-      'name': 'Mozambique',
-      'nativeName': 'Moçambique',
-      'tld': '.mz',
-      'cca2': 'MZ',
-      'ccn3': '508',
-      'cca3': 'MOZ',
-      'currency': 'MZN',
-      'callingCode': '258',
-      'capital': 'Maputo',
-      'altSpellings': ['MZ', 'Republic of Mozambique', 'República de Moçambique'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'Portuguese',
-      'population': 23700715,
-      'latlng': [-18.25, 35],
-      'demonym': 'Mozambican'
-    }, {
-      'name': 'Myanmar',
-      'nativeName': 'Myanma',
-      'tld': '.mm',
-      'cca2': 'MM',
-      'ccn3': '104',
-      'cca3': 'MMR',
-      'currency': 'MMK',
-      'callingCode': '95',
-      'capital': 'Naypyidaw',
-      'altSpellings': ['MM', 'Burma', 'Republic of the Union of Myanmar', 'Pyidaunzu Thanmăda Myăma Nainngandaw'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Burmese',
-      'latlng': [22, 98],
-      'demonym': 'Myanmarian'
-    }, {
-      'name': 'Namibia',
-      'nativeName': 'Namibia',
-      'tld': '.na',
-      'cca2': 'NA',
-      'ccn3': '516',
-      'cca3': 'NAM',
-      'currency': ['NAD', 'ZAR'],
-      'callingCode': '264',
-      'capital': 'Windhoek',
-      'altSpellings': ['NA', 'Namibië', 'Republic of Namibia'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Southern Africa',
-      'language': 'English',
-      'population': 2113077,
-      'latlng': [-22, 17],
-      'demonym': 'Namibian'
-    }, {
-      'name': 'Nauru',
-      'nativeName': 'Nauru',
-      'tld': '.nr',
-      'cca2': 'NR',
-      'ccn3': '520',
-      'cca3': 'NRU',
-      'currency': 'AUD',
-      'callingCode': '674',
-      'capital': 'Yaren',
-      'altSpellings': ['NR', 'Naoero', 'Pleasant Island', 'Republic of Nauru', 'Ripublik Naoero'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['Nauruan', 'English'],
-      'population': 9945,
-      'latlng': [-0.53333333, 166.91666666],
-      'demonym': 'Nauruan'
-    }, {
-      'name': 'Nepal',
-      'nativeName': 'नपल',
-      'tld': '.np',
-      'cca2': 'NP',
-      'ccn3': '524',
-      'cca3': 'NPL',
-      'currency': 'NPR',
-      'callingCode': '977',
-      'capital': 'Kathmandu',
-      'altSpellings': ['NP', 'Federal Democratic Republic of Nepal', 'Loktāntrik Ganatantra Nepāl'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': 'Nepali',
-      'population': 26494504,
-      'latlng': [28, 84],
-      'demonym': 'Nepalese'
-    }, {
-      'name': 'Netherlands',
-      'nativeName': 'Nederland',
-      'tld': '.nl',
-      'cca2': 'NL',
-      'ccn3': '528',
-      'cca3': 'NLD',
-      'currency': 'EUR',
-      'callingCode': '31',
-      'capital': 'Amsterdam',
-      'altSpellings': ['NL', 'Holland', 'Nederland'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': 'Dutch',
-      'population': 16807300,
-      'latlng': [52.5, 5.75],
-      'demonym': 'Dutch'
-    }, {
-      'name': 'New Caledonia',
-      'nativeName': 'Nouvelle-Calédonie',
-      'tld': '.nc',
-      'cca2': 'NC',
-      'ccn3': '540',
-      'cca3': 'NCL',
-      'currency': 'XPF',
-      'callingCode': '687',
-      'capital': 'Nouméa',
-      'altSpellings': 'NC',
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Melanesia',
-      'language': 'French',
-      'population': 258958,
-      'latlng': [-21.5, 165.5],
-      'demonym': 'New Caledonian'
-    }, {
-      'name': 'New Zealand',
-      'nativeName': 'New Zealand',
-      'tld': '.nz',
-      'cca2': 'NZ',
-      'ccn3': '554',
-      'cca3': 'NZL',
-      'currency': 'NZD',
-      'callingCode': '64',
-      'capital': 'Wellington',
-      'altSpellings': ['NZ', 'Aotearoa'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': ['Australia', 'New Zealand'],
-      'language': ['English', 'Māori', 'New Zealand Sign Language'],
-      'population': 4478810,
-      'latlng': [-41, 174],
-      'demonym': 'New Zealander'
-    }, {
-      'name': 'Nicaragua',
-      'nativeName': 'Nicaragua',
-      'tld': '.ni',
-      'cca2': 'NI',
-      'ccn3': '558',
-      'cca3': 'NIC',
-      'currency': 'NIO',
-      'callingCode': '505',
-      'capital': 'Managua',
-      'altSpellings': ['NI', 'Republic of Nicaragua', 'República de Nicaragua'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 6071045,
-      'latlng': [13, -85],
-      'demonym': 'Nicaraguan'
-    }, {
-      'name': 'Niger',
-      'nativeName': 'Niger',
-      'tld': '.ne',
-      'cca2': 'NE',
-      'ccn3': '562',
-      'cca3': 'NER',
-      'currency': 'XOF',
-      'callingCode': '227',
-      'capital': 'Niamey',
-      'altSpellings': ['NE', 'Nijar', 'Republic of Niger', 'République du Niger'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 17129076,
-      'latlng': [16, 8],
-      'demonym': 'Nigerian'
-    }, {
-      'name': 'Nigeria',
-      'nativeName': 'Nigeria',
-      'tld': '.ng',
-      'cca2': 'NG',
-      'ccn3': '566',
-      'cca3': 'NGA',
-      'currency': 'NGN',
-      'callingCode': '234',
-      'capital': 'Abuja',
-      'altSpellings': ['NG', 'Nijeriya', 'Naíjíríà', 'Federal Republic of Nigeria'],
-      'relevance': '1.5',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'population': 173615000,
-      'latlng': [10, 8],
-      'demonym': 'Nigerian'
-    }, {
-      'name': 'Niue',
-      'nativeName': 'Niuē',
-      'tld': '.nu',
-      'cca2': 'NU',
-      'ccn3': '570',
-      'cca3': 'NIU',
-      'currency': 'NZD',
-      'callingCode': '683',
-      'capital': 'Alofi',
-      'altSpellings': 'NU',
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['Niuean', 'English'],
-      'population': 1613,
-      'latlng': [-19.03333333, -169.86666666],
-      'demonym': 'Niuean'
-    }, {
-      'name': 'Norfolk Island',
-      'nativeName': 'Norfolk Island',
-      'tld': '.nf',
-      'cca2': 'NF',
-      'ccn3': '574',
-      'cca3': 'NFK',
-      'currency': 'AUD',
-      'callingCode': '672',
-      'capital': 'Kingston',
-      'altSpellings': ['NF', 'Territory of Norfolk Island', 'Teratri of Norf\'k Ailen'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': ['Australia', 'New Zealand'],
-      'language': ['English', 'Norfuk'],
-      'population': 2302,
-      'latlng': [-29.03333333, 167.95],
-      'demonym': 'Norfolk Islander'
-    }, {
-      'name': 'North Korea',
-      'nativeName': '북한',
-      'tld': '.kp',
-      'cca2': 'KP',
-      'ccn3': '408',
-      'cca3': 'PRK',
-      'currency': 'KPW',
-      'callingCode': '850',
-      'capital': 'Pyongyang',
-      'altSpellings': ['KP', 'Democratic People\'s Republic of Korea', '조선민주주의인민공화국', 'Chosŏn Minjujuŭi Inmin Konghwaguk'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Korean',
-      'population': 24895000,
-      'latlng': [40, 127],
-      'demonym': 'North Korean'
-    }, {
-      'name': 'Northern Mariana Islands',
-      'nativeName': 'Northern Mariana Islands',
-      'tld': '.mp',
-      'cca2': 'MP',
-      'ccn3': '580',
-      'cca3': 'MNP',
-      'currency': 'USD',
-      'callingCode': '1670',
-      'capital': 'Saipan',
-      'altSpellings': ['MP', 'Commonwealth of the Northern Mariana Islands', 'Sankattan Siha Na Islas Mariånas'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['English', 'Chamorro', 'Carolinian'],
-      'population': 53883,
-      'latlng': [15.2, 145.75],
-      'demonym': 'American'
-    }, {
-      'name': 'Norway',
-      'nativeName': 'Norge',
-      'tld': '.no',
-      'cca2': 'NO',
-      'ccn3': '578',
-      'cca3': 'NOR',
-      'currency': 'NOK',
-      'callingCode': '47',
-      'capital': 'Oslo',
-      'altSpellings': ['NO', 'Norge', 'Noreg', 'Kingdom of Norway', 'Kongeriket Norge', 'Kongeriket Noreg'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Norwegian',
-      'population': 5077798,
-      'latlng': [62, 10],
-      'demonym': 'Norwegian'
-    }, {
-      'name': 'Oman',
-      'nativeName': 'ʻUmān',
-      'tld': '.om',
-      'cca2': 'OM',
-      'ccn3': '512',
-      'cca3': 'OMN',
-      'currency': 'OMR',
-      'callingCode': '968',
-      'capital': 'Muscat',
-      'altSpellings': ['OM', 'Sultanate of Oman', 'Salṭanat ʻUmān'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 3929000,
-      'latlng': [21, 57],
-      'demonym': 'Omani'
-    }, {
-      'name': 'Pakistan',
-      'nativeName': 'Pakistan',
-      'tld': '.pk',
-      'cca2': 'PK',
-      'ccn3': '586',
-      'cca3': 'PAK',
-      'currency': 'PKR',
-      'callingCode': '92',
-      'capital': 'Islamabad',
-      'altSpellings': ['PK', 'Pākistān', 'Islamic Republic of Pakistan', 'Islāmī Jumhūriya\'eh Pākistān'],
-      'relevance': '2',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': ['English', 'Urdu'],
-      'population': 184845000,
-      'latlng': [30, 70],
-      'demonym': 'Pakistani'
-    }, {
-      'name': 'Palau',
-      'nativeName': 'Palau',
-      'tld': '.pw',
-      'cca2': 'PW',
-      'ccn3': '585',
-      'cca3': 'PLW',
-      'currency': 'USD',
-      'callingCode': '680',
-      'capital': 'Ngerulmud',
-      'altSpellings': ['PW', 'Republic of Palau', 'Beluu er a Belau'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Micronesia',
-      'language': ['English', 'Palauan'],
-      'population': 20901,
-      'latlng': [7.5, 134.5],
-      'demonym': 'Palauan'
-    }, {
-      'name': 'Palestine',
-      'nativeName': 'Filasṭin',
-      'tld': '.ps',
-      'cca2': 'PS',
-      'ccn3': '275',
-      'cca3': 'PSE',
-      'currency': 'ILS',
-      'callingCode': '970',
-      'capital': 'Ramallah',
-      'altSpellings': ['PS', 'State of Palestine', 'Dawlat Filasṭin'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'latlng': [31.9, 35.2],
-      'demonym': 'Palestinian'
-    }, {
-      'name': 'Panama',
-      'nativeName': 'Panamá',
-      'tld': '.pa',
-      'cca2': 'PA',
-      'ccn3': '591',
-      'cca3': 'PAN',
-      'currency': ['PAB', 'USD'],
-      'callingCode': '507',
-      'capital': 'Panama City',
-      'altSpellings': ['PA', 'Republic of Panama', 'República de Panamá'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Central America',
-      'language': 'Spanish',
-      'population': 3405813,
-      'latlng': [9, -80],
-      'demonym': 'Panamanian'
-    }, {
-      'name': 'Papua New Guinea',
-      'nativeName': 'Papua Niugini',
-      'tld': '.pg',
-      'cca2': 'PG',
-      'ccn3': '598',
-      'cca3': 'PNG',
-      'currency': 'PGK',
-      'callingCode': '675',
-      'capital': 'Port Moresby',
-      'altSpellings': ['PG', 'Independent State of Papua New Guinea', 'Independen Stet bilong Papua Niugini'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Melanesia',
-      'language': ['Hiri Motu', 'Tok Pisin', 'English'],
-      'population': 7059653,
-      'latlng': [-6, 147],
-      'demonym': 'Papua New Guinean'
-    }, {
-      'name': 'Paraguay',
-      'nativeName': 'Paraguay',
-      'tld': '.py',
-      'cca2': 'PY',
-      'ccn3': '600',
-      'cca3': 'PRY',
-      'currency': 'PYG',
-      'callingCode': '595',
-      'capital': 'Asunción',
-      'altSpellings': ['PY', 'Republic of Paraguay', 'República del Paraguay', 'Tetã Paraguái'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': ['Spanish', 'Guaraní'],
-      'population': 6783374,
-      'latlng': [-23, -58],
-      'demonym': 'Paraguayan'
-    }, {
-      'name': 'Peru',
-      'nativeName': 'Perú',
-      'tld': '.pe',
-      'cca2': 'PE',
-      'ccn3': '604',
-      'cca3': 'PER',
-      'currency': 'PEN',
-      'callingCode': '51',
-      'capital': 'Lima',
-      'altSpellings': ['PE', 'Republic of Peru', ' República del Perú'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': ['Spanish', 'Quechua', 'Aymara'],
-      'population': 30475144,
-      'latlng': [-10, -76],
-      'demonym': 'Peruvian'
-    }, {
-      'name': 'Philippines',
-      'nativeName': 'Pilipinas',
-      'tld': '.ph',
-      'cca2': 'PH',
-      'ccn3': '608',
-      'cca3': 'PHL',
-      'currency': 'PHP',
-      'callingCode': '63',
-      'capital': 'Manila',
-      'altSpellings': ['PH', 'Republic of the Philippines', 'Repúblika ng Pilipinas'],
-      'relevance': '1.5',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': ['Filipino', 'English'],
-      'population': 98678000,
-      'latlng': [13, 122],
-      'demonym': 'Filipino'
-    }, {
-      'name': 'Pitcairn Islands',
-      'nativeName': 'Pitcairn Islands',
-      'tld': '.pn',
-      'cca2': 'PN',
-      'ccn3': '612',
-      'cca3': 'PCN',
-      'currency': 'NZD',
-      'callingCode': '64',
-      'capital': 'Adamstown',
-      'altSpellings': ['PN', 'Pitcairn Henderson Ducie and Oeno Islands'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': 'English',
-      'population': 56,
-      'latlng': [-25.06666666, -130.1],
-      'demonym': 'Pitcairn Islander'
-    }, {
-      'name': 'Poland',
-      'nativeName': 'Polska',
-      'tld': '.pl',
-      'cca2': 'PL',
-      'ccn3': '616',
-      'cca3': 'POL',
-      'currency': 'PLN',
-      'callingCode': '48',
-      'capital': 'Warsaw',
-      'altSpellings': ['PL', 'Republic of Poland', 'Rzeczpospolita Polska'],
-      'relevance': '1.25',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Polish',
-      'population': 38533299,
-      'latlng': [52, 20],
-      'demonym': 'Polish'
-    }, {
-      'name': 'Portugal',
-      'nativeName': 'Portugal',
-      'tld': '.pt',
-      'cca2': 'PT',
-      'ccn3': '620',
-      'cca3': 'PRT',
-      'currency': 'EUR',
-      'callingCode': '351',
-      'capital': 'Lisbon',
-      'altSpellings': ['PT', 'Portuguesa', 'Portuguese Republic', 'República Portuguesa'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Portuguese',
-      'population': 10562178,
-      'latlng': [39.5, -8],
-      'demonym': 'Portuguese'
-    }, {
-      'name': 'Puerto Rico',
-      'nativeName': 'Puerto Rico',
-      'tld': '.pr',
-      'cca2': 'PR',
-      'ccn3': '630',
-      'cca3': 'PRI',
-      'currency': 'USD',
-      'callingCode': ['1787', '1939'],
-      'capital': 'San Juan',
-      'altSpellings': ['PR', 'Commonwealth of Puerto Rico', 'Estado Libre Asociado de Puerto Rico'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': ['Spanish', 'English'],
-      'population': 3667084,
-      'latlng': [18.25, -66.5],
-      'demonym': 'Puerto Rican'
-    }, {
-      'name': 'Qatar',
-      'nativeName': 'Qaṭar',
-      'tld': '.qa',
-      'cca2': 'QA',
-      'ccn3': '634',
-      'cca3': 'QAT',
-      'currency': 'QAR',
-      'callingCode': '974',
-      'capital': 'Doha',
-      'altSpellings': ['QA', 'State of Qatar', 'Dawlat Qaṭar'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 2024707,
-      'latlng': [25.5, 51.25],
-      'demonym': 'Qatari'
-    }, {
-      'name': 'Republic of Kosovo',
-      'nativeName': 'Republika e Kosovës',
-      'tld': '',
-      'cca2': 'XK',
-      'ccn3': '780',
-      'cca3': 'KOS',
-      'currency': 'EUR',
-      'callingCode': ['377', '381', '386'],
-      'capital': 'Pristina',
-      'altSpellings': ['XK', 'Република Косово'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': ['Albanian', 'Serbian'],
-      'population': 1733842,
-      'latlng': [42.666667, 21.166667],
-      'demonym': 'Kosovar'
-    }, {
-      'name': 'Réunion',
-      'nativeName': 'La Réunion',
-      'tld': '.re',
-      'cca2': 'RE',
-      'ccn3': '638',
-      'cca3': 'REU',
-      'currency': 'EUR',
-      'callingCode': '262',
-      'capital': 'Saint-Denis',
-      'altSpellings': ['RE', 'Reunion'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'French',
-      'population': 821136,
-      'latlng': [-21.15, 55.5],
-      'demonym': 'French'
-    }, {
-      'name': 'Romania',
-      'nativeName': 'România',
-      'tld': '.ro',
-      'cca2': 'RO',
-      'ccn3': '642',
-      'cca3': 'ROU',
-      'currency': 'RON',
-      'callingCode': '40',
-      'capital': 'Bucharest',
-      'altSpellings': ['RO', 'Rumania', 'Roumania', 'România'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Romanian',
-      'population': 20121641,
-      'latlng': [46, 25],
-      'demonym': 'Romanian'
-    }, {
-      'name': 'Russia',
-      'nativeName': 'Россия',
-      'tld': '.ru',
-      'cca2': 'RU',
-      'ccn3': '643',
-      'cca3': 'RUS',
-      'currency': 'RUB',
-      'callingCode': '7',
-      'capital': 'Moscow',
-      'altSpellings': ['RU', 'Rossiya', 'Russian Federation', 'Российская Федерация', 'Rossiyskaya Federatsiya'],
-      'relevance': '2.5',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Russian',
-      'population': 143500000,
-      'latlng': [60, 100],
-      'demonym': 'Russian'
-    }, {
-      'name': 'Rwanda',
-      'nativeName': 'Rwanda',
-      'tld': '.rw',
-      'cca2': 'RW',
-      'ccn3': '646',
-      'cca3': 'RWA',
-      'currency': 'RWF',
-      'callingCode': '250',
-      'capital': 'Kigali',
-      'altSpellings': ['RW', 'Republic of Rwanda', 'Repubulika y\'u Rwanda', 'République du Rwanda'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Kinyarwanda', 'French', 'English'],
-      'population': 10537222,
-      'latlng': [-2, 30],
-      'demonym': 'Rwandan'
-    }, {
-      'name': 'Saint Barthélemy',
-      'nativeName': 'Saint-Barthélemy',
-      'tld': '.bl',
-      'cca2': 'BL',
-      'ccn3': '652',
-      'cca3': 'BLM',
-      'currency': 'EUR',
-      'callingCode': '590',
-      'capital': 'Gustavia',
-      'altSpellings': ['BL', 'St. Barthelemy', 'Collectivity of Saint Barthélemy', 'Collectivité de Saint-Barthélemy'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'French',
-      'population': 8938,
-      'latlng': [18.5, -63.41666666],
-      'demonym': 'Saint Barthélemy Islander'
-    }, {
-      'name': 'Saint Helena',
-      'nativeName': 'Saint Helena',
-      'tld': '.sh',
-      'cca2': 'SH',
-      'ccn3': '654',
-      'cca3': 'SHN',
-      'currency': 'SHP',
-      'callingCode': '290',
-      'capital': 'Jamestown',
-      'altSpellings': 'SH',
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'latlng': [-15.95, -5.7],
-      'demonym': 'Saint Helenian'
-    }, {
-      'name': 'Saint Kitts and Nevis',
-      'nativeName': 'Saint Kitts and Nevis',
-      'tld': '.kn',
-      'cca2': 'KN',
-      'ccn3': '659',
-      'cca3': 'KNA',
-      'currency': 'XCD',
-      'callingCode': '1869',
-      'capital': 'Basseterre',
-      'altSpellings': ['KN', 'Federation of Saint Christopher and Nevis'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 54000,
-      'latlng': [17.33333333, -62.75],
-      'demonym': 'Kittian and Nevisian'
-    }, {
-      'name': 'Saint Lucia',
-      'nativeName': 'Saint Lucia',
-      'tld': '.lc',
-      'cca2': 'LC',
-      'ccn3': '662',
-      'cca3': 'LCA',
-      'currency': 'XCD',
-      'callingCode': '1758',
-      'capital': 'Castries',
-      'altSpellings': 'LC',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 166526,
-      'latlng': [13.88333333, -60.96666666],
-      'demonym': 'Saint Lucian'
-    }, {
-      'name': 'Saint Martin',
-      'nativeName': 'Saint-Martin',
-      'tld': ['.mf', '.fr', '.gp'],
-      'cca2': 'MF',
-      'ccn3': '663',
-      'cca3': 'MAF',
-      'currency': 'EUR',
-      'callingCode': '590',
-      'capital': 'Marigot',
-      'altSpellings': ['MF', 'Collectivity of Saint Martin', 'Collectivité de Saint-Martin'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'French',
-      'latlng': [18.08333333, -63.95],
-      'demonym': 'Saint Martin Islander'
-    }, {
-      'name': 'Saint Pierre and Miquelon',
-      'nativeName': 'Saint-Pierre-et-Miquelon',
-      'tld': '.pm',
-      'cca2': 'PM',
-      'ccn3': '666',
-      'cca3': 'SPM',
-      'currency': 'EUR',
-      'callingCode': '508',
-      'capital': 'Saint-Pierre',
-      'altSpellings': ['PM', 'Collectivité territoriale de Saint-Pierre-et-Miquelon'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': 'French',
-      'population': 6081,
-      'latlng': [46.83333333, -56.33333333],
-      'demonym': 'French'
-    }, {
-      'name': 'Saint Vincent and the Grenadines',
-      'nativeName': 'Saint Vincent and the Grenadines',
-      'tld': '.vc',
-      'cca2': 'VC',
-      'ccn3': '670',
-      'cca3': 'VCT',
-      'currency': 'XCD',
-      'callingCode': '1784',
-      'capital': 'Kingstown',
-      'altSpellings': 'VC',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 109000,
-      'latlng': [13.25, -61.2],
-      'demonym': 'Saint Vincentian'
-    }, {
-      'name': 'Samoa',
-      'nativeName': 'Samoa',
-      'tld': '.ws',
-      'cca2': 'WS',
-      'ccn3': '882',
-      'cca3': 'WSM',
-      'currency': 'WST',
-      'callingCode': '685',
-      'capital': 'Apia',
-      'altSpellings': ['WS', 'Independent State of Samoa', 'Malo Saʻoloto Tutoʻatasi o Sāmoa'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['Samoan', 'English'],
-      'population': 187820,
-      'latlng': [-13.58333333, -172.33333333],
-      'demonym': 'Samoan'
-    }, {
-      'name': 'San Marino',
-      'nativeName': 'San Marino',
-      'tld': '.sm',
-      'cca2': 'SM',
-      'ccn3': '674',
-      'cca3': 'SMR',
-      'currency': 'EUR',
-      'callingCode': '378',
-      'capital': 'City of San Marino',
-      'altSpellings': ['SM', 'Republic of San Marino', 'Repubblica di San Marino'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Italian',
-      'population': 32509,
-      'latlng': [43.76666666, 12.41666666],
-      'demonym': 'Sammarinese'
-    }, {
-      'name': 'São Tomé and Príncipe',
-      'nativeName': 'São Tomé e Príncipe',
-      'tld': '.st',
-      'cca2': 'ST',
-      'ccn3': '678',
-      'cca3': 'STP',
-      'currency': 'STD',
-      'callingCode': '239',
-      'capital': 'São Tomé',
-      'altSpellings': ['ST', 'Democratic Republic of São Tomé and Príncipe', 'República Democrática de São Tomé e Príncipe'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'Portuguese',
-      'population': 187356,
-      'latlng': [1, 7],
-      'demonym': 'Sao Tomean'
-    }, {
-      'name': 'Saudi Arabia',
-      'nativeName': 'as-Su‘ūdiyyah',
-      'tld': '.sa',
-      'cca2': 'SA',
-      'ccn3': '682',
-      'cca3': 'SAU',
-      'currency': 'SAR',
-      'callingCode': '966',
-      'capital': 'Riyadh',
-      'altSpellings': ['SA', 'Kingdom of Saudi Arabia', 'Al-Mamlakah al-‘Arabiyyah as-Su‘ūdiyyah'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 29994272,
-      'latlng': [25, 45],
-      'demonym': 'Saudi Arabian'
-    }, {
-      'name': 'Senegal',
-      'nativeName': 'Sénégal',
-      'tld': '.sn',
-      'cca2': 'SN',
-      'ccn3': '686',
-      'cca3': 'SEN',
-      'currency': 'XOF',
-      'callingCode': '221',
-      'capital': 'Dakar',
-      'altSpellings': ['SN', 'Republic of Senegal', 'République du Sénégal'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 13567338,
-      'latlng': [14, -14],
-      'demonym': 'Senegalese'
-    }, {
-      'name': 'Serbia',
-      'nativeName': 'Србија',
-      'tld': '.rs',
-      'cca2': 'RS',
-      'ccn3': '688',
-      'cca3': 'SRB',
-      'currency': 'RSD',
-      'callingCode': '381',
-      'capital': 'Belgrade',
-      'altSpellings': ['RS', 'Srbija', 'Republic of Serbia', 'Република Србија', 'Republika Srbija'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Serbian',
-      'population': 7181505,
-      'latlng': [44, 21],
-      'demonym': 'Serbian'
-    }, {
-      'name': 'Seychelles',
-      'nativeName': 'Seychelles',
-      'tld': '.sc',
-      'cca2': 'SC',
-      'ccn3': '690',
-      'cca3': 'SYC',
-      'currency': 'SCR',
-      'callingCode': '248',
-      'capital': 'Victoria',
-      'altSpellings': ['SC', 'Republic of Seychelles', 'Repiblik Sesel', 'République des Seychelles'],
-      'relevance': '0.5',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['French', 'English', 'Seychellois Creole'],
-      'population': 90945,
-      'latlng': [-4.58333333, 55.66666666],
-      'demonym': 'Seychellois'
-    }, {
-      'name': 'Sierra Leone',
-      'nativeName': 'Sierra Leone',
-      'tld': '.sl',
-      'cca2': 'SL',
-      'ccn3': '694',
-      'cca3': 'SLE',
-      'currency': 'SLL',
-      'callingCode': '232',
-      'capital': 'Freetown',
-      'altSpellings': ['SL', 'Republic of Sierra Leone'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'English',
-      'population': 6190280,
-      'latlng': [8.5, -11.5],
-      'demonym': 'Sierra Leonean'
-    }, {
-      'name': 'Singapore',
-      'nativeName': 'Singapore',
-      'tld': '.sg',
-      'cca2': 'SG',
-      'ccn3': '702',
-      'cca3': 'SGP',
-      'currency': 'SGD',
-      'callingCode': '65',
-      'capital': 'Singapore',
-      'altSpellings': ['SG', 'Singapura', 'Republik Singapura', '新加坡共和国'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': ['English', 'Malay', 'Mandarin', 'Tamil'],
-      'population': 5399200,
-      'latlng': [1.36666666, 103.8],
-      'demonym': 'Singaporean'
-    }, {
-      'name': 'Sint Maarten',
-      'nativeName': 'Sint Maarten',
-      'tld': '.sx',
-      'cca2': 'SX',
-      'ccn3': '534',
-      'cca3': 'SXM',
-      'currency': 'ANG',
-      'callingCode': '1721',
-      'capital': 'Philipsburg',
-      'altSpellings': 'SX',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': ['Dutch', 'English'],
-      'population': 37429,
-      'latlng': [18.033333, -63.05],
-      'demonym': 'Dutch'
-    }, {
-      'name': 'Slovakia',
-      'nativeName': 'Slovensko',
-      'tld': '.sk',
-      'cca2': 'SK',
-      'ccn3': '703',
-      'cca3': 'SVK',
-      'currency': 'EUR',
-      'callingCode': '421',
-      'capital': 'Bratislava',
-      'altSpellings': ['SK', 'Slovak Republic', 'Slovenská republika'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Slovak',
-      'population': 5412008,
-      'latlng': [48.66666666, 19.5],
-      'demonym': 'Slovak'
-    }, {
-      'name': 'Slovenia',
-      'nativeName': 'Slovenija',
-      'tld': '.si',
-      'cca2': 'SI',
-      'ccn3': '705',
-      'cca3': 'SVN',
-      'currency': 'EUR',
-      'callingCode': '386',
-      'capital': 'Ljubljana',
-      'altSpellings': ['SI', 'Republic of Slovenia', 'Republika Slovenija'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Slovene',
-      'population': 2061405,
-      'latlng': [46.11666666, 14.81666666],
-      'demonym': 'Slovene'
-    }, {
-      'name': 'Solomon Islands',
-      'nativeName': 'Solomon Islands',
-      'tld': '.sb',
-      'cca2': 'SB',
-      'ccn3': '090',
-      'cca3': 'SLB',
-      'currency': 'SDB',
-      'callingCode': '677',
-      'capital': 'Honiara',
-      'altSpellings': 'SB',
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Melanesia',
-      'language': 'English',
-      'population': 561000,
-      'latlng': [-8, 159],
-      'demonym': 'Solomon Islander'
-    }, {
-      'name': 'Somalia',
-      'nativeName': 'Soomaaliya',
-      'tld': '.so',
-      'cca2': 'SO',
-      'ccn3': '706',
-      'cca3': 'SOM',
-      'currency': 'SOS',
-      'callingCode': '252',
-      'capital': 'Mogadishu',
-      'altSpellings': ['SO', 'aṣ-Ṣūmāl', 'Federal Republic of Somalia', 'Jamhuuriyadda Federaalka Soomaaliya', 'Jumhūriyyat aṣ-Ṣūmāl al-Fiderāliyya'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Somali', 'Arabic'],
-      'population': 10496000,
-      'latlng': [10, 49],
-      'demonym': 'Somali'
-    }, {
-      'name': 'South Africa',
-      'nativeName': 'South Africa',
-      'tld': '.za',
-      'cca2': 'ZA',
-      'ccn3': '710',
-      'cca3': 'ZAF',
-      'currency': 'ZAR',
-      'callingCode': '27',
-      'capital': 'Cape Town',
-      'altSpellings': ['ZA', 'RSA', 'Suid-Afrika', 'Republic of South Africa'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Southern Africa',
-      'language': ['Afrikaans', 'English', 'Southern Ndebele', 'Northern Sotho', 'Southern Sotho', 'Swazi', 'Tsonga', 'Tswana', 'Venda', 'Xhosa', 'Zulu'],
-      'population': 52981991,
-      'latlng': [-29, 24],
-      'demonym': 'South African'
-    }, {
-      'name': 'South Georgia',
-      'nativeName': 'South Georgia',
-      'tld': '.gs',
-      'cca2': 'GS',
-      'ccn3': '239',
-      'cca3': 'SGS',
-      'currency': 'GBP',
-      'callingCode': '500',
-      'capital': 'King Edward Point',
-      'altSpellings': ['GS', 'South Georgia and the South Sandwich Islands'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'English',
-      'latlng': [-54.5, -37],
-      'demonym': 'South Georgia and the South Sandwich Islander'
-    }, {
-      'name': 'South Korea',
-      'nativeName': '대한민국',
-      'tld': '.kr',
-      'cca2': 'KR',
-      'ccn3': '410',
-      'cca3': 'KOR',
-      'currency': 'KRW',
-      'callingCode': '82',
-      'capital': 'Seoul',
-      'altSpellings': ['KR', 'Republic of Korea'],
-      'relevance': '1.5',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Korean',
-      'population': 50219669,
-      'latlng': [37, 127.5],
-      'demonym': 'South Korean'
-    }, {
-      'name': 'South Sudan',
-      'nativeName': 'South Sudan',
-      'tld': '.ss',
-      'cca2': 'SS',
-      'ccn3': '728',
-      'cca3': 'SSD',
-      'currency': 'SSP',
-      'callingCode': '211',
-      'capital': 'Juba',
-      'altSpellings': 'SS',
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Middle Africa',
-      'language': 'English',
-      'population': 11296000,
-      'latlng': [7, 30],
-      'demonym': 'South Sudanese'
-    }, {
-      'name': 'Spain',
-      'nativeName': 'España',
-      'tld': '.es',
-      'cca2': 'ES',
-      'ccn3': '724',
-      'cca3': 'ESP',
-      'currency': 'EUR',
-      'callingCode': '34',
-      'capital': 'Madrid',
-      'altSpellings': ['ES', 'Kingdom of Spain', 'Reino de España'],
-      'relevance': '2',
-      'region': 'Europe',
-      'subregion': 'Southern Europe',
-      'language': 'Spanish',
-      'population': 46704314,
-      'latlng': [40, -4],
-      'demonym': 'Spanish'
-    }, {
-      'name': 'Sri Lanka',
-      'nativeName': 'śrī laṃkāva',
-      'tld': '.lk',
-      'cca2': 'LK',
-      'ccn3': '144',
-      'cca3': 'LKA',
-      'currency': 'LKR',
-      'callingCode': '94',
-      'capital': 'Colombo',
-      'altSpellings': ['LK', 'ilaṅkai', 'Democratic Socialist Republic of Sri Lanka'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Southern Asia',
-      'language': ['Sinhala', 'Tamil'],
-      'population': 20277597,
-      'latlng': [7, 81],
-      'demonym': 'Sri Lankan'
-    }, {
-      'name': 'Sudan',
-      'nativeName': 'as-Sūdān',
-      'tld': '.sd',
-      'cca2': 'SD',
-      'ccn3': '729',
-      'cca3': 'SDN',
-      'currency': 'SDG',
-      'callingCode': '249',
-      'capital': 'Khartoum',
-      'altSpellings': ['SD', 'Republic of the Sudan', 'Jumhūrīyat as-Sūdān'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': ['Arabic', 'English'],
-      'population': 37964000,
-      'latlng': [15, 30],
-      'demonym': 'Sudanese'
-    }, {
-      'name': 'Suriname',
-      'nativeName': 'Suriname',
-      'tld': '.sr',
-      'cca2': 'SR',
-      'ccn3': '740',
-      'cca3': 'SUR',
-      'currency': 'SRD',
-      'callingCode': '597',
-      'capital': 'Paramaribo',
-      'altSpellings': ['SR', 'Sarnam', 'Sranangron', 'Republic of Suriname', 'Republiek Suriname'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Dutch',
-      'population': 534189,
-      'latlng': [4, -56],
-      'demonym': 'Surinamer'
-    }, {
-      'name': 'Svalbard and Jan Mayen',
-      'nativeName': 'Svalbard og Jan Mayen',
-      'tld': '.sj',
-      'cca2': 'SJ',
-      'ccn3': '744',
-      'cca3': 'SJM',
-      'currency': 'NOK',
-      'callingCode': '4779',
-      'capital': 'Longyearbyen',
-      'altSpellings': ['SJ', 'Svalbard and Jan Mayen Islands'],
-      'relevance': '0.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Norwegian',
-      'population': 2655,
-      'latlng': [78, 20],
-      'demonym': 'Norwegian'
-    }, {
-      'name': 'Swaziland',
-      'nativeName': 'Swaziland',
-      'tld': '.sz',
-      'cca2': 'SZ',
-      'ccn3': '748',
-      'cca3': 'SWZ',
-      'currency': 'SZL',
-      'callingCode': '268',
-      'capital': 'Lobamba',
-      'altSpellings': ['SZ', 'weSwatini', 'Swatini', 'Ngwane', 'Kingdom of Swaziland', 'Umbuso waseSwatini'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Southern Africa',
-      'language': ['Swazi', 'English'],
-      'population': 1250000,
-      'latlng': [-26.5, 31.5],
-      'demonym': 'Swazi'
-    }, {
-      'name': 'Sweden',
-      'nativeName': 'Sverige',
-      'tld': '.se',
-      'cca2': 'SE',
-      'ccn3': '752',
-      'cca3': 'SWE',
-      'currency': 'SEK',
-      'callingCode': '46',
-      'capital': 'Stockholm',
-      'altSpellings': ['SE', 'Kingdom of Sweden', 'Konungariket Sverige'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'Swedish',
-      'population': 9625444,
-      'latlng': [62, 15],
-      'demonym': 'Swedish'
-    }, {
-      'name': 'Switzerland',
-      'nativeName': 'Schweiz',
-      'tld': '.ch',
-      'cca2': 'CH',
-      'ccn3': '756',
-      'cca3': 'CHE',
-      'currency': ['CHE', 'CHF', 'CHW'],
-      'callingCode': '41',
-      'capital': 'Bern',
-      'altSpellings': ['CH', 'Swiss Confederation', 'Schweiz', 'Suisse', 'Svizzera', 'Svizra'],
-      'relevance': '1.5',
-      'region': 'Europe',
-      'subregion': 'Western Europe',
-      'language': ['German', 'French', 'Italian', 'Romansh'],
-      'population': 8085300,
-      'latlng': [47, 8],
-      'demonym': 'Swiss'
-    }, {
-      'name': 'Syria',
-      'nativeName': 'Sūriyā',
-      'tld': '.sy',
-      'cca2': 'SY',
-      'ccn3': '760',
-      'cca3': 'SYR',
-      'currency': 'SYP',
-      'callingCode': '963',
-      'capital': 'Damascus',
-      'altSpellings': ['SY', 'Syrian Arab Republic', 'Al-Jumhūrīyah Al-ʻArabīyah As-Sūrīyah'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 21898000,
-      'latlng': [35, 38],
-      'demonym': 'Syrian'
-    }, {
-      'name': 'Taiwan',
-      'nativeName': '臺灣',
-      'tld': '.tw',
-      'cca2': 'TW',
-      'ccn3': '158',
-      'cca3': 'TWN',
-      'currency': 'TWD',
-      'callingCode': '886',
-      'capital': 'Taipei',
-      'altSpellings': ['TW', 'Táiwān', 'Republic of China', '中華民國', 'Zhōnghuá Mínguó'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Eastern Asia',
-      'language': 'Standard Chinese',
-      'population': 23361147,
-      'latlng': [23.5, 121],
-      'demonym': 'Taiwanese'
-    }, {
-      'name': 'Tajikistan',
-      'nativeName': 'Тоҷикистон',
-      'tld': '.tj',
-      'cca2': 'TJ',
-      'ccn3': '762',
-      'cca3': 'TJK',
-      'currency': 'TJS',
-      'callingCode': '992',
-      'capital': 'Dushanbe',
-      'altSpellings': ['TJ', 'Toçikiston', 'Republic of Tajikistan', 'Ҷумҳурии Тоҷикистон', 'Çumhuriyi Toçikiston'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Central Asia',
-      'language': 'Tajik',
-      'population': 8000000,
-      'latlng': [39, 71],
-      'demonym': 'Tadzhik'
-    }, {
-      'name': 'Tanzania',
-      'nativeName': 'Tanzania',
-      'tld': '.tz',
-      'cca2': 'TZ',
-      'ccn3': '834',
-      'cca3': 'TZA',
-      'currency': 'TZS',
-      'callingCode': '255',
-      'capital': 'Dodoma',
-      'altSpellings': ['TZ', 'United Republic of Tanzania', 'Jamhuri ya Muungano wa Tanzania'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Swahili', 'English'],
-      'population': 44928923,
-      'latlng': [-6, 35],
-      'demonym': 'Tanzanian'
-    }, {
-      'name': 'Thailand',
-      'nativeName': 'ประเทศไทย',
-      'tld': '.th',
-      'cca2': 'TH',
-      'ccn3': '764',
-      'cca3': 'THA',
-      'currency': 'THB',
-      'callingCode': '66',
-      'capital': 'Bangkok',
-      'altSpellings': ['TH', 'Prathet', 'Thai', 'Kingdom of Thailand', 'ราชอาณาจักรไทย', 'Ratcha Anachak Thai'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Thai',
-      'population': 65926261,
-      'latlng': [15, 100],
-      'demonym': 'Thai'
-    }, {
-      'name': 'Timor-Leste',
-      'nativeName': 'Timor-Leste',
-      'tld': '.tl',
-      'cca2': 'TL',
-      'ccn3': '626',
-      'cca3': 'TLS',
-      'currency': 'USD',
-      'callingCode': '670',
-      'capital': 'Dili',
-      'altSpellings': ['TL', 'East Timor', 'Democratic Republic of Timor-Leste', 'República Democrática de Timor-Leste', 'Repúblika Demokrátika Timór-Leste'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': ['Portuguese', 'Tetum'],
-      'latlng': [-8.83333333, 125.91666666],
-      'demonym': 'East Timorese'
-    }, {
-      'name': 'Togo',
-      'nativeName': 'Togo',
-      'tld': '.tg',
-      'cca2': 'TG',
-      'ccn3': '768',
-      'cca3': 'TGO',
-      'currency': 'XOF',
-      'callingCode': '228',
-      'capital': 'Lomé',
-      'altSpellings': ['TG', 'Togolese', 'Togolese Republic', 'République Togolaise'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Western Africa',
-      'language': 'French',
-      'population': 6191155,
-      'latlng': [8, 1.16666666],
-      'demonym': 'Togolese'
-    }, {
-      'name': 'Tokelau',
-      'nativeName': 'Tokelau',
-      'tld': '.tk',
-      'cca2': 'TK',
-      'ccn3': '772',
-      'cca3': 'TKL',
-      'currency': 'NZD',
-      'callingCode': '690',
-      'capital': 'Fakaofo',
-      'altSpellings': 'TK',
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['Tokelauan', 'English', 'Samoan'],
-      'population': 1411,
-      'latlng': [-9, -172],
-      'demonym': 'Tokelauan'
-    }, {
-      'name': 'Tonga',
-      'nativeName': 'Tonga',
-      'tld': '.to',
-      'cca2': 'TO',
-      'ccn3': '776',
-      'cca3': 'TON',
-      'currency': 'TOP',
-      'callingCode': '676',
-      'capital': 'Nuku\'alofa',
-      'altSpellings': 'TO',
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['Tongan', 'English'],
-      'population': 103036,
-      'latlng': [-20, -175],
-      'demonym': 'Tongan'
-    }, {
-      'name': 'Trinidad and Tobago',
-      'nativeName': 'Trinidad and Tobago',
-      'tld': '.tt',
-      'cca2': 'TT',
-      'ccn3': '780',
-      'cca3': 'TTO',
-      'currency': 'TTD',
-      'callingCode': '1868',
-      'capital': 'Port of Spain',
-      'altSpellings': ['TT', 'Republic of Trinidad and Tobago'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 1328019,
-      'latlng': [11, -61],
-      'demonym': 'Trinidadian'
-    }, {
-      'name': 'Tunisia',
-      'nativeName': 'Tūnis',
-      'tld': '.tn',
-      'cca2': 'TN',
-      'ccn3': '788',
-      'cca3': 'TUN',
-      'currency': 'TND',
-      'callingCode': '216',
-      'capital': 'Tunis',
-      'altSpellings': ['TN', 'Republic of Tunisia', 'al-Jumhūriyyah at-Tūnisiyyah'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': 'Arabic',
-      'population': 10833431,
-      'latlng': [34, 9],
-      'demonym': 'Tunisian'
-    }, {
-      'name': 'Turkey',
-      'nativeName': 'Türkiye',
-      'tld': '.tr',
-      'cca2': 'TR',
-      'ccn3': '792',
-      'cca3': 'TUR',
-      'currency': 'TRY',
-      'callingCode': '90',
-      'capital': 'Ankara',
-      'altSpellings': ['TR', 'Turkiye', 'Republic of Turkey', 'Türkiye Cumhuriyeti'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Turkish',
-      'population': 75627384,
-      'latlng': [39, 35],
-      'demonym': 'Turkish'
-    }, {
-      'name': 'Turkmenistan',
-      'nativeName': 'Türkmenistan',
-      'tld': '.tm',
-      'cca2': 'TM',
-      'ccn3': '795',
-      'cca3': 'TKM',
-      'currency': 'TMT',
-      'callingCode': '993',
-      'capital': 'Ashgabat',
-      'altSpellings': 'TM',
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Central Asia',
-      'language': 'Turkmen',
-      'population': 5240000,
-      'latlng': [40, 60],
-      'demonym': 'Turkmen'
-    }, {
-      'name': 'Turks and Caicos Islands',
-      'nativeName': 'Turks and Caicos Islands',
-      'tld': '.tc',
-      'cca2': 'TC',
-      'ccn3': '796',
-      'cca3': 'TCA',
-      'currency': 'USD',
-      'callingCode': '1649',
-      'capital': 'Cockburn Town',
-      'altSpellings': 'TC',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 31458,
-      'latlng': [21.75, -71.58333333],
-      'demonym': 'Turks and Caicos Islander'
-    }, {
-      'name': 'Tuvalu',
-      'nativeName': 'Tuvalu',
-      'tld': '.tv',
-      'cca2': 'TV',
-      'ccn3': '798',
-      'cca3': 'TUV',
-      'currency': 'AUD',
-      'callingCode': '688',
-      'capital': 'Funafuti',
-      'altSpellings': 'TV',
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': ['Tuvaluan', 'English'],
-      'population': 11323,
-      'latlng': [-8, 178],
-      'demonym': 'Tuvaluan'
-    }, {
-      'name': 'Uganda',
-      'nativeName': 'Uganda',
-      'tld': '.ug',
-      'cca2': 'UG',
-      'ccn3': '800',
-      'cca3': 'UGA',
-      'currency': 'UGX',
-      'callingCode': '256',
-      'capital': 'Kampala',
-      'altSpellings': ['UG', 'Republic of Uganda', 'Jamhuri ya Uganda'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['English', 'Swahili'],
-      'population': 35357000,
-      'latlng': [1, 32],
-      'demonym': 'Ugandan'
-    }, {
-      'name': 'Ukraine',
-      'nativeName': 'Україна',
-      'tld': '.ua',
-      'cca2': 'UA',
-      'ccn3': '804',
-      'cca3': 'UKR',
-      'currency': 'UAH',
-      'callingCode': '380',
-      'capital': 'Kiev',
-      'altSpellings': ['UA', 'Ukrayina'],
-      'relevance': '0',
-      'region': 'Europe',
-      'subregion': 'Eastern Europe',
-      'language': 'Ukrainian',
-      'population': 45461627,
-      'latlng': [49, 32],
-      'demonym': 'Ukrainian'
-    }, {
-      'name': 'United Arab Emirates',
-      'nativeName': 'Dawlat al-ʾImārāt al-ʿArabiyyah al-Muttaḥidah',
-      'tld': '.ae',
-      'cca2': 'AE',
-      'ccn3': '784',
-      'cca3': 'ARE',
-      'currency': 'AED',
-      'callingCode': '971',
-      'capital': 'Abu Dhabi',
-      'altSpellings': ['AE', 'UAE'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 8264070,
-      'latlng': [24, 54],
-      'demonym': 'Emirian'
-    }, {
-      'name': 'United Kingdom',
-      'nativeName': 'United Kingdom',
-      'tld': '.uk',
-      'cca2': 'GB',
-      'ccn3': '826',
-      'cca3': 'GBR',
-      'currency': 'GBP',
-      'callingCode': '44',
-      'capital': 'London',
-      'altSpellings': ['GB', 'UK', 'Great Britain'],
-      'relevance': '2.5',
-      'region': 'Europe',
-      'subregion': 'Northern Europe',
-      'language': 'English',
-      'population': 63705000,
-      'latlng': [54, -2],
-      'demonym': 'British'
-    }, {
-      'name': 'United States',
-      'nativeName': 'United States',
-      'tld': '.us',
-      'cca2': 'US',
-      'ccn3': '840',
-      'cca3': 'USA',
-      'currency': ['USD', 'USN', 'USS'],
-      'callingCode': '1',
-      'capital': 'Washington D.C.',
-      'altSpellings': ['US', 'USA', 'United States of America', 'America'],
-      'relevance': '3.5',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': 'English',
-      'population': 317101000,
-      'latlng': [38, -97],
-      'demonym': 'American'
-    }, {
-      'name': 'United States Minor Outlying Islands',
-      'nativeName': 'United States Minor Outlying Islands',
-      'tld': '.us',
-      'cca2': 'UM',
-      'ccn3': '581',
-      'cca3': 'UMI',
-      'currency': 'USD',
-      'callingCode': '',
-      'capital': '',
-      'altSpellings': 'UM',
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'Northern America',
-      'language': 'English',
-      'latlng': [],
-      'demonym': 'American'
-    }, {
-      'name': 'United States Virgin Islands',
-      'nativeName': 'United States Virgin Islands',
-      'tld': '.vi',
-      'cca2': 'VI',
-      'ccn3': '850',
-      'cca3': 'VIR',
-      'currency': 'USD',
-      'callingCode': '1340',
-      'capital': 'Charlotte Amalie',
-      'altSpellings': 'VI',
-      'relevance': '0.5',
-      'region': 'Americas',
-      'subregion': 'Caribbean',
-      'language': 'English',
-      'population': 106405,
-      'latlng': [18.35, -64.933333],
-      'demonym': 'Virgin Islander'
-    }, {
-      'name': 'Uruguay',
-      'nativeName': 'Uruguay',
-      'tld': '.uy',
-      'cca2': 'UY',
-      'ccn3': '858',
-      'cca3': 'URY',
-      'currency': ['UYI', 'UYU'],
-      'callingCode': '598',
-      'capital': 'Montevideo',
-      'altSpellings': ['UY', 'Oriental Republic of Uruguay', 'República Oriental del Uruguay'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 3286314,
-      'latlng': [-33, -56],
-      'demonym': 'Uruguayan'
-    }, {
-      'name': 'Uzbekistan',
-      'nativeName': 'O‘zbekiston',
-      'tld': '.uz',
-      'cca2': 'UZ',
-      'ccn3': '860',
-      'cca3': 'UZB',
-      'currency': 'UZS',
-      'callingCode': '998',
-      'capital': 'Tashkent',
-      'altSpellings': ['UZ', 'Republic of Uzbekistan', 'O‘zbekiston Respublikasi', 'Ўзбекистон Республикаси'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Central Asia',
-      'language': 'Uzbek',
-      'population': 30183400,
-      'latlng': [41, 64],
-      'demonym': 'Uzbekistani'
-    }, {
-      'name': 'Vanuatu',
-      'nativeName': 'Vanuatu',
-      'tld': '.vu',
-      'cca2': 'VU',
-      'ccn3': '548',
-      'cca3': 'VUT',
-      'currency': 'VUV',
-      'callingCode': '678',
-      'capital': 'Port Vila',
-      'altSpellings': ['VU', 'Republic of Vanuatu', 'Ripablik blong Vanuatu', 'République de Vanuatu'],
-      'relevance': '0',
-      'region': 'Oceania',
-      'subregion': 'Melanesia',
-      'language': ['Bislama', 'French', 'English'],
-      'population': 264652,
-      'latlng': [-16, 167],
-      'demonym': 'Ni-Vanuatu'
-    }, {
-      'name': 'Venezuela',
-      'nativeName': 'Venezuela',
-      'tld': '.ve',
-      'cca2': 'VE',
-      'ccn3': '862',
-      'cca3': 'VEN',
-      'currency': 'VEF',
-      'callingCode': '58',
-      'capital': 'Caracas',
-      'altSpellings': ['VE', 'Bolivarian Republic of Venezuela', 'República Bolivariana de Venezuela'],
-      'relevance': '0',
-      'region': 'Americas',
-      'subregion': 'South America',
-      'language': 'Spanish',
-      'population': 28946101,
-      'latlng': [8, -66],
-      'demonym': 'Venezuelan'
-    }, {
-      'name': 'Vietnam',
-      'nativeName': 'Việt Nam',
-      'tld': '.vn',
-      'cca2': 'VN',
-      'ccn3': '704',
-      'cca3': 'VNM',
-      'currency': 'VND',
-      'callingCode': '84',
-      'capital': 'Hanoi',
-      'altSpellings': ['VN', 'Socialist Republic of Vietnam', 'Cộng hòa Xã hội chủ nghĩa Việt Nam'],
-      'relevance': '1.5',
-      'region': 'Asia',
-      'subregion': 'South-Eastern Asia',
-      'language': 'Vietnamese',
-      'population': 90388000,
-      'latlng': [16.16666666, 107.83333333],
-      'demonym': 'Vietnamese'
-    }, {
-      'name': 'Wallis and Futuna',
-      'nativeName': 'Wallis et Futuna',
-      'tld': '.wf',
-      'cca2': 'WF',
-      'ccn3': '876',
-      'cca3': 'WLF',
-      'currency': 'XPF',
-      'callingCode': '681',
-      'capital': 'Mata-Utu',
-      'altSpellings': ['WF', 'Territory of the Wallis and Futuna Islands', 'Territoire des îles Wallis et Futuna'],
-      'relevance': '0.5',
-      'region': 'Oceania',
-      'subregion': 'Polynesia',
-      'language': 'French',
-      'population': 13135,
-      'latlng': [-13.3, -176.2],
-      'demonym': 'Wallis and Futuna Islander'
-    }, {
-      'name': 'Western Sahara',
-      'nativeName': 'Aṣ-Ṣaḥrā’ al-Ġarbiyya',
-      'tld': '.eh',
-      'cca2': 'EH',
-      'ccn3': '732',
-      'cca3': 'ESH',
-      'currency': ['MAD', 'DZD', 'MRO'],
-      'callingCode': '212',
-      'capital': 'El Aaiún',
-      'altSpellings': ['EH', 'Taneẓroft Tutrimt'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Northern Africa',
-      'language': ['Berber', 'Hassaniya'],
-      'population': 567000,
-      'latlng': [24.5, -13],
-      'demonym': 'Sahrawi'
-    }, {
-      'name': 'Yemen',
-      'nativeName': 'al-Yaman',
-      'tld': '.ye',
-      'cca2': 'YE',
-      'ccn3': '887',
-      'cca3': 'YEM',
-      'currency': 'YER',
-      'callingCode': '967',
-      'capital': 'Sana\'a',
-      'altSpellings': ['YE', 'Yemeni Republic', 'al-Jumhūriyyah al-Yamaniyyah'],
-      'relevance': '0',
-      'region': 'Asia',
-      'subregion': 'Western Asia',
-      'language': 'Arabic',
-      'population': 24527000,
-      'latlng': [15, 48],
-      'demonym': 'Yemeni'
-    }, {
-      'name': 'Zambia',
-      'nativeName': 'Zambia',
-      'tld': '.zm',
-      'cca2': 'ZM',
-      'ccn3': '894',
-      'cca3': 'ZMB',
-      'currency': 'ZMK',
-      'callingCode': '260',
-      'capital': 'Lusaka',
-      'altSpellings': ['ZM', 'Republic of Zambia'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': 'English',
-      'population': 13092666,
-      'latlng': [-15, 30],
-      'demonym': 'Zambian'
-    }, {
-      'name': 'Zimbabwe',
-      'nativeName': 'Zimbabwe',
-      'tld': '.zw',
-      'cca2': 'ZW',
-      'ccn3': '716',
-      'cca3': 'ZWE',
-      'currency': 'ZWL',
-      'callingCode': '263',
-      'capital': 'Harare',
-      'altSpellings': ['ZW', 'Republic of Zimbabwe'],
-      'relevance': '0',
-      'region': 'Africa',
-      'subregion': 'Eastern Africa',
-      'language': ['Chewa', 'Chibarwe', 'English', 'Kalanga', 'Koisan', 'Nambya', 'Ndau', 'Ndebele', 'Shangani', 'Shona', 'Zimbabwean sign language', 'Sotho', 'Tonga', 'Tswana', 'Venda', 'Xhosa'],
-      'population': 12973808,
-      'latlng': [-20, 30],
-      'demonym': 'Zimbabwean'
+      "name": "Afghanistan",
+      "cca2": "AF",
+      "callingCode": "93",
+      "altSpellings": [
+        "AF",
+        "Afġānistān"
+      ]
+    },
+    {
+      "name": "Åland Islands",
+      "cca2": "AX",
+      "callingCode": "358",
+      "altSpellings": [
+        "AX",
+        "Aaland",
+        "Aland",
+        "Ahvenanmaa"
+      ]
+    },
+    {
+      "name": "Albania",
+      "cca2": "AL",
+      "callingCode": "355",
+      "altSpellings": [
+        "AL",
+        "Shqipëri",
+        "Shqipëria",
+        "Shqipnia"
+      ]
+    },
+    {
+      "name": "Algeria",
+      "cca2": "DZ",
+      "callingCode": "213",
+      "altSpellings": [
+        "DZ",
+        "Dzayer",
+        "Algérie"
+      ]
+    },
+    {
+      "name": "American Samoa",
+      "cca2": "AS",
+      "callingCode": "1684",
+      "altSpellings": [
+        "AS",
+        "Amerika Sāmoa",
+        "Amelika Sāmoa",
+        "Sāmoa Amelika"
+      ]
+    },
+    {
+      "name": "Andorra",
+      "cca2": "AD",
+      "callingCode": "376",
+      "altSpellings": [
+        "AD",
+        "Principality of Andorra",
+        "Principat d'Andorra"
+      ]
+    },
+    {
+      "name": "Angola",
+      "cca2": "AO",
+      "callingCode": "244",
+      "altSpellings": [
+        "AO",
+        "República de Angola",
+        "ʁɛpublika de an'ɡɔla"
+      ]
+    },
+    {
+      "name": "Anguilla",
+      "cca2": "AI",
+      "callingCode": "1264",
+      "altSpellings": "AI"
+    },
+    {
+      "name": "Antarctica",
+      "cca2": "AQ",
+      "callingCode": "",
+      "altSpellings": "AQ"
+    },
+    {
+      "name": "Antigua and Barbuda",
+      "cca2": "AG",
+      "callingCode": "1268",
+      "altSpellings": "AG"
+    },
+    {
+      "name": "Argentina",
+      "cca2": "AR",
+      "callingCode": "54",
+      "altSpellings": [
+        "AR",
+        "Argentine Republic",
+        "República Argentina"
+      ]
+    },
+    {
+      "name": "Armenia",
+      "cca2": "AM",
+      "callingCode": "374",
+      "altSpellings": [
+        "AM",
+        "Hayastan",
+        "Republic of Armenia",
+        "Հայաստանի Հանրապետություն"
+      ]
+    },
+    {
+      "name": "Aruba",
+      "cca2": "AW",
+      "callingCode": "297",
+      "altSpellings": "AW"
+    },
+    {
+      "name": "Australia",
+      "cca2": "AU",
+      "callingCode": "61",
+      "altSpellings": "AU"
+    },
+    {
+      "name": "Austria",
+      "cca2": "AT",
+      "callingCode": "43",
+      "altSpellings": [
+        "AT",
+        "Österreich",
+        "Osterreich",
+        "Oesterreich"
+      ]
+    },
+    {
+      "name": "Azerbaijan",
+      "cca2": "AZ",
+      "callingCode": "994",
+      "altSpellings": [
+        "AZ",
+        "Republic of Azerbaijan",
+        "Azərbaycan Respublikası"
+      ]
+    },
+    {
+      "name": "Bahamas",
+      "cca2": "BS",
+      "callingCode": "1242",
+      "altSpellings": [
+        "BS",
+        "Commonwealth of the Bahamas"
+      ]
+    },
+    {
+      "name": "Bahrain",
+      "cca2": "BH",
+      "callingCode": "973",
+      "altSpellings": [
+        "BH",
+        "Kingdom of Bahrain",
+        "Mamlakat al-Baḥrayn"
+      ]
+    },
+    {
+      "name": "Bangladesh",
+      "cca2": "BD",
+      "callingCode": "880",
+      "altSpellings": [
+        "BD",
+        "People's Republic of Bangladesh",
+        "Gônôprôjatôntri Bangladesh"
+      ]
+    },
+    {
+      "name": "Barbados",
+      "cca2": "BB",
+      "callingCode": "1246",
+      "altSpellings": "BB"
+    },
+    {
+      "name": "Belarus",
+      "cca2": "BY",
+      "callingCode": "375",
+      "altSpellings": [
+        "BY",
+        "Bielaruś",
+        "Republic of Belarus",
+        "Белоруссия",
+        "Республика Беларусь",
+        "Belorussiya",
+        "Respublika Belarus’"
+      ]
+    },
+    {
+      "name": "Belgium",
+      "cca2": "BE",
+      "callingCode": "32",
+      "altSpellings": [
+        "BE",
+        "België",
+        "Belgie",
+        "Belgien",
+        "Belgique",
+        "Kingdom of Belgium",
+        "Koninkrijk België",
+        "Royaume de Belgique",
+        "Königreich Belgien"
+      ]
+    },
+    {
+      "name": "Belize",
+      "cca2": "BZ",
+      "callingCode": "501",
+      "altSpellings": "BZ"
+    },
+    {
+      "name": "Benin",
+      "cca2": "BJ",
+      "callingCode": "229",
+      "altSpellings": [
+        "BJ",
+        "Republic of Benin",
+        "République du Bénin"
+      ]
+    },
+    {
+      "name": "Bermuda",
+      "cca2": "BM",
+      "callingCode": "1441",
+      "altSpellings": [
+        "BM",
+        "The Islands of Bermuda",
+        "The Bermudas",
+        "Somers Isles"
+      ]
+    },
+    {
+      "name": "Bhutan",
+      "cca2": "BT",
+      "callingCode": "975",
+      "altSpellings": [
+        "BT",
+        "Kingdom of Bhutan"
+      ]
+    },
+    {
+      "name": "Bolivia",
+      "cca2": "BO",
+      "callingCode": "591",
+      "altSpellings": [
+        "BO",
+        "Buliwya",
+        "Wuliwya",
+        "Plurinational State of Bolivia",
+        "Estado Plurinacional de Bolivia",
+        "Buliwya Mamallaqta",
+        "Wuliwya Suyu",
+        "Tetã Volívia"
+      ]
+    },
+    {
+      "name": "Bonaire",
+      "cca2": "BQ",
+      "callingCode": "5997",
+      "altSpellings": [
+        "BQ",
+        "Boneiru"
+      ]
+    },
+    {
+      "name": "Bosnia and Herzegovina",
+      "cca2": "BA",
+      "callingCode": "387",
+      "altSpellings": [
+        "BA",
+        "Bosnia-Herzegovina",
+        "Босна и Херцеговина"
+      ]
+    },
+    {
+      "name": "Botswana",
+      "cca2": "BW",
+      "callingCode": "267",
+      "altSpellings": [
+        "BW",
+        "Republic of Botswana",
+        "Lefatshe la Botswana"
+      ]
+    },
+    {
+      "name": "Bouvet Island",
+      "cca2": "BV",
+      "callingCode": "",
+      "altSpellings": [
+        "BV",
+        "Bouvetøya",
+        "Bouvet-øya"
+      ]
+    },
+    {
+      "name": "Brazil",
+      "cca2": "BR",
+      "callingCode": "55",
+      "altSpellings": [
+        "BR",
+        "Brasil",
+        "Federative Republic of Brazil",
+        "República Federativa do Brasil"
+      ]
+    },
+    {
+      "name": "British Indian Ocean Territory",
+      "cca2": "IO",
+      "callingCode": "246",
+      "altSpellings": "IO"
+    },
+    {
+      "name": "British Virgin Islands",
+      "cca2": "VG",
+      "callingCode": "1284",
+      "altSpellings": "VG"
+    },
+    {
+      "name": "Brunei",
+      "cca2": "BN",
+      "callingCode": "673",
+      "altSpellings": [
+        "BN",
+        "Nation of Brunei",
+        " the Abode of Peace"
+      ]
+    },
+    {
+      "name": "Bulgaria",
+      "cca2": "BG",
+      "callingCode": "359",
+      "altSpellings": [
+        "BG",
+        "Republic of Bulgaria",
+        "Република България"
+      ]
+    },
+    {
+      "name": "Burkina Faso",
+      "cca2": "BF",
+      "callingCode": "226",
+      "altSpellings": "BF"
+    },
+    {
+      "name": "Burundi",
+      "cca2": "BI",
+      "callingCode": "257",
+      "altSpellings": [
+        "BI",
+        "Republic of Burundi",
+        "Republika y'Uburundi",
+        "République du Burundi"
+      ]
+    },
+    {
+      "name": "Cambodia",
+      "cca2": "KH",
+      "callingCode": "855",
+      "altSpellings": [
+        "KH",
+        "Kingdom of Cambodia"
+      ]
+    },
+    {
+      "name": "Cameroon",
+      "cca2": "CM",
+      "callingCode": "237",
+      "altSpellings": [
+        "CM",
+        "Republic of Cameroon",
+        "République du Cameroun"
+      ]
+    },
+    {
+      "name": "Canada",
+      "cca2": "CA",
+      "callingCode": "1",
+      "altSpellings": "CA"
+    },
+    {
+      "name": "Cape Verde",
+      "cca2": "CV",
+      "callingCode": "238",
+      "altSpellings": [
+        "CV",
+        "Republic of Cabo Verde",
+        "República de Cabo Verde"
+      ]
+    },
+    {
+      "name": "Cayman Islands",
+      "cca2": "KY",
+      "callingCode": "1345",
+      "altSpellings": "KY"
+    },
+    {
+      "name": "Central African Republic",
+      "cca2": "CF",
+      "callingCode": "236",
+      "altSpellings": [
+        "CF",
+        "Central African Republic",
+        "République centrafricaine"
+      ]
+    },
+    {
+      "name": "Chad",
+      "cca2": "TD",
+      "callingCode": "235",
+      "altSpellings": [
+        "TD",
+        "Tchad",
+        "Republic of Chad",
+        "République du Tchad"
+      ]
+    },
+    {
+      "name": "Chile",
+      "cca2": "CL",
+      "callingCode": "56",
+      "altSpellings": [
+        "CL",
+        "Republic of Chile",
+        "República de Chile"
+      ]
+    },
+    {
+      "name": "China",
+      "cca2": "CN",
+      "callingCode": "86",
+      "altSpellings": [
+        "CN",
+        "Zhōngguó",
+        "Zhongguo",
+        "Zhonghua",
+        "People's Republic of China",
+        "中华人民共和国",
+        "Zhōnghuá Rénmín Gònghéguó"
+      ]
+    },
+    {
+      "name": "Colombia",
+      "cca2": "CO",
+      "callingCode": "57",
+      "altSpellings": [
+        "CO",
+        "Republic of Colombia",
+        "República de Colombia"
+      ]
+    },
+    {
+      "name": "Comoros",
+      "cca2": "KM",
+      "callingCode": "269",
+      "altSpellings": [
+        "KM",
+        "Union of the Comoros",
+        "Union des Comores",
+        "Udzima wa Komori",
+        "al-Ittiḥād al-Qumurī"
+      ]
+    },
+    {
+      "name": "Republic of the Congo",
+      "cca2": "CG",
+      "callingCode": "242",
+      "altSpellings": [
+        "CG",
+        "Congo-Brazzaville"
+      ]
+    },
+    {
+      "name": "Democratic Republic of the Congo",
+      "cca2": "CD",
+      "callingCode": "243",
+      "altSpellings": [
+        "CD",
+        "DR Congo",
+        "Congo-Kinshasa",
+        "DRC"
+      ]
+    },
+    {
+      "name": "Cook Islands",
+      "cca2": "CK",
+      "callingCode": "682",
+      "altSpellings": [
+        "CK",
+        "Kūki 'Āirani"
+      ]
+    },
+    {
+      "name": "Costa Rica",
+      "cca2": "CR",
+      "callingCode": "506",
+      "altSpellings": [
+        "CR",
+        "Republic of Costa Rica",
+        "República de Costa Rica"
+      ]
+    },
+    {
+      "name": "Côte d'Ivoire",
+      "cca2": "CI",
+      "callingCode": "225",
+      "altSpellings": [
+        "CI",
+        "Ivory Coast",
+        "Republic of Côte d'Ivoire",
+        "République de Côte d'Ivoire"
+      ]
+    },
+    {
+      "name": "Croatia",
+      "cca2": "HR",
+      "callingCode": "385",
+      "altSpellings": [
+        "HR",
+        "Hrvatska",
+        "Republic of Croatia",
+        "Republika Hrvatska"
+      ]
+    },
+    {
+      "name": "Cuba",
+      "cca2": "CU",
+      "callingCode": "53",
+      "altSpellings": [
+        "CU",
+        "Republic of Cuba",
+        "República de Cuba"
+      ]
+    },
+    {
+      "name": "Curaçao",
+      "cca2": "CW",
+      "callingCode": "5999",
+      "altSpellings": [
+        "CW",
+        "Curacao",
+        "Kòrsou",
+        "Country of Curaçao",
+        "Land Curaçao",
+        "Pais Kòrsou"
+      ]
+    },
+    {
+      "name": "Cyprus",
+      "cca2": "CY",
+      "callingCode": "357",
+      "altSpellings": [
+        "CY",
+        "Kýpros",
+        "Kıbrıs",
+        "Republic of Cyprus",
+        "Κυπριακή Δημοκρατία",
+        "Kıbrıs Cumhuriyeti"
+      ]
+    },
+    {
+      "name": "Czech Republic",
+      "cca2": "CZ",
+      "callingCode": "420",
+      "altSpellings": [
+        "CZ",
+        "Česká republika",
+        "Česko"
+      ]
+    },
+    {
+      "name": "Denmark",
+      "cca2": "DK",
+      "callingCode": "45",
+      "altSpellings": [
+        "DK",
+        "Danmark",
+        "Kingdom of Denmark",
+        "Kongeriget Danmark"
+      ]
+    },
+    {
+      "name": "Djibouti",
+      "cca2": "DJ",
+      "callingCode": "253",
+      "altSpellings": [
+        "DJ",
+        "Jabuuti",
+        "Gabuuti",
+        "Republic of Djibouti",
+        "République de Djibouti",
+        "Gabuutih Ummuuno",
+        "Jamhuuriyadda Jabuuti"
+      ]
+    },
+    {
+      "name": "Dominica",
+      "cca2": "DM",
+      "callingCode": "1767",
+      "altSpellings": [
+        "DM",
+        "Dominique",
+        "Wai‘tu kubuli",
+        "Commonwealth of Dominica"
+      ]
+    },
+    {
+      "name": "Dominican Republic",
+      "cca2": "DO",
+      "callingCode": [
+        "1809",
+        "1829",
+        "1849"
+      ],
+      "altSpellings": "DO"
+    },
+    {
+      "name": "Ecuador",
+      "cca2": "EC",
+      "callingCode": "593",
+      "altSpellings": [
+        "EC",
+        "Republic of Ecuador",
+        "República del Ecuador"
+      ]
+    },
+    {
+      "name": "Egypt",
+      "cca2": "EG",
+      "callingCode": "20",
+      "altSpellings": [
+        "EG",
+        "Arab Republic of Egypt"
+      ]
+    },
+    {
+      "name": "El Salvador",
+      "cca2": "SV",
+      "callingCode": "503",
+      "altSpellings": [
+        "SV",
+        "Republic of El Salvador",
+        "República de El Salvador"
+      ]
+    },
+    {
+      "name": "Equatorial Guinea",
+      "cca2": "GQ",
+      "callingCode": "240",
+      "altSpellings": [
+        "GQ",
+        "Republic of Equatorial Guinea",
+        "República de Guinea Ecuatorial",
+        "République de Guinée équatoriale",
+        "República da Guiné Equatorial"
+      ]
+    },
+    {
+      "name": "Eritrea",
+      "cca2": "ER",
+      "callingCode": "291",
+      "altSpellings": [
+        "ER",
+        "State of Eritrea",
+        "ሃገረ ኤርትራ",
+        "Dawlat Iritriyá",
+        "ʾErtrā",
+        "Iritriyā",
+        ""
+      ]
+    },
+    {
+      "name": "Estonia",
+      "cca2": "EE",
+      "callingCode": "372",
+      "altSpellings": [
+        "EE",
+        "Eesti",
+        "Republic of Estonia",
+        "Eesti Vabariik"
+      ]
+    },
+    {
+      "name": "Ethiopia",
+      "cca2": "ET",
+      "callingCode": "251",
+      "altSpellings": [
+        "ET",
+        "ʾĪtyōṗṗyā",
+        "Federal Democratic Republic of Ethiopia",
+        "የኢትዮጵያ ፌዴራላዊ ዲሞክራሲያዊ ሪፐብሊክ"
+      ]
+    },
+    {
+      "name": "Falkland Islands",
+      "cca2": "FK",
+      "callingCode": "500",
+      "altSpellings": [
+        "FK",
+        "Islas Malvinas"
+      ]
+    },
+    {
+      "name": "Faroe Islands",
+      "cca2": "FO",
+      "callingCode": "298",
+      "altSpellings": [
+        "FO",
+        "Føroyar",
+        "Færøerne"
+      ]
+    },
+    {
+      "name": "Fiji",
+      "cca2": "FJ",
+      "callingCode": "679",
+      "altSpellings": [
+        "FJ",
+        "Viti",
+        "Republic of Fiji",
+        "Matanitu ko Viti",
+        "Fijī Gaṇarājya"
+      ]
+    },
+    {
+      "name": "Finland",
+      "cca2": "FI",
+      "callingCode": "358",
+      "altSpellings": [
+        "FI",
+        "Suomi",
+        "Republic of Finland",
+        "Suomen tasavalta",
+        "Republiken Finland"
+      ]
+    },
+    {
+      "name": "France",
+      "cca2": "FR",
+      "callingCode": "33",
+      "altSpellings": [
+        "FR",
+        "French Republic",
+        "République française"
+      ]
+    },
+    {
+      "name": "French Guiana",
+      "cca2": "GF",
+      "callingCode": "594",
+      "altSpellings": [
+        "GF",
+        "Guiana",
+        "Guyane"
+      ]
+    },
+    {
+      "name": "French Polynesia",
+      "cca2": "PF",
+      "callingCode": "689",
+      "altSpellings": [
+        "PF",
+        "Polynésie française",
+        "French Polynesia",
+        "Pōrīnetia Farāni"
+      ]
+    },
+    {
+      "name": "French Southern and Antarctic Lands",
+      "cca2": "TF",
+      "callingCode": "",
+      "altSpellings": "TF"
+    },
+    {
+      "name": "Gabon",
+      "cca2": "GA",
+      "callingCode": "241",
+      "altSpellings": [
+        "GA",
+        "Gabonese Republic",
+        "République Gabonaise"
+      ]
+    },
+    {
+      "name": "Gambia",
+      "cca2": "GM",
+      "callingCode": "220",
+      "altSpellings": [
+        "GM",
+        "Republic of the Gambia"
+      ]
+    },
+    {
+      "name": "Georgia",
+      "cca2": "GE",
+      "callingCode": "995",
+      "altSpellings": [
+        "GE",
+        "Sakartvelo"
+      ]
+    },
+    {
+      "name": "Germany",
+      "cca2": "DE",
+      "callingCode": "49",
+      "altSpellings": [
+        "DE",
+        "Federal Republic of Germany",
+        "Bundesrepublik Deutschland"
+      ]
+    },
+    {
+      "name": "Ghana",
+      "cca2": "GH",
+      "callingCode": "233",
+      "altSpellings": "GH"
+    },
+    {
+      "name": "Gibraltar",
+      "cca2": "GI",
+      "callingCode": "350",
+      "altSpellings": "GI"
+    },
+    {
+      "name": "Greece",
+      "cca2": "GR",
+      "callingCode": "30",
+      "altSpellings": [
+        "GR",
+        "Elláda",
+        "Hellenic Republic",
+        "Ελληνική Δημοκρατία"
+      ]
+    },
+    {
+      "name": "Greenland",
+      "cca2": "GL",
+      "callingCode": "299",
+      "altSpellings": [
+        "GL",
+        "Grønland"
+      ]
+    },
+    {
+      "name": "Grenada",
+      "cca2": "GD",
+      "callingCode": "1473",
+      "altSpellings": "GD"
+    },
+    {
+      "name": "Guadeloupe",
+      "cca2": "GP",
+      "callingCode": "590",
+      "altSpellings": [
+        "GP",
+        "Gwadloup"
+      ]
+    },
+    {
+      "name": "Guam",
+      "cca2": "GU",
+      "callingCode": "1671",
+      "altSpellings": [
+        "GU",
+        "Guåhån"
+      ]
+    },
+    {
+      "name": "Guatemala",
+      "cca2": "GT",
+      "callingCode": "502",
+      "altSpellings": "GT"
+    },
+    {
+      "name": "Guernsey",
+      "cca2": "GG",
+      "callingCode": "44",
+      "altSpellings": [
+        "GG",
+        "Bailiwick of Guernsey",
+        "Bailliage de Guernesey"
+      ]
+    },
+    {
+      "name": "Guinea",
+      "cca2": "GN",
+      "callingCode": "224",
+      "altSpellings": [
+        "GN",
+        "Republic of Guinea",
+        "République de Guinée"
+      ]
+    },
+    {
+      "name": "Guinea-Bissau",
+      "cca2": "GW",
+      "callingCode": "245",
+      "altSpellings": [
+        "GW",
+        "Republic of Guinea-Bissau",
+        "República da Guiné-Bissau"
+      ]
+    },
+    {
+      "name": "Guyana",
+      "cca2": "GY",
+      "callingCode": "592",
+      "altSpellings": [
+        "GY",
+        "Co-operative Republic of Guyana"
+      ]
+    },
+    {
+      "name": "Haiti",
+      "cca2": "HT",
+      "callingCode": "509",
+      "altSpellings": [
+        "HT",
+        "Republic of Haiti",
+        "République d'Haïti",
+        "Repiblik Ayiti"
+      ]
+    },
+    {
+      "name": "Heard Island and McDonald Islands",
+      "cca2": "HM",
+      "callingCode": "",
+      "altSpellings": "HM"
+    },
+    {
+      "name": "Vatican City",
+      "cca2": "VA",
+      "callingCode": [
+        "39066",
+        "379"
+      ],
+      "altSpellings": [
+        "VA",
+        "Vatican City State",
+        "Stato della Città del Vaticano"
+      ]
+    },
+    {
+      "name": "Honduras",
+      "cca2": "HN",
+      "callingCode": "504",
+      "altSpellings": [
+        "HN",
+        "Republic of Honduras",
+        "República de Honduras"
+      ]
+    },
+    {
+      "name": "Hong Kong",
+      "cca2": "HK",
+      "callingCode": "852",
+      "altSpellings": [
+        "HK",
+        "香港"
+      ]
+    },
+    {
+      "name": "Hungary",
+      "cca2": "HU",
+      "callingCode": "36",
+      "altSpellings": "HU"
+    },
+    {
+      "name": "Iceland",
+      "cca2": "IS",
+      "callingCode": "354",
+      "altSpellings": [
+        "IS",
+        "Island",
+        "Republic of Iceland",
+        "Lýðveldið Ísland"
+      ]
+    },
+    {
+      "name": "India",
+      "cca2": "IN",
+      "callingCode": "91",
+      "altSpellings": [
+        "IN",
+        "Bhārat",
+        "Republic of India",
+        "Bharat Ganrajya"
+      ]
+    },
+    {
+      "name": "Indonesia",
+      "cca2": "ID",
+      "callingCode": "62",
+      "altSpellings": [
+        "ID",
+        "Republic of Indonesia",
+        "Republik Indonesia"
+      ]
+    },
+    {
+      "name": "Iran",
+      "cca2": "IR",
+      "callingCode": "98",
+      "altSpellings": [
+        "IR",
+        "Islamic Republic of Iran",
+        "Jomhuri-ye Eslāmi-ye Irān"
+      ]
+    },
+    {
+      "name": "Iraq",
+      "cca2": "IQ",
+      "callingCode": "964",
+      "altSpellings": [
+        "IQ",
+        "Republic of Iraq",
+        "Jumhūriyyat al-‘Irāq"
+      ]
+    },
+    {
+      "name": "Ireland",
+      "cca2": "IE",
+      "callingCode": "353",
+      "altSpellings": [
+        "IE",
+        "Éire",
+        "Republic of Ireland",
+        "Poblacht na hÉireann"
+      ]
+    },
+    {
+      "name": "Isle of Man",
+      "cca2": "IM",
+      "callingCode": "44",
+      "altSpellings": [
+        "IM",
+        "Ellan Vannin",
+        "Mann",
+        "Mannin"
+      ]
+    },
+    {
+      "name": "Israel",
+      "cca2": "IL",
+      "callingCode": "972",
+      "altSpellings": [
+        "IL",
+        "State of Israel",
+        "Medīnat Yisrā'el"
+      ]
+    },
+    {
+      "name": "Italy",
+      "cca2": "IT",
+      "callingCode": "39",
+      "altSpellings": [
+        "IT",
+        "Italian Republic",
+        "Repubblica italiana"
+      ]
+    },
+    {
+      "name": "Jamaica",
+      "cca2": "JM",
+      "callingCode": "1876",
+      "altSpellings": "JM"
+    },
+    {
+      "name": "Japan",
+      "cca2": "JP",
+      "callingCode": "81",
+      "altSpellings": [
+        "JP",
+        "Nippon",
+        "Nihon"
+      ]
+    },
+    {
+      "name": "Jersey",
+      "cca2": "JE",
+      "callingCode": "44",
+      "altSpellings": [
+        "JE",
+        "Bailiwick of Jersey",
+        "Bailliage de Jersey",
+        "Bailliage dé Jèrri"
+      ]
+    },
+    {
+      "name": "Jordan",
+      "cca2": "JO",
+      "callingCode": "962",
+      "altSpellings": [
+        "JO",
+        "Hashemite Kingdom of Jordan",
+        "al-Mamlakah al-Urdunīyah al-Hāshimīyah"
+      ]
+    },
+    {
+      "name": "Kazakhstan",
+      "cca2": "KZ",
+      "callingCode": [
+        "76",
+        "77"
+      ],
+      "altSpellings": [
+        "KZ",
+        "Qazaqstan",
+        "Казахстан",
+        "Republic of Kazakhstan",
+        "Қазақстан Республикасы",
+        "Qazaqstan Respublïkası",
+        "Республика Казахстан",
+        "Respublika Kazakhstan"
+      ]
+    },
+    {
+      "name": "Kenya",
+      "cca2": "KE",
+      "callingCode": "254",
+      "altSpellings": [
+        "KE",
+        "Republic of Kenya",
+        "Jamhuri ya Kenya"
+      ]
+    },
+    {
+      "name": "Kiribati",
+      "cca2": "KI",
+      "callingCode": "686",
+      "altSpellings": [
+        "KI",
+        "Republic of Kiribati",
+        "Ribaberiki Kiribati"
+      ]
+    },
+    {
+      "name": "Kuwait",
+      "cca2": "KW",
+      "callingCode": "965",
+      "altSpellings": [
+        "KW",
+        "State of Kuwait",
+        "Dawlat al-Kuwait"
+      ]
+    },
+    {
+      "name": "Kyrgyzstan",
+      "cca2": "KG",
+      "callingCode": "996",
+      "altSpellings": [
+        "KG",
+        "Киргизия",
+        "Kyrgyz Republic",
+        "Кыргыз Республикасы",
+        "Kyrgyz Respublikasy"
+      ]
+    },
+    {
+      "name": "Laos",
+      "cca2": "LA",
+      "callingCode": "856",
+      "altSpellings": [
+        "LA",
+        "Lao",
+        "Lao People's Democratic Republic",
+        "Sathalanalat Paxathipatai Paxaxon Lao"
+      ]
+    },
+    {
+      "name": "Latvia",
+      "cca2": "LV",
+      "callingCode": "371",
+      "altSpellings": [
+        "LV",
+        "Republic of Latvia",
+        "Latvijas Republika"
+      ]
+    },
+    {
+      "name": "Lebanon",
+      "cca2": "LB",
+      "callingCode": "961",
+      "altSpellings": [
+        "LB",
+        "Lebanese Republic",
+        "Al-Jumhūrīyah Al-Libnānīyah"
+      ]
+    },
+    {
+      "name": "Lesotho",
+      "cca2": "LS",
+      "callingCode": "266",
+      "altSpellings": [
+        "LS",
+        "Kingdom of Lesotho",
+        "Muso oa Lesotho"
+      ]
+    },
+    {
+      "name": "Liberia",
+      "cca2": "LR",
+      "callingCode": "231",
+      "altSpellings": [
+        "LR",
+        "Republic of Liberia"
+      ]
+    },
+    {
+      "name": "Libya",
+      "cca2": "LY",
+      "callingCode": "218",
+      "altSpellings": [
+        "LY",
+        "State of Libya",
+        "Dawlat Libya"
+      ]
+    },
+    {
+      "name": "Liechtenstein",
+      "cca2": "LI",
+      "callingCode": "423",
+      "altSpellings": [
+        "LI",
+        "Principality of Liechtenstein",
+        "Fürstentum Liechtenstein"
+      ]
+    },
+    {
+      "name": "Lithuania",
+      "cca2": "LT",
+      "callingCode": "370",
+      "altSpellings": [
+        "LT",
+        "Republic of Lithuania",
+        "Lietuvos Respublika"
+      ]
+    },
+    {
+      "name": "Luxembourg",
+      "cca2": "LU",
+      "callingCode": "352",
+      "altSpellings": [
+        "LU",
+        "Grand Duchy of Luxembourg",
+        "Grand-Duché de Luxembourg",
+        "Großherzogtum Luxemburg",
+        "Groussherzogtum Lëtzebuerg"
+      ]
+    },
+    {
+      "name": "Macao",
+      "cca2": "MO",
+      "callingCode": "853",
+      "altSpellings": [
+        "MO",
+        "澳门",
+        "Macao Special Administrative Region of the People's Republic of China",
+        "中華人民共和國澳門特別行政區",
+        "Região Administrativa Especial de Macau da República Popular da China"
+      ]
+    },
+    {
+      "name": "Macedonia",
+      "cca2": "MK",
+      "callingCode": "389",
+      "altSpellings": [
+        "MK",
+        "Republic of Macedonia",
+        "Република Македонија"
+      ]
+    },
+    {
+      "name": "Madagascar",
+      "cca2": "MG",
+      "callingCode": "261",
+      "altSpellings": [
+        "MG",
+        "Republic of Madagascar",
+        "Repoblikan'i Madagasikara",
+        "République de Madagascar"
+      ]
+    },
+    {
+      "name": "Malawi",
+      "cca2": "MW",
+      "callingCode": "265",
+      "altSpellings": [
+        "MW",
+        "Republic of Malawi"
+      ]
+    },
+    {
+      "name": "Malaysia",
+      "cca2": "MY",
+      "callingCode": "60",
+      "altSpellings": "MY"
+    },
+    {
+      "name": "Maldives",
+      "cca2": "MV",
+      "callingCode": "960",
+      "altSpellings": [
+        "MV",
+        "Maldive Islands",
+        "Republic of the Maldives",
+        "Dhivehi Raajjeyge Jumhooriyya"
+      ]
+    },
+    {
+      "name": "Mali",
+      "cca2": "ML",
+      "callingCode": "223",
+      "altSpellings": [
+        "ML",
+        "Republic of Mali",
+        "République du Mali"
+      ]
+    },
+    {
+      "name": "Malta",
+      "cca2": "MT",
+      "callingCode": "356",
+      "altSpellings": [
+        "MT",
+        "Republic of Malta",
+        "Repubblika ta' Malta"
+      ]
+    },
+    {
+      "name": "Marshall Islands",
+      "cca2": "MH",
+      "callingCode": "692",
+      "altSpellings": [
+        "MH",
+        "Republic of the Marshall Islands",
+        "Aolepān Aorōkin M̧ajeļ"
+      ]
+    },
+    {
+      "name": "Martinique",
+      "cca2": "MQ",
+      "callingCode": "596",
+      "altSpellings": "MQ"
+    },
+    {
+      "name": "Mauritania",
+      "cca2": "MR",
+      "callingCode": "222",
+      "altSpellings": [
+        "MR",
+        "Islamic Republic of Mauritania",
+        "al-Jumhūriyyah al-ʾIslāmiyyah al-Mūrītāniyyah"
+      ]
+    },
+    {
+      "name": "Mauritius",
+      "cca2": "MU",
+      "callingCode": "230",
+      "altSpellings": [
+        "MU",
+        "Republic of Mauritius",
+        "République de Maurice"
+      ]
+    },
+    {
+      "name": "Mayotte",
+      "cca2": "YT",
+      "callingCode": "262",
+      "altSpellings": [
+        "YT",
+        "Department of Mayotte",
+        "Département de Mayotte"
+      ]
+    },
+    {
+      "name": "Mexico",
+      "cca2": "MX",
+      "callingCode": "52",
+      "altSpellings": [
+        "MX",
+        "Mexicanos",
+        "United Mexican States",
+        "Estados Unidos Mexicanos"
+      ]
+    },
+    {
+      "name": "Micronesia",
+      "cca2": "FM",
+      "callingCode": "691",
+      "altSpellings": [
+        "FM",
+        "Federated States of Micronesia"
+      ]
+    },
+    {
+      "name": "Moldova",
+      "cca2": "MD",
+      "callingCode": "373",
+      "altSpellings": [
+        "MD",
+        "Republic of Moldova",
+        "Republica Moldova"
+      ]
+    },
+    {
+      "name": "Monaco",
+      "cca2": "MC",
+      "callingCode": "377",
+      "altSpellings": [
+        "MC",
+        "Principality of Monaco",
+        "Principauté de Monaco"
+      ]
+    },
+    {
+      "name": "Mongolia",
+      "cca2": "MN",
+      "callingCode": "976",
+      "altSpellings": "MN"
+    },
+    {
+      "name": "Montenegro",
+      "cca2": "ME",
+      "callingCode": "382",
+      "altSpellings": [
+        "ME",
+        "Crna Gora"
+      ]
+    },
+    {
+      "name": "Montserrat",
+      "cca2": "MS",
+      "callingCode": "1664",
+      "altSpellings": "MS"
+    },
+    {
+      "name": "Morocco",
+      "cca2": "MA",
+      "callingCode": "212",
+      "altSpellings": [
+        "MA",
+        "Kingdom of Morocco",
+        "Al-Mamlakah al-Maġribiyah"
+      ]
+    },
+    {
+      "name": "Mozambique",
+      "cca2": "MZ",
+      "callingCode": "258",
+      "altSpellings": [
+        "MZ",
+        "Republic of Mozambique",
+        "República de Moçambique"
+      ]
+    },
+    {
+      "name": "Myanmar",
+      "cca2": "MM",
+      "callingCode": "95",
+      "altSpellings": [
+        "MM",
+        "Burma",
+        "Republic of the Union of Myanmar",
+        "Pyidaunzu Thanmăda Myăma Nainngandaw"
+      ]
+    },
+    {
+      "name": "Namibia",
+      "cca2": "NA",
+      "callingCode": "264",
+      "altSpellings": [
+        "NA",
+        "Namibië",
+        "Republic of Namibia"
+      ]
+    },
+    {
+      "name": "Nauru",
+      "cca2": "NR",
+      "callingCode": "674",
+      "altSpellings": [
+        "NR",
+        "Naoero",
+        "Pleasant Island",
+        "Republic of Nauru",
+        "Ripublik Naoero"
+      ]
+    },
+    {
+      "name": "Nepal",
+      "cca2": "NP",
+      "callingCode": "977",
+      "altSpellings": [
+        "NP",
+        "Federal Democratic Republic of Nepal",
+        "Loktāntrik Ganatantra Nepāl"
+      ]
+    },
+    {
+      "name": "Netherlands",
+      "cca2": "NL",
+      "callingCode": "31",
+      "altSpellings": [
+        "NL",
+        "Holland",
+        "Nederland"
+      ]
+    },
+    {
+      "name": "New Caledonia",
+      "cca2": "NC",
+      "callingCode": "687",
+      "altSpellings": "NC"
+    },
+    {
+      "name": "New Zealand",
+      "cca2": "NZ",
+      "callingCode": "64",
+      "altSpellings": [
+        "NZ",
+        "Aotearoa"
+      ]
+    },
+    {
+      "name": "Nicaragua",
+      "cca2": "NI",
+      "callingCode": "505",
+      "altSpellings": [
+        "NI",
+        "Republic of Nicaragua",
+        "República de Nicaragua"
+      ]
+    },
+    {
+      "name": "Niger",
+      "cca2": "NE",
+      "callingCode": "227",
+      "altSpellings": [
+        "NE",
+        "Nijar",
+        "Republic of Niger",
+        "République du Niger"
+      ]
+    },
+    {
+      "name": "Nigeria",
+      "cca2": "NG",
+      "callingCode": "234",
+      "altSpellings": [
+        "NG",
+        "Nijeriya",
+        "Naíjíríà",
+        "Federal Republic of Nigeria"
+      ]
+    },
+    {
+      "name": "Niue",
+      "cca2": "NU",
+      "callingCode": "683",
+      "altSpellings": "NU"
+    },
+    {
+      "name": "Norfolk Island",
+      "cca2": "NF",
+      "callingCode": "672",
+      "altSpellings": [
+        "NF",
+        "Territory of Norfolk Island",
+        "Teratri of Norf'k Ailen"
+      ]
+    },
+    {
+      "name": "North Korea",
+      "cca2": "KP",
+      "callingCode": "850",
+      "altSpellings": [
+        "KP",
+        "Democratic People's Republic of Korea",
+        "조선민주주의인민공화국",
+        "Chosŏn Minjujuŭi Inmin Konghwaguk"
+      ]
+    },
+    {
+      "name": "Northern Mariana Islands",
+      "cca2": "MP",
+      "callingCode": "1670",
+      "altSpellings": [
+        "MP",
+        "Commonwealth of the Northern Mariana Islands",
+        "Sankattan Siha Na Islas Mariånas"
+      ]
+    },
+    {
+      "name": "Norway",
+      "cca2": "NO",
+      "callingCode": "47",
+      "altSpellings": [
+        "NO",
+        "Norge",
+        "Noreg",
+        "Kingdom of Norway",
+        "Kongeriket Norge",
+        "Kongeriket Noreg"
+      ]
+    },
+    {
+      "name": "Oman",
+      "cca2": "OM",
+      "callingCode": "968",
+      "altSpellings": [
+        "OM",
+        "Sultanate of Oman",
+        "Salṭanat ʻUmān"
+      ]
+    },
+    {
+      "name": "Pakistan",
+      "cca2": "PK",
+      "callingCode": "92",
+      "altSpellings": [
+        "PK",
+        "Pākistān",
+        "Islamic Republic of Pakistan",
+        "Islāmī Jumhūriya'eh Pākistān"
+      ]
+    },
+    {
+      "name": "Palau",
+      "cca2": "PW",
+      "callingCode": "680",
+      "altSpellings": [
+        "PW",
+        "Republic of Palau",
+        "Beluu er a Belau"
+      ]
+    },
+    {
+      "name": "Palestine",
+      "cca2": "PS",
+      "callingCode": "970",
+      "altSpellings": [
+        "PS",
+        "State of Palestine",
+        "Dawlat Filasṭin"
+      ]
+    },
+    {
+      "name": "Panama",
+      "cca2": "PA",
+      "callingCode": "507",
+      "altSpellings": [
+        "PA",
+        "Republic of Panama",
+        "República de Panamá"
+      ]
+    },
+    {
+      "name": "Papua New Guinea",
+      "cca2": "PG",
+      "callingCode": "675",
+      "altSpellings": [
+        "PG",
+        "Independent State of Papua New Guinea",
+        "Independen Stet bilong Papua Niugini"
+      ]
+    },
+    {
+      "name": "Paraguay",
+      "cca2": "PY",
+      "callingCode": "595",
+      "altSpellings": [
+        "PY",
+        "Republic of Paraguay",
+        "República del Paraguay",
+        "Tetã Paraguái"
+      ]
+    },
+    {
+      "name": "Peru",
+      "cca2": "PE",
+      "callingCode": "51",
+      "altSpellings": [
+        "PE",
+        "Republic of Peru",
+        " República del Perú"
+      ]
+    },
+    {
+      "name": "Philippines",
+      "cca2": "PH",
+      "callingCode": "63",
+      "altSpellings": [
+        "PH",
+        "Republic of the Philippines",
+        "Repúblika ng Pilipinas"
+      ]
+    },
+    {
+      "name": "Pitcairn Islands",
+      "cca2": "PN",
+      "callingCode": "64",
+      "altSpellings": [
+        "PN",
+        "Pitcairn Henderson Ducie and Oeno Islands"
+      ]
+    },
+    {
+      "name": "Poland",
+      "cca2": "PL",
+      "callingCode": "48",
+      "altSpellings": [
+        "PL",
+        "Republic of Poland",
+        "Rzeczpospolita Polska"
+      ]
+    },
+    {
+      "name": "Portugal",
+      "cca2": "PT",
+      "callingCode": "351",
+      "altSpellings": [
+        "PT",
+        "Portuguesa",
+        "Portuguese Republic",
+        "República Portuguesa"
+      ]
+    },
+    {
+      "name": "Puerto Rico",
+      "cca2": "PR",
+      "callingCode": [
+        "1787",
+        "1939"
+      ],
+      "altSpellings": [
+        "PR",
+        "Commonwealth of Puerto Rico",
+        "Estado Libre Asociado de Puerto Rico"
+      ]
+    },
+    {
+      "name": "Qatar",
+      "cca2": "QA",
+      "callingCode": "974",
+      "altSpellings": [
+        "QA",
+        "State of Qatar",
+        "Dawlat Qaṭar"
+      ]
+    },
+    {
+      "name": "Republic of Kosovo",
+      "cca2": "XK",
+      "callingCode": [
+        "377",
+        "381",
+        "386"
+      ],
+      "altSpellings": [
+        "XK",
+        "Република Косово"
+      ]
+    },
+    {
+      "name": "Réunion",
+      "cca2": "RE",
+      "callingCode": "262",
+      "altSpellings": [
+        "RE",
+        "Reunion"
+      ]
+    },
+    {
+      "name": "Romania",
+      "cca2": "RO",
+      "callingCode": "40",
+      "altSpellings": [
+        "RO",
+        "Rumania",
+        "Roumania",
+        "România"
+      ]
+    },
+    {
+      "name": "Russia",
+      "cca2": "RU",
+      "callingCode": "7",
+      "altSpellings": [
+        "RU",
+        "Rossiya",
+        "Russian Federation",
+        "Российская Федерация",
+        "Rossiyskaya Federatsiya"
+      ]
+    },
+    {
+      "name": "Rwanda",
+      "cca2": "RW",
+      "callingCode": "250",
+      "altSpellings": [
+        "RW",
+        "Republic of Rwanda",
+        "Repubulika y'u Rwanda",
+        "République du Rwanda"
+      ]
+    },
+    {
+      "name": "Saint Barthélemy",
+      "cca2": "BL",
+      "callingCode": "590",
+      "altSpellings": [
+        "BL",
+        "St. Barthelemy",
+        "Collectivity of Saint Barthélemy",
+        "Collectivité de Saint-Barthélemy"
+      ]
+    },
+    {
+      "name": "Saint Helena",
+      "cca2": "SH",
+      "callingCode": "290",
+      "altSpellings": "SH"
+    },
+    {
+      "name": "Saint Kitts and Nevis",
+      "cca2": "KN",
+      "callingCode": "1869",
+      "altSpellings": [
+        "KN",
+        "Federation of Saint Christopher and Nevis"
+      ]
+    },
+    {
+      "name": "Saint Lucia",
+      "cca2": "LC",
+      "callingCode": "1758",
+      "altSpellings": "LC"
+    },
+    {
+      "name": "Saint Martin",
+      "cca2": "MF",
+      "callingCode": "590",
+      "altSpellings": [
+        "MF",
+        "Collectivity of Saint Martin",
+        "Collectivité de Saint-Martin"
+      ]
+    },
+    {
+      "name": "Saint Pierre and Miquelon",
+      "cca2": "PM",
+      "callingCode": "508",
+      "altSpellings": [
+        "PM",
+        "Collectivité territoriale de Saint-Pierre-et-Miquelon"
+      ]
+    },
+    {
+      "name": "Saint Vincent and the Grenadines",
+      "cca2": "VC",
+      "callingCode": "1784",
+      "altSpellings": "VC"
+    },
+    {
+      "name": "Samoa",
+      "cca2": "WS",
+      "callingCode": "685",
+      "altSpellings": [
+        "WS",
+        "Independent State of Samoa",
+        "Malo Saʻoloto Tutoʻatasi o Sāmoa"
+      ]
+    },
+    {
+      "name": "San Marino",
+      "cca2": "SM",
+      "callingCode": "378",
+      "altSpellings": [
+        "SM",
+        "Republic of San Marino",
+        "Repubblica di San Marino"
+      ]
+    },
+    {
+      "name": "São Tomé and Príncipe",
+      "cca2": "ST",
+      "callingCode": "239",
+      "altSpellings": [
+        "ST",
+        "Democratic Republic of São Tomé and Príncipe",
+        "República Democrática de São Tomé e Príncipe"
+      ]
+    },
+    {
+      "name": "Saudi Arabia",
+      "cca2": "SA",
+      "callingCode": "966",
+      "altSpellings": [
+        "SA",
+        "Kingdom of Saudi Arabia",
+        "Al-Mamlakah al-‘Arabiyyah as-Su‘ūdiyyah"
+      ]
+    },
+    {
+      "name": "Senegal",
+      "cca2": "SN",
+      "callingCode": "221",
+      "altSpellings": [
+        "SN",
+        "Republic of Senegal",
+        "République du Sénégal"
+      ]
+    },
+    {
+      "name": "Serbia",
+      "cca2": "RS",
+      "callingCode": "381",
+      "altSpellings": [
+        "RS",
+        "Srbija",
+        "Republic of Serbia",
+        "Република Србија",
+        "Republika Srbija"
+      ]
+    },
+    {
+      "name": "Seychelles",
+      "cca2": "SC",
+      "callingCode": "248",
+      "altSpellings": [
+        "SC",
+        "Republic of Seychelles",
+        "Repiblik Sesel",
+        "République des Seychelles"
+      ]
+    },
+    {
+      "name": "Sierra Leone",
+      "cca2": "SL",
+      "callingCode": "232",
+      "altSpellings": [
+        "SL",
+        "Republic of Sierra Leone"
+      ]
+    },
+    {
+      "name": "Singapore",
+      "cca2": "SG",
+      "callingCode": "65",
+      "altSpellings": [
+        "SG",
+        "Singapura",
+        "Republik Singapura",
+        "新加坡共和国"
+      ]
+    },
+    {
+      "name": "Sint Maarten",
+      "cca2": "SX",
+      "callingCode": "1721",
+      "altSpellings": "SX"
+    },
+    {
+      "name": "Slovakia",
+      "cca2": "SK",
+      "callingCode": "421",
+      "altSpellings": [
+        "SK",
+        "Slovak Republic",
+        "Slovenská republika"
+      ]
+    },
+    {
+      "name": "Slovenia",
+      "cca2": "SI",
+      "callingCode": "386",
+      "altSpellings": [
+        "SI",
+        "Republic of Slovenia",
+        "Republika Slovenija"
+      ]
+    },
+    {
+      "name": "Solomon Islands",
+      "cca2": "SB",
+      "callingCode": "677",
+      "altSpellings": "SB"
+    },
+    {
+      "name": "Somalia",
+      "cca2": "SO",
+      "callingCode": "252",
+      "altSpellings": [
+        "SO",
+        "aṣ-Ṣūmāl",
+        "Federal Republic of Somalia",
+        "Jamhuuriyadda Federaalka Soomaaliya",
+        "Jumhūriyyat aṣ-Ṣūmāl al-Fiderāliyya"
+      ]
+    },
+    {
+      "name": "South Africa",
+      "cca2": "ZA",
+      "callingCode": "27",
+      "altSpellings": [
+        "ZA",
+        "RSA",
+        "Suid-Afrika",
+        "Republic of South Africa"
+      ]
+    },
+    {
+      "name": "South Georgia",
+      "cca2": "GS",
+      "callingCode": "500",
+      "altSpellings": [
+        "GS",
+        "South Georgia and the South Sandwich Islands"
+      ]
+    },
+    {
+      "name": "South Korea",
+      "cca2": "KR",
+      "callingCode": "82",
+      "altSpellings": [
+        "KR",
+        "Republic of Korea"
+      ]
+    },
+    {
+      "name": "South Sudan",
+      "cca2": "SS",
+      "callingCode": "211",
+      "altSpellings": "SS"
+    },
+    {
+      "name": "Spain",
+      "cca2": "ES",
+      "callingCode": "34",
+      "altSpellings": [
+        "ES",
+        "Kingdom of Spain",
+        "Reino de España"
+      ]
+    },
+    {
+      "name": "Sri Lanka",
+      "cca2": "LK",
+      "callingCode": "94",
+      "altSpellings": [
+        "LK",
+        "ilaṅkai",
+        "Democratic Socialist Republic of Sri Lanka"
+      ]
+    },
+    {
+      "name": "Sudan",
+      "cca2": "SD",
+      "callingCode": "249",
+      "altSpellings": [
+        "SD",
+        "Republic of the Sudan",
+        "Jumhūrīyat as-Sūdān"
+      ]
+    },
+    {
+      "name": "Suriname",
+      "cca2": "SR",
+      "callingCode": "597",
+      "altSpellings": [
+        "SR",
+        "Sarnam",
+        "Sranangron",
+        "Republic of Suriname",
+        "Republiek Suriname"
+      ]
+    },
+    {
+      "name": "Svalbard and Jan Mayen",
+      "cca2": "SJ",
+      "callingCode": "4779",
+      "altSpellings": [
+        "SJ",
+        "Svalbard and Jan Mayen Islands"
+      ]
+    },
+    {
+      "name": "Swaziland",
+      "cca2": "SZ",
+      "callingCode": "268",
+      "altSpellings": [
+        "SZ",
+        "weSwatini",
+        "Swatini",
+        "Ngwane",
+        "Kingdom of Swaziland",
+        "Umbuso waseSwatini"
+      ]
+    },
+    {
+      "name": "Sweden",
+      "cca2": "SE",
+      "callingCode": "46",
+      "altSpellings": [
+        "SE",
+        "Kingdom of Sweden",
+        "Konungariket Sverige"
+      ]
+    },
+    {
+      "name": "Switzerland",
+      "cca2": "CH",
+      "callingCode": "41",
+      "altSpellings": [
+        "CH",
+        "Swiss Confederation",
+        "Schweiz",
+        "Suisse",
+        "Svizzera",
+        "Svizra"
+      ]
+    },
+    {
+      "name": "Syria",
+      "cca2": "SY",
+      "callingCode": "963",
+      "altSpellings": [
+        "SY",
+        "Syrian Arab Republic",
+        "Al-Jumhūrīyah Al-ʻArabīyah As-Sūrīyah"
+      ]
+    },
+    {
+      "name": "Taiwan",
+      "cca2": "TW",
+      "callingCode": "886",
+      "altSpellings": [
+        "TW",
+        "Táiwān",
+        "Republic of China",
+        "中華民國",
+        "Zhōnghuá Mínguó"
+      ]
+    },
+    {
+      "name": "Tajikistan",
+      "cca2": "TJ",
+      "callingCode": "992",
+      "altSpellings": [
+        "TJ",
+        "Toçikiston",
+        "Republic of Tajikistan",
+        "Ҷумҳурии Тоҷикистон",
+        "Çumhuriyi Toçikiston"
+      ]
+    },
+    {
+      "name": "Tanzania",
+      "cca2": "TZ",
+      "callingCode": "255",
+      "altSpellings": [
+        "TZ",
+        "United Republic of Tanzania",
+        "Jamhuri ya Muungano wa Tanzania"
+      ]
+    },
+    {
+      "name": "Thailand",
+      "cca2": "TH",
+      "callingCode": "66",
+      "altSpellings": [
+        "TH",
+        "Prathet",
+        "Thai",
+        "Kingdom of Thailand",
+        "ราชอาณาจักรไทย",
+        "Ratcha Anachak Thai"
+      ]
+    },
+    {
+      "name": "Timor-Leste",
+      "cca2": "TL",
+      "callingCode": "670",
+      "altSpellings": [
+        "TL",
+        "East Timor",
+        "Democratic Republic of Timor-Leste",
+        "República Democrática de Timor-Leste",
+        "Repúblika Demokrátika Timór-Leste"
+      ]
+    },
+    {
+      "name": "Togo",
+      "cca2": "TG",
+      "callingCode": "228",
+      "altSpellings": [
+        "TG",
+        "Togolese",
+        "Togolese Republic",
+        "République Togolaise"
+      ]
+    },
+    {
+      "name": "Tokelau",
+      "cca2": "TK",
+      "callingCode": "690",
+      "altSpellings": "TK"
+    },
+    {
+      "name": "Tonga",
+      "cca2": "TO",
+      "callingCode": "676",
+      "altSpellings": "TO"
+    },
+    {
+      "name": "Trinidad and Tobago",
+      "cca2": "TT",
+      "callingCode": "1868",
+      "altSpellings": [
+        "TT",
+        "Republic of Trinidad and Tobago"
+      ]
+    },
+    {
+      "name": "Tunisia",
+      "cca2": "TN",
+      "callingCode": "216",
+      "altSpellings": [
+        "TN",
+        "Republic of Tunisia",
+        "al-Jumhūriyyah at-Tūnisiyyah"
+      ]
+    },
+    {
+      "name": "Turkey",
+      "cca2": "TR",
+      "callingCode": "90",
+      "altSpellings": [
+        "TR",
+        "Turkiye",
+        "Republic of Turkey",
+        "Türkiye Cumhuriyeti"
+      ]
+    },
+    {
+      "name": "Turkmenistan",
+      "cca2": "TM",
+      "callingCode": "993",
+      "altSpellings": "TM"
+    },
+    {
+      "name": "Turks and Caicos Islands",
+      "cca2": "TC",
+      "callingCode": "1649",
+      "altSpellings": "TC"
+    },
+    {
+      "name": "Tuvalu",
+      "cca2": "TV",
+      "callingCode": "688",
+      "altSpellings": "TV"
+    },
+    {
+      "name": "Uganda",
+      "cca2": "UG",
+      "callingCode": "256",
+      "altSpellings": [
+        "UG",
+        "Republic of Uganda",
+        "Jamhuri ya Uganda"
+      ]
+    },
+    {
+      "name": "Ukraine",
+      "cca2": "UA",
+      "callingCode": "380",
+      "altSpellings": [
+        "UA",
+        "Ukrayina"
+      ]
+    },
+    {
+      "name": "United Arab Emirates",
+      "cca2": "AE",
+      "callingCode": "971",
+      "altSpellings": [
+        "AE",
+        "UAE"
+      ]
+    },
+    {
+      "name": "United Kingdom",
+      "cca2": "GB",
+      "callingCode": "44",
+      "altSpellings": [
+        "GB",
+        "UK",
+        "Great Britain"
+      ]
+    },
+    {
+      "name": "United States",
+      "cca2": "US",
+      "callingCode": "1",
+      "altSpellings": [
+        "US",
+        "USA",
+        "United States of America",
+        "America"
+      ]
+    },
+    {
+      "name": "United States Minor Outlying Islands",
+      "cca2": "UM",
+      "callingCode": "",
+      "altSpellings": "UM"
+    },
+    {
+      "name": "United States Virgin Islands",
+      "cca2": "VI",
+      "callingCode": "1340",
+      "altSpellings": "VI"
+    },
+    {
+      "name": "Uruguay",
+      "cca2": "UY",
+      "callingCode": "598",
+      "altSpellings": [
+        "UY",
+        "Oriental Republic of Uruguay",
+        "República Oriental del Uruguay"
+      ]
+    },
+    {
+      "name": "Uzbekistan",
+      "cca2": "UZ",
+      "callingCode": "998",
+      "altSpellings": [
+        "UZ",
+        "Republic of Uzbekistan",
+        "O‘zbekiston Respublikasi",
+        "Ўзбекистон Республикаси"
+      ]
+    },
+    {
+      "name": "Vanuatu",
+      "cca2": "VU",
+      "callingCode": "678",
+      "altSpellings": [
+        "VU",
+        "Republic of Vanuatu",
+        "Ripablik blong Vanuatu",
+        "République de Vanuatu"
+      ]
+    },
+    {
+      "name": "Venezuela",
+      "cca2": "VE",
+      "callingCode": "58",
+      "altSpellings": [
+        "VE",
+        "Bolivarian Republic of Venezuela",
+        "República Bolivariana de Venezuela"
+      ]
+    },
+    {
+      "name": "Vietnam",
+      "cca2": "VN",
+      "callingCode": "84",
+      "altSpellings": [
+        "VN",
+        "Socialist Republic of Vietnam",
+        "Cộng hòa Xã hội chủ nghĩa Việt Nam"
+      ]
+    },
+    {
+      "name": "Wallis and Futuna",
+      "cca2": "WF",
+      "callingCode": "681",
+      "altSpellings": [
+        "WF",
+        "Territory of the Wallis and Futuna Islands",
+        "Territoire des îles Wallis et Futuna"
+      ]
+    },
+    {
+      "name": "Western Sahara",
+      "cca2": "EH",
+      "callingCode": "212",
+      "altSpellings": [
+        "EH",
+        "Taneẓroft Tutrimt"
+      ]
+    },
+    {
+      "name": "Yemen",
+      "cca2": "YE",
+      "callingCode": "967",
+      "altSpellings": [
+        "YE",
+        "Yemeni Republic",
+        "al-Jumhūriyyah al-Yamaniyyah"
+      ]
+    },
+    {
+      "name": "Zambia",
+      "cca2": "ZM",
+      "callingCode": "260",
+      "altSpellings": [
+        "ZM",
+        "Republic of Zambia"
+      ]
+    },
+    {
+      "name": "Zimbabwe",
+      "cca2": "ZW",
+      "callingCode": "263",
+      "altSpellings": [
+        "ZW",
+        "Republic of Zimbabwe"
+      ]
     }
   ];
   root = this;
@@ -5391,12 +3548,12 @@ require.register("widget/lib/isvisible", function(exports, require, module) {
   /*
   * https://secure2.store.apple.com/us/checkout is too good for Element.prototype
   */
-  if(typeof Element.prototype === 'undefined')
+  if(typeof window.Element.prototype === 'undefined')
   {
     return;
   }
 
-  Element.prototype.isVisible = function() {
+  window.Element.prototype.isVisible = function() {
 
     'use strict';
 
@@ -5528,7 +3685,7 @@ require.register("widget/lib/isvisible", function(exports, require, module) {
 
 require.register("widget/lib/jquery", function(exports, require, module) {
 /*!
- * jQuery JavaScript Library v3.0.0-pre -ajax,-ajax/jsonp,-ajax/load,-ajax/parseJSON,-ajax/parseXML,-ajax/script,-ajax/var/location,-ajax/var/nonce,-ajax/var/rquery,-ajax/xhr,-manipulation/_evalUrl,-event/ajax,-css,-css/addGetHookIf,-css/curCSS,-css/defaultDisplay,-css/hiddenVisibleSelectors,-css/support,-css/swap,-css/var/cssExpand,-css/var/getStyles,-css/var/isHidden,-css/var/rmargin,-css/var/rnumnonpx,-effects,-effects/Tween,-effects/animatedSelector,-dimensions,-offset,-deprecated,-event/alias,-wrap,-deferred,-data,-data/Data,-data/accepts,-data/var/dataPriv,-data/var/dataUser,-eventw
+ * jQuery JavaScript Library v3.0.0-pre -ajax,-ajax/jsonp,-ajax/load,-ajax/parseJSON,-ajax/parseXML,-ajax/script,-ajax/var/location,-ajax/var/nonce,-ajax/var/rquery,-ajax/xhr,-manipulation/_evalUrl,-event/ajax,-css,-css/addGetHookIf,-css/adjustCSS,-css/curCSS,-css/hiddenVisibleSelectors,-css/showHide,-css/support,-css/var/cssExpand,-css/var/getStyles,-css/var/isHidden,-css/var/rmargin,-css/var/rnumnonpx,-css/var/swap,-effects,-effects/Tween,-effects/animatedSelector,-dimensions,-offset,-deprecated,-wrap
  * http://jquery.com/
  *
  * Includes Sizzle.js
@@ -5538,7 +3695,7 @@ require.register("widget/lib/jquery", function(exports, require, module) {
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2015-02-24T23:40Z
+ * Date: 2015-08-07T05:32Z
  */
 
 (function( global, factory ) {
@@ -5570,7 +3727,7 @@ require.register("widget/lib/jquery", function(exports, require, module) {
 // Can't be in strict mode, several libs including ASP.NET trace
 // the stack via arguments.caller.callee and Firefox dies if
 // you try to trace through "use strict" call chains. (#13335)
-//
+//"use strict";
 var arr = [];
 
 var document = window.document;
@@ -5594,7 +3751,7 @@ var support = {};
 
 
 var
-	version = "3.0.0-pre -ajax,-ajax/jsonp,-ajax/load,-ajax/parseJSON,-ajax/parseXML,-ajax/script,-ajax/var/location,-ajax/var/nonce,-ajax/var/rquery,-ajax/xhr,-manipulation/_evalUrl,-event/ajax,-css,-css/addGetHookIf,-css/curCSS,-css/defaultDisplay,-css/hiddenVisibleSelectors,-css/support,-css/swap,-css/var/cssExpand,-css/var/getStyles,-css/var/isHidden,-css/var/rmargin,-css/var/rnumnonpx,-effects,-effects/Tween,-effects/animatedSelector,-dimensions,-offset,-deprecated,-event/alias,-wrap,-deferred,-data,-data/Data,-data/accepts,-data/var/dataPriv,-data/var/dataUser,-eventw",
+	version = "3.0.0-pre -ajax,-ajax/jsonp,-ajax/load,-ajax/parseJSON,-ajax/parseXML,-ajax/script,-ajax/var/location,-ajax/var/nonce,-ajax/var/rquery,-ajax/xhr,-manipulation/_evalUrl,-event/ajax,-css,-css/addGetHookIf,-css/adjustCSS,-css/curCSS,-css/hiddenVisibleSelectors,-css/showHide,-css/support,-css/var/cssExpand,-css/var/getStyles,-css/var/isHidden,-css/var/rmargin,-css/var/rnumnonpx,-css/var/swap,-effects,-effects/Tween,-effects/animatedSelector,-dimensions,-offset,-deprecated,-wrap",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -5609,7 +3766,7 @@ var
 
 	// Matches dashed string for camelizing
 	rmsPrefix = /^-ms-/,
-	rdashAlpha = /-([\da-z])/gi,
+	rdashAlpha = /-([a-z])/g,
 
 	// Used by jQuery.camelCase as callback to replace()
 	fcamelCase = function( all, letter ) {
@@ -6007,6 +4164,16 @@ jQuery.extend({
 	support: support
 });
 
+// JSHint would error on this code due to the Symbol not being defined in ES5.
+// Defining this global in .jshintrc would create a danger of using the global
+// unguarded in another place, it seems safer to just disable JSHint for these
+// three lines.
+/* jshint ignore: start */
+if ( typeof Symbol === "function" ) {
+	jQuery.fn[ Symbol.iterator ] = arr[ Symbol.iterator ];
+}
+/* jshint ignore: end */
+
 // Populate the class2type map
 jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "),
 function(i, name) {
@@ -6014,15 +4181,16 @@ function(i, name) {
 });
 
 function isArraylike( obj ) {
-	var length = obj.length,
+
+	// Support: iOS 8.2 (not reproducible in simulator)
+	// `in` check used to prevent JIT error (gh-2145)
+	// hasOwn isn't used here due to false negatives
+	// regarding Nodelist length in IE
+	var length = "length" in obj && obj.length,
 		type = jQuery.type( obj );
 
 	if ( type === "function" || jQuery.isWindow( obj ) ) {
 		return false;
-	}
-
-	if ( obj.nodeType === 1 && length ) {
-		return true;
 	}
 
 	return type === "array" || length === 0 ||
@@ -6030,14 +4198,14 @@ function isArraylike( obj ) {
 }
 var Sizzle =
 /*!
- * Sizzle CSS Selector Engine v2.1.1
+ * Sizzle CSS Selector Engine v2.2.0
  * http://sizzlejs.com/
  *
- * Copyright 2008, 2014 jQuery Foundation, Inc. and other contributors
+ * Copyright jQuery Foundation and other contributors
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2014-12-15
+ * Date: 2015-04-10
  */
 (function( window ) {
 
@@ -6222,104 +4390,128 @@ try {
 }
 
 function Sizzle( selector, context, results, seed ) {
-	var match, elem, m, nodeType,
-		// QSA vars
-		i, groups, old, nid, newContext, newSelector;
+	var m, i, elem, nid, match, groups, newSelector,
+		newContext = context && context.ownerDocument,
 
-	if ( ( context ? context.ownerDocument || context : preferredDoc ) !== document ) {
-		setDocument( context );
-	}
+		// nodeType defaults to 9, since context defaults to document
+		nodeType = context ? context.nodeType : 9;
 
-	context = context || document;
 	results = results || [];
 
-	if ( !selector || typeof selector !== "string" ) {
+	// Return early from calls with invalid selector or context
+	if ( typeof selector !== "string" || !selector ||
+		nodeType !== 1 && nodeType !== 9 && nodeType !== 11 ) {
+
 		return results;
 	}
 
-	if ( (nodeType = context.nodeType) !== 1 && nodeType !== 9 && nodeType !== 11 ) {
-		return [];
-	}
+	// Try to shortcut find operations (as opposed to filters) in HTML documents
+	if ( !seed ) {
 
-	if ( documentIsHTML && !seed ) {
+		if ( ( context ? context.ownerDocument || context : preferredDoc ) !== document ) {
+			setDocument( context );
+		}
+		context = context || document;
 
-		// Try to shortcut find operations when possible (e.g., not under DocumentFragment)
-		if ( nodeType !== 11 && (match = rquickExpr.exec( selector )) ) {
-			// Speed-up: Sizzle("#ID")
-			if ( (m = match[1]) ) {
-				if ( nodeType === 9 ) {
-					elem = context.getElementById( m );
-					// Check parentNode to catch when Blackberry 4.6 returns
-					// nodes that are no longer in the document (jQuery #6963)
-					if ( elem && elem.parentNode ) {
-						// Handle the case where IE, Opera, and Webkit return items
-						// by name instead of ID
-						if ( elem.id === m ) {
+		if ( documentIsHTML ) {
+
+			// If the selector is sufficiently simple, try using a "get*By*" DOM method
+			// (excepting DocumentFragment context, where the methods don't exist)
+			if ( nodeType !== 11 && (match = rquickExpr.exec( selector )) ) {
+
+				// ID selector
+				if ( (m = match[1]) ) {
+
+					// Document context
+					if ( nodeType === 9 ) {
+						if ( (elem = context.getElementById( m )) ) {
+
+							// Support: IE, Opera, Webkit
+							// TODO: identify versions
+							// getElementById can match elements by name instead of ID
+							if ( elem.id === m ) {
+								results.push( elem );
+								return results;
+							}
+						} else {
+							return results;
+						}
+
+					// Element context
+					} else {
+
+						// Support: IE, Opera, Webkit
+						// TODO: identify versions
+						// getElementById can match elements by name instead of ID
+						if ( newContext && (elem = newContext.getElementById( m )) &&
+							contains( context, elem ) &&
+							elem.id === m ) {
+
 							results.push( elem );
 							return results;
 						}
-					} else {
-						return results;
 					}
-				} else {
-					// Context is not a document
-					if ( context.ownerDocument && (elem = context.ownerDocument.getElementById( m )) &&
-						contains( context, elem ) && elem.id === m ) {
-						results.push( elem );
-						return results;
-					}
-				}
 
-			// Speed-up: Sizzle("TAG")
-			} else if ( match[2] ) {
-				push.apply( results, context.getElementsByTagName( selector ) );
-				return results;
-
-			// Speed-up: Sizzle(".CLASS")
-			} else if ( (m = match[3]) && support.getElementsByClassName ) {
-				push.apply( results, context.getElementsByClassName( m ) );
-				return results;
-			}
-		}
-
-		// QSA path
-		if ( support.qsa && (!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
-			nid = old = expando;
-			newContext = context;
-			newSelector = nodeType !== 1 && selector;
-
-			// qSA works strangely on Element-rooted queries
-			// We can work around this by specifying an extra ID on the root
-			// and working up from there (Thanks to Andrew Dupont for the technique)
-			// IE 8 doesn't work on object elements
-			if ( nodeType === 1 && context.nodeName.toLowerCase() !== "object" ) {
-				groups = tokenize( selector );
-
-				if ( (old = context.getAttribute("id")) ) {
-					nid = old.replace( rescape, "\\$&" );
-				} else {
-					context.setAttribute( "id", nid );
-				}
-				nid = "[id='" + nid + "'] ";
-
-				i = groups.length;
-				while ( i-- ) {
-					groups[i] = nid + toSelector( groups[i] );
-				}
-				newContext = rsibling.test( selector ) && testContext( context.parentNode ) || context;
-				newSelector = groups.join(",");
-			}
-
-			if ( newSelector ) {
-				try {
-					push.apply( results,
-						newContext.querySelectorAll( newSelector )
-					);
+				// Type selector
+				} else if ( match[2] ) {
+					push.apply( results, context.getElementsByTagName( selector ) );
 					return results;
-				} catch(qsaError) {
-				} finally {
-					if ( !old ) {
-						context.removeAttribute("id");
+
+				// Class selector
+				} else if ( (m = match[3]) && support.getElementsByClassName &&
+					context.getElementsByClassName ) {
+
+					push.apply( results, context.getElementsByClassName( m ) );
+					return results;
+				}
+			}
+
+			// Take advantage of querySelectorAll
+			if ( support.qsa &&
+				!compilerCache[ selector + " " ] &&
+				(!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
+
+				if ( nodeType !== 1 ) {
+					newContext = context;
+					newSelector = selector;
+
+				// qSA looks outside Element context, which is not what we want
+				// Thanks to Andrew Dupont for this workaround technique
+				// Support: IE <=8
+				// Exclude object elements
+				} else if ( context.nodeName.toLowerCase() !== "object" ) {
+
+					// Capture the context ID, setting it first if necessary
+					if ( (nid = context.getAttribute( "id" )) ) {
+						nid = nid.replace( rescape, "\\$&" );
+					} else {
+						context.setAttribute( "id", (nid = expando) );
+					}
+
+					// Prefix every selector in the list
+					groups = tokenize( selector );
+					i = groups.length;
+					while ( i-- ) {
+						groups[i] = "[id='" + nid + "'] " + toSelector( groups[i] );
+					}
+					newSelector = groups.join( "," );
+
+					// Expand context for sibling selectors
+					newContext = rsibling.test( selector ) && testContext( context.parentNode ) ||
+						context;
+				}
+
+				if ( newSelector ) {
+					try {
+						push.apply( results,
+							newContext.querySelectorAll( newSelector )
+						);
+						return results;
+					} catch ( qsaError ) {
+					} finally {
+						if ( nid === expando ) {
+							context.removeAttribute( "id" );
+						}
 					}
 				}
 			}
@@ -6332,7 +4524,7 @@ function Sizzle( selector, context, results, seed ) {
 
 /**
  * Create key-value caches of limited size
- * @returns {Function(string, Object)} Returns the Object data after storing it on itself with
+ * @returns {function(string, object)} Returns the Object data after storing it on itself with
  *	property name the (space-suffixed) string and (if the cache is larger than Expr.cacheLength)
  *	deleting the oldest entry
  */
@@ -6500,32 +4692,29 @@ setDocument = Sizzle.setDocument = function( node ) {
 	var hasCompare, parent,
 		doc = node ? node.ownerDocument || node : preferredDoc;
 
-	// If no document and documentElement is available, return
+	// Return early if doc is invalid or already selected
 	if ( doc === document || doc.nodeType !== 9 || !doc.documentElement ) {
 		return document;
 	}
 
-	// Set our document
+	// Update global variables
 	document = doc;
-	docElem = doc.documentElement;
-	parent = doc.defaultView;
+	docElem = document.documentElement;
+	documentIsHTML = !isXML( document );
 
-	// Support: IE>8
-	// If iframe document is assigned to "document" variable and if iframe has been reloaded,
-	// IE will throw "permission denied" error when accessing "document" variable, see jQuery #13936
-	// IE6-8 do not support the defaultView property so parent will be undefined
-	if ( parent && parent !== parent.top ) {
-		// IE11 does not have attachEvent, so all must suffer
+	// Support: IE 9 - 11
+	// Accessing iframe documents after unload throws "permission denied" errors (jQuery #13936)
+	// Limit the fix to IE with document.documentMode and IE >=9 with document.defaultView
+	if ( document.documentMode && (parent = document.defaultView) && parent.top !== parent ) {
+		// Support: IE 11
 		if ( parent.addEventListener ) {
 			parent.addEventListener( "unload", unloadHandler, false );
+
+		// Support: IE 9 - 10 only
 		} else if ( parent.attachEvent ) {
 			parent.attachEvent( "onunload", unloadHandler );
 		}
 	}
-
-	/* Support tests
-	---------------------------------------------------------------------- */
-	documentIsHTML = !isXML( doc );
 
 	/* Attributes
 	---------------------------------------------------------------------- */
@@ -6543,12 +4732,12 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 	// Check if getElementsByTagName("*") returns only elements
 	support.getElementsByTagName = assert(function( div ) {
-		div.appendChild( doc.createComment("") );
+		div.appendChild( document.createComment("") );
 		return !div.getElementsByTagName("*").length;
 	});
 
 	// Support: IE<9
-	support.getElementsByClassName = rnative.test( doc.getElementsByClassName );
+	support.getElementsByClassName = rnative.test( document.getElementsByClassName );
 
 	// Support: IE<10
 	// Check if getElementById returns elements by name
@@ -6556,7 +4745,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 	// so use a roundabout getElementsByName test
 	support.getById = assert(function( div ) {
 		docElem.appendChild( div ).id = expando;
-		return !doc.getElementsByName || !doc.getElementsByName( expando ).length;
+		return !document.getElementsByName || !document.getElementsByName( expando ).length;
 	});
 
 	// ID find and filter
@@ -6564,9 +4753,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 		Expr.find["ID"] = function( id, context ) {
 			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
 				var m = context.getElementById( id );
-				// Check parentNode to catch when Blackberry 4.6 returns
-				// nodes that are no longer in the document #6963
-				return m && m.parentNode ? [ m ] : [];
+				return m ? [ m ] : [];
 			}
 		};
 		Expr.filter["ID"] = function( id ) {
@@ -6583,7 +4770,8 @@ setDocument = Sizzle.setDocument = function( node ) {
 		Expr.filter["ID"] =  function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
-				var node = typeof elem.getAttributeNode !== "undefined" && elem.getAttributeNode("id");
+				var node = typeof elem.getAttributeNode !== "undefined" &&
+					elem.getAttributeNode("id");
 				return node && node.value === attrId;
 			};
 		};
@@ -6623,7 +4811,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 	// Class
 	Expr.find["CLASS"] = support.getElementsByClassName && function( className, context ) {
-		if ( documentIsHTML ) {
+		if ( typeof context.getElementsByClassName !== "undefined" && documentIsHTML ) {
 			return context.getElementsByClassName( className );
 		}
 	};
@@ -6643,7 +4831,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 	// See http://bugs.jquery.com/ticket/13378
 	rbuggyQSA = [];
 
-	if ( (support.qsa = rnative.test( doc.querySelectorAll )) ) {
+	if ( (support.qsa = rnative.test( document.querySelectorAll )) ) {
 		// Build QSA regex
 		// Regex strategy adopted from Diego Perini
 		assert(function( div ) {
@@ -6653,7 +4841,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 			// since its presence should be enough
 			// http://bugs.jquery.com/ticket/12359
 			docElem.appendChild( div ).innerHTML = "<a id='" + expando + "'></a>" +
-				"<select id='" + expando + "-\f]' msallowcapture=''>" +
+				"<select id='" + expando + "-\r\\' msallowcapture=''>" +
 				"<option selected=''></option></select>";
 
 			// Support: IE8, Opera 11-12.16
@@ -6670,7 +4858,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 				rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
 			}
 
-			// Support: Chrome<29, Android<4.2+, Safari<7.0+, iOS<7.0+, PhantomJS<1.9.7+
+			// Support: Chrome<29, Android<4.4, Safari<7.0+, iOS<7.0+, PhantomJS<1.9.8+
 			if ( !div.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
 				rbuggyQSA.push("~=");
 			}
@@ -6693,7 +4881,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 		assert(function( div ) {
 			// Support: Windows 8 Native Apps
 			// The type and name attributes are restricted during .innerHTML assignment
-			var input = doc.createElement("input");
+			var input = document.createElement("input");
 			input.setAttribute( "type", "hidden" );
 			div.appendChild( input ).setAttribute( "name", "D" );
 
@@ -6741,7 +4929,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 	hasCompare = rnative.test( docElem.compareDocumentPosition );
 
 	// Element contains another
-	// Purposefully does not implement inclusive descendent
+	// Purposefully self-exclusive
 	// As in, an element does not contain itself
 	contains = hasCompare || rnative.test( docElem.contains ) ?
 		function( a, b ) {
@@ -6795,10 +4983,10 @@ setDocument = Sizzle.setDocument = function( node ) {
 			(!support.sortDetached && b.compareDocumentPosition( a ) === compare) ) {
 
 			// Choose the first element that is related to our preferred document
-			if ( a === doc || a.ownerDocument === preferredDoc && contains(preferredDoc, a) ) {
+			if ( a === document || a.ownerDocument === preferredDoc && contains(preferredDoc, a) ) {
 				return -1;
 			}
-			if ( b === doc || b.ownerDocument === preferredDoc && contains(preferredDoc, b) ) {
+			if ( b === document || b.ownerDocument === preferredDoc && contains(preferredDoc, b) ) {
 				return 1;
 			}
 
@@ -6826,8 +5014,8 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 		// Parentless nodes are either documents or disconnected
 		if ( !aup || !bup ) {
-			return a === doc ? -1 :
-				b === doc ? 1 :
+			return a === document ? -1 :
+				b === document ? 1 :
 				aup ? -1 :
 				bup ? 1 :
 				sortInput ?
@@ -6864,7 +5052,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 			0;
 	};
 
-	return doc;
+	return document;
 };
 
 Sizzle.matches = function( expr, elements ) {
@@ -6881,6 +5069,7 @@ Sizzle.matchesSelector = function( elem, expr ) {
 	expr = expr.replace( rattributeQuotes, "='$1']" );
 
 	if ( support.matchesSelector && documentIsHTML &&
+		!compilerCache[ expr + " " ] &&
 		( !rbuggyMatches || !rbuggyMatches.test( expr ) ) &&
 		( !rbuggyQSA     || !rbuggyQSA.test( expr ) ) ) {
 
@@ -7154,11 +5343,12 @@ Expr = Sizzle.selectors = {
 				} :
 
 				function( elem, context, xml ) {
-					var cache, outerCache, node, diff, nodeIndex, start,
+					var cache, uniqueCache, outerCache, node, nodeIndex, start,
 						dir = simple !== forward ? "nextSibling" : "previousSibling",
 						parent = elem.parentNode,
 						name = ofType && elem.nodeName.toLowerCase(),
-						useCache = !xml && !ofType;
+						useCache = !xml && !ofType,
+						diff = false;
 
 					if ( parent ) {
 
@@ -7167,7 +5357,10 @@ Expr = Sizzle.selectors = {
 							while ( dir ) {
 								node = elem;
 								while ( (node = node[ dir ]) ) {
-									if ( ofType ? node.nodeName.toLowerCase() === name : node.nodeType === 1 ) {
+									if ( ofType ?
+										node.nodeName.toLowerCase() === name :
+										node.nodeType === 1 ) {
+
 										return false;
 									}
 								}
@@ -7181,11 +5374,21 @@ Expr = Sizzle.selectors = {
 
 						// non-xml :nth-child(...) stores cache data on `parent`
 						if ( forward && useCache ) {
+
 							// Seek `elem` from a previously-cached index
-							outerCache = parent[ expando ] || (parent[ expando ] = {});
-							cache = outerCache[ type ] || [];
-							nodeIndex = cache[0] === dirruns && cache[1];
-							diff = cache[0] === dirruns && cache[2];
+
+							// ...in a gzip-friendly way
+							node = parent;
+							outerCache = node[ expando ] || (node[ expando ] = {});
+
+							// Support: IE <9 only
+							// Defend against cloned attroperties (jQuery gh-1709)
+							uniqueCache = outerCache[ node.uniqueID ] ||
+								(outerCache[ node.uniqueID ] = {});
+
+							cache = uniqueCache[ type ] || [];
+							nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
+							diff = nodeIndex && cache[ 2 ];
 							node = nodeIndex && parent.childNodes[ nodeIndex ];
 
 							while ( (node = ++nodeIndex && node && node[ dir ] ||
@@ -7195,29 +5398,55 @@ Expr = Sizzle.selectors = {
 
 								// When found, cache indexes on `parent` and break
 								if ( node.nodeType === 1 && ++diff && node === elem ) {
-									outerCache[ type ] = [ dirruns, nodeIndex, diff ];
+									uniqueCache[ type ] = [ dirruns, nodeIndex, diff ];
 									break;
 								}
 							}
 
-						// Use previously-cached element index if available
-						} else if ( useCache && (cache = (elem[ expando ] || (elem[ expando ] = {}))[ type ]) && cache[0] === dirruns ) {
-							diff = cache[1];
-
-						// xml :nth-child(...) or :nth-last-child(...) or :nth(-last)?-of-type(...)
 						} else {
-							// Use the same loop as above to seek `elem` from the start
-							while ( (node = ++nodeIndex && node && node[ dir ] ||
-								(diff = nodeIndex = 0) || start.pop()) ) {
+							// Use previously-cached element index if available
+							if ( useCache ) {
+								// ...in a gzip-friendly way
+								node = elem;
+								outerCache = node[ expando ] || (node[ expando ] = {});
 
-								if ( ( ofType ? node.nodeName.toLowerCase() === name : node.nodeType === 1 ) && ++diff ) {
-									// Cache the index of each encountered element
-									if ( useCache ) {
-										(node[ expando ] || (node[ expando ] = {}))[ type ] = [ dirruns, diff ];
-									}
+								// Support: IE <9 only
+								// Defend against cloned attroperties (jQuery gh-1709)
+								uniqueCache = outerCache[ node.uniqueID ] ||
+									(outerCache[ node.uniqueID ] = {});
 
-									if ( node === elem ) {
-										break;
+								cache = uniqueCache[ type ] || [];
+								nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
+								diff = nodeIndex;
+							}
+
+							// xml :nth-child(...)
+							// or :nth-last-child(...) or :nth(-last)?-of-type(...)
+							if ( diff === false ) {
+								// Use the same loop as above to seek `elem` from the start
+								while ( (node = ++nodeIndex && node && node[ dir ] ||
+									(diff = nodeIndex = 0) || start.pop()) ) {
+
+									if ( ( ofType ?
+										node.nodeName.toLowerCase() === name :
+										node.nodeType === 1 ) &&
+										++diff ) {
+
+										// Cache the index of each encountered element
+										if ( useCache ) {
+											outerCache = node[ expando ] || (node[ expando ] = {});
+
+											// Support: IE <9 only
+											// Defend against cloned attroperties (jQuery gh-1709)
+											uniqueCache = outerCache[ node.uniqueID ] ||
+												(outerCache[ node.uniqueID ] = {});
+
+											uniqueCache[ type ] = [ dirruns, diff ];
+										}
+
+										if ( node === elem ) {
+											break;
+										}
 									}
 								}
 							}
@@ -7579,10 +5808,10 @@ function addCombinator( matcher, combinator, base ) {
 
 		// Check against all ancestor/preceding elements
 		function( elem, context, xml ) {
-			var oldCache, outerCache,
+			var oldCache, uniqueCache, outerCache,
 				newCache = [ dirruns, doneName ];
 
-			// We can't set arbitrary data on XML nodes, so they don't benefit from dir caching
+			// We can't set arbitrary data on XML nodes, so they don't benefit from combinator caching
 			if ( xml ) {
 				while ( (elem = elem[ dir ]) ) {
 					if ( elem.nodeType === 1 || checkNonElements ) {
@@ -7595,14 +5824,19 @@ function addCombinator( matcher, combinator, base ) {
 				while ( (elem = elem[ dir ]) ) {
 					if ( elem.nodeType === 1 || checkNonElements ) {
 						outerCache = elem[ expando ] || (elem[ expando ] = {});
-						if ( (oldCache = outerCache[ dir ]) &&
+
+						// Support: IE <9 only
+						// Defend against cloned attroperties (jQuery gh-1709)
+						uniqueCache = outerCache[ elem.uniqueID ] || (outerCache[ elem.uniqueID ] = {});
+
+						if ( (oldCache = uniqueCache[ dir ]) &&
 							oldCache[ 0 ] === dirruns && oldCache[ 1 ] === doneName ) {
 
 							// Assign to newCache so results back-propagate to previous elements
 							return (newCache[ 2 ] = oldCache[ 2 ]);
 						} else {
 							// Reuse newcache so results back-propagate to previous elements
-							outerCache[ dir ] = newCache;
+							uniqueCache[ dir ] = newCache;
 
 							// A match means we're done; a fail means we have to keep checking
 							if ( (newCache[ 2 ] = matcher( elem, context, xml )) ) {
@@ -7827,18 +6061,21 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				len = elems.length;
 
 			if ( outermost ) {
-				outermostContext = context !== document && context;
+				outermostContext = context === document || context || outermost;
 			}
 
 			// Add elements passing elementMatchers directly to results
-			// Keep `i` a string if there are no elements so `matchedCount` will be "00" below
 			// Support: IE<9, Safari
 			// Tolerate NodeList properties (IE: "length"; Safari: <number>) matching elements by id
 			for ( ; i !== len && (elem = elems[i]) != null; i++ ) {
 				if ( byElement && elem ) {
 					j = 0;
+					if ( !context && elem.ownerDocument !== document ) {
+						setDocument( elem );
+						xml = !documentIsHTML;
+					}
 					while ( (matcher = elementMatchers[j++]) ) {
-						if ( matcher( elem, context, xml ) ) {
+						if ( matcher( elem, context || document, xml) ) {
 							results.push( elem );
 							break;
 						}
@@ -7862,8 +6099,17 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				}
 			}
 
-			// Apply set filters to unmatched elements
+			// `i` is now the count of elements visited above, and adding it to `matchedCount`
+			// makes the latter nonnegative.
 			matchedCount += i;
+
+			// Apply set filters to unmatched elements
+			// NOTE: This can be skipped if there are no unmatched elements (i.e., `matchedCount`
+			// equals `i`), unless we didn't visit _any_ elements in the above loop because we have
+			// no element matchers and no seed.
+			// Incrementing an initially-string "0" `i` allows `i` to remain a string only in that
+			// case, which will result in a "00" `matchedCount` that differs from `i` but is also
+			// numerically zero.
 			if ( bySet && i !== matchedCount ) {
 				j = 0;
 				while ( (matcher = setMatchers[j++]) ) {
@@ -7955,10 +6201,11 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 
 	results = results || [];
 
-	// Try to minimize operations if there is no seed and only one group
+	// Try to minimize operations if there is only one selector in the list and no seed
+	// (the latter of which guarantees us context)
 	if ( match.length === 1 ) {
 
-		// Take a shortcut and set the context if the root selector is an ID
+		// Reduce context if the leading compound selector is an ID
 		tokens = match[0] = match[0].slice( 0 );
 		if ( tokens.length > 2 && (token = tokens[0]).type === "ID" &&
 				support.getById && context.nodeType === 9 && documentIsHTML &&
@@ -8013,7 +6260,7 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 		context,
 		!documentIsHTML,
 		results,
-		rsibling.test( selector ) && testContext( context.parentNode ) || context
+		!context || rsibling.test( selector ) && testContext( context.parentNode ) || context
 	);
 	return results;
 };
@@ -8090,7 +6337,7 @@ return Sizzle;
 jQuery.find = Sizzle;
 jQuery.expr = Sizzle.selectors;
 jQuery.expr[":"] = jQuery.expr.pseudos;
-jQuery.unique = Sizzle.uniqueSort;
+jQuery.uniqueSort = jQuery.unique = Sizzle.uniqueSort;
 jQuery.text = Sizzle.getText;
 jQuery.isXMLDoc = Sizzle.isXML;
 jQuery.contains = Sizzle.contains;
@@ -8170,7 +6417,7 @@ jQuery.fn.extend({
 			jQuery.find( selector, self[ i ], ret );
 		}
 
-		return this.pushStack( len > 1 ? jQuery.unique( ret ) : ret );
+		return this.pushStack( len > 1 ? jQuery.uniqueSort( ret ) : ret );
 	},
 	filter: function( selector ) {
 		return this.pushStack( winnow(this, selector || [], false) );
@@ -8205,13 +6452,17 @@ var rootjQuery,
 	// Shortcut simple #id case for speed
 	rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/,
 
-	init = jQuery.fn.init = function( selector, context ) {
+	init = jQuery.fn.init = function( selector, context, root ) {
 		var match, elem;
 
 		// HANDLE: $(""), $(null), $(undefined), $(false)
 		if ( !selector ) {
 			return this;
 		}
+
+		// init accepts an alternate rootjQuery
+		// so migrate can support jQuery.sub (gh-2101)
+		root = root || rootjQuery;
 
 		// Handle HTML strings
 		if ( typeof selector === "string" ) {
@@ -8271,7 +6522,7 @@ var rootjQuery,
 
 			// HANDLE: $(expr, $(...))
 			} else if ( !context || context.jquery ) {
-				return ( context || rootjQuery ).find( selector );
+				return ( context || root ).find( selector );
 
 			// HANDLE: $(expr, context)
 			// (which is just equivalent to: $(context).find(expr)
@@ -8288,8 +6539,8 @@ var rootjQuery,
 		// HANDLE: $(function)
 		// Shortcut for document ready
 		} else if ( jQuery.isFunction( selector ) ) {
-			return rootjQuery.ready !== undefined ?
-				rootjQuery.ready( selector ) :
+			return root.ready !== undefined ?
+				root.ready( selector ) :
 				// Execute immediately if ready is not present
 				selector( jQuery );
 		}
@@ -8382,7 +6633,7 @@ jQuery.fn.extend({
 			}
 		}
 
-		return this.pushStack( matched.length > 1 ? jQuery.unique( matched ) : matched );
+		return this.pushStack( matched.length > 1 ? jQuery.uniqueSort( matched ) : matched );
 	},
 
 	// Determine the position of an element within the set
@@ -8408,7 +6659,7 @@ jQuery.fn.extend({
 
 	add: function( selector, context ) {
 		return this.pushStack(
-			jQuery.unique(
+			jQuery.uniqueSort(
 				jQuery.merge( this.get(), jQuery( selector, context ) )
 			)
 		);
@@ -8479,7 +6730,7 @@ jQuery.each({
 		if ( this.length > 1 ) {
 			// Remove duplicates
 			if ( !guaranteedUnique[ name ] ) {
-				jQuery.unique( matched );
+				jQuery.uniqueSort( matched );
 			}
 
 			// Reverse order for parents* and prev-derivatives
@@ -8713,6 +6964,353 @@ jQuery.Callbacks = function( options ) {
 };
 
 
+function Identity( v ) {
+	return v;
+}
+function Thrower( ex ) {
+	throw ex;
+}
+
+jQuery.extend({
+
+	Deferred: function( func ) {
+		var tuples = [
+				// action, add listener, callbacks,
+				// ... .then handlers, argument index, [final state]
+				[ "notify", "progress", jQuery.Callbacks("memory"),
+					jQuery.Callbacks("memory"), 2 ],
+				[ "resolve", "done", jQuery.Callbacks("once memory"),
+					jQuery.Callbacks("once memory"), 0, "resolved" ],
+				[ "reject", "fail", jQuery.Callbacks("once memory"),
+					jQuery.Callbacks("once memory"), 1, "rejected" ]
+			],
+			state = "pending",
+			promise = {
+				state: function() {
+					return state;
+				},
+				always: function() {
+					deferred.done( arguments ).fail( arguments );
+					return this;
+				},
+				"catch": function( fn ) {
+					return promise.then( null, fn );
+				},
+				// Keep pipe for back-compat
+				pipe: function( /* fnDone, fnFail, fnProgress */ ) {
+					var fns = arguments;
+
+					return jQuery.Deferred(function( newDefer ) {
+						jQuery.each( tuples, function( i, tuple ) {
+							// Map tuples (progress, done, fail) to arguments (done, fail, progress)
+							var fn = jQuery.isFunction( fns[ tuple[ 4 ] ] ) && fns[ tuple[ 4 ] ];
+
+							// deferred.progress(function() { bind to newDefer or newDefer.notify })
+							// deferred.done(function() { bind to newDefer or newDefer.resolve })
+							// deferred.fail(function() { bind to newDefer or newDefer.reject })
+							deferred[ tuple[1] ](function() {
+								var returned = fn && fn.apply( this, arguments );
+								if ( returned && jQuery.isFunction( returned.promise ) ) {
+									returned.promise()
+										.progress( newDefer.notify )
+										.done( newDefer.resolve )
+										.fail( newDefer.reject );
+								} else {
+									newDefer[ tuple[ 0 ] + "With" ](
+										this === promise ? newDefer.promise() : this,
+										fn ? [ returned ] : arguments
+									);
+								}
+							});
+						});
+						fns = null;
+					}).promise();
+				},
+				then: function( onFulfilled, onRejected, onProgress ) {
+					var maxDepth = 0;
+					function resolve( depth, deferred, handler, special ) {
+						return function() {
+							var that = this === promise ? undefined : this,
+								args = arguments,
+								mightThrow = function() {
+									var returned, then;
+
+									// Support: Promises/A+ section 2.3.3.3.3
+									// https://promisesaplus.com/#point-59
+									// Ignore double-resolution attempts
+									if ( depth < maxDepth ) {
+										return;
+									}
+
+									returned = handler.apply( that, args );
+
+									// Support: Promises/A+ section 2.3.1
+									// https://promisesaplus.com/#point-48
+									if ( returned === deferred.promise() ) {
+										throw new TypeError( "Thenable self-resolution" );
+									}
+
+									// Support: Promises/A+ sections 2.3.3.1, 3.5
+									// https://promisesaplus.com/#point-54
+									// https://promisesaplus.com/#point-75
+									// Retrieve `then` only once
+									then = returned &&
+
+										// Support: Promises/A+ section 2.3.4
+										// https://promisesaplus.com/#point-64
+										// Only check objects and functions for thenability
+										( typeof returned === "object" ||
+											typeof returned === "function" ) &&
+										returned.then;
+
+									// Handle a returned thenable
+									if ( jQuery.isFunction( then ) ) {
+										// Special processors (notify) just wait for resolution
+										if ( special ) {
+											then.call(
+												returned,
+												resolve( maxDepth, deferred, Identity, special ),
+												resolve( maxDepth, deferred, Thrower, special )
+											);
+
+										// Normal processors (resolve) also hook into progress
+										} else {
+
+											// ...and disregard older resolution values
+											maxDepth++;
+
+											then.call(
+												returned,
+												resolve( maxDepth, deferred, Identity, special ),
+												resolve( maxDepth, deferred, Thrower, special ),
+												resolve( maxDepth, deferred, Identity,
+													deferred.notify )
+											);
+										}
+
+									// Handle all other returned values
+									} else {
+										// Only substitue handlers pass on context
+										// and multiple values (non-spec behavior)
+										if ( handler !== Identity ) {
+											that = undefined;
+											args = [ returned ];
+										}
+
+										// Process the value(s)
+										// Default process is resolve
+										( special || deferred.resolveWith )(
+											that || deferred.promise(), args );
+									}
+								},
+
+								// Only normal processors (resolve) catch and reject exceptions
+								process = special ?
+									mightThrow :
+									function() {
+										try {
+											mightThrow();
+										} catch ( e ) {
+
+											// Support: Promises/A+ section 2.3.3.3.4.1
+											// https://promisesaplus.com/#point-61
+											// Ignore post-resolution exceptions
+											if ( depth + 1 >= maxDepth ) {
+												// Only substitue handlers pass on context
+												// and multiple values (non-spec behavior)
+												if ( handler !== Thrower ) {
+													that = undefined;
+													args = [ e ];
+												}
+
+												deferred.rejectWith( that || deferred.promise(),
+													args );
+											}
+										}
+									};
+
+							// Support: Promises/A+ section 2.3.3.3.1
+							// https://promisesaplus.com/#point-57
+							// Re-resolve promises immediately to dodge false rejection from
+							// subsequent errors
+							if ( depth ) {
+								process();
+							} else {
+								window.setTimeout( process );
+							}
+						};
+					}
+
+					return jQuery.Deferred(function( newDefer ) {
+						// progress_handlers.add( ... )
+						tuples[ 0 ][ 3 ].add(
+							resolve(
+								0,
+								newDefer,
+								jQuery.isFunction( onProgress ) ?
+									onProgress :
+									Identity,
+								newDefer.notifyWith
+							)
+						);
+
+						// fulfilled_handlers.add( ... )
+						tuples[ 1 ][ 3 ].add(
+							resolve(
+								0,
+								newDefer,
+								jQuery.isFunction( onFulfilled ) ?
+									onFulfilled :
+									Identity
+							)
+						);
+
+						// rejected_handlers.add( ... )
+						tuples[ 2 ][ 3 ].add(
+							resolve(
+								0,
+								newDefer,
+								jQuery.isFunction( onRejected ) ?
+									onRejected :
+									Thrower
+							)
+						);
+					}).promise();
+				},
+				// Get a promise for this deferred
+				// If obj is provided, the promise aspect is added to the object
+				promise: function( obj ) {
+					return obj != null ? jQuery.extend( obj, promise ) : promise;
+				}
+			},
+			deferred = {};
+
+		// Add list-specific methods
+		jQuery.each( tuples, function( i, tuple ) {
+			var list = tuple[ 2 ],
+				stateString = tuple[ 5 ];
+
+			// promise.progress = list.add
+			// promise.done = list.add
+			// promise.fail = list.add
+			promise[ tuple[1] ] = list.add;
+
+			// Handle state
+			if ( stateString ) {
+				list.add(
+					function() {
+						// state = "resolved" (i.e., fulfilled)
+						// state = "rejected"
+						state = stateString;
+					},
+
+					// rejected_callbacks.disable
+					// fulfilled_callbacks.disable
+					tuples[ 3 - i ][ 2 ].disable,
+
+					// progress_callbacks.lock
+					tuples[ 0 ][ 2 ].lock
+				);
+			}
+
+			// progress_handlers.fire
+			// fulfilled_handlers.fire
+			// rejected_handlers.fire
+			list.add( tuple[ 3 ].fire );
+
+			// deferred.notify = function() { deferred.notifyWith(...) }
+			// deferred.resolve = function() { deferred.resolveWith(...) }
+			// deferred.reject = function() { deferred.rejectWith(...) }
+			deferred[ tuple[0] ] = function() {
+				deferred[ tuple[0] + "With" ]( this === deferred ? promise : this, arguments );
+				return this;
+			};
+
+			// deferred.notifyWith = list.fireWith
+			// deferred.resolveWith = list.fireWith
+			// deferred.rejectWith = list.fireWith
+			deferred[ tuple[0] + "With" ] = list.fireWith;
+		});
+
+		// Make the deferred a promise
+		promise.promise( deferred );
+
+		// Call given func if any
+		if ( func ) {
+			func.call( deferred, deferred );
+		}
+
+		// All done!
+		return deferred;
+	},
+
+	// Deferred helper
+	when: function( subordinate /* , ..., subordinateN */ ) {
+		var method,
+			i = 0,
+			resolveValues = slice.call( arguments ),
+			length = resolveValues.length,
+
+			// the count of uncompleted subordinates
+			remaining = length !== 1 ||
+				( subordinate && jQuery.isFunction( subordinate.promise ) ) ? length : 0,
+
+			// the master Deferred.
+			// If resolveValues consist of only a single Deferred, just use that.
+			master = remaining === 1 ? subordinate : jQuery.Deferred(),
+
+			// Update function for both resolve and progress values
+			updateFunc = function( i, contexts, values ) {
+				return function( value ) {
+					contexts[ i ] = this;
+					values[ i ] = arguments.length > 1 ? slice.call( arguments ) : value;
+					if ( values === progressValues ) {
+						master.notifyWith( contexts, values );
+					} else if ( !( --remaining ) ) {
+						master.resolveWith( contexts, values );
+					}
+				};
+			},
+			progressValues, progressContexts, resolveContexts;
+
+		// Add listeners to Deferred subordinates; treat others as resolved
+		if ( length > 1 ) {
+			progressValues = new Array( length );
+			progressContexts = new Array( length );
+			resolveContexts = new Array( length );
+			for ( ; i < length; i++ ) {
+				if ( resolveValues[ i ] &&
+					jQuery.isFunction( (method = resolveValues[ i ].promise) ) ) {
+
+					method.call( resolveValues[ i ] )
+						.progress( updateFunc( i, progressContexts, progressValues ) )
+						.done( updateFunc( i, resolveContexts, resolveValues ) )
+						.fail( master.reject );
+				} else if ( resolveValues[ i ] &&
+					jQuery.isFunction( (method = resolveValues[ i ].then) ) ) {
+
+					method.call(
+						resolveValues[ i ],
+						updateFunc( i, resolveContexts, resolveValues ),
+						master.reject,
+						updateFunc( i, progressContexts, progressValues )
+					);
+				} else {
+					--remaining;
+				}
+			}
+		}
+
+		// If we're not waiting on anything, resolve the master
+		if ( !remaining ) {
+			master.resolveWith( resolveContexts, resolveValues );
+		}
+
+		return master.promise();
+	}
+});
+
+
 // The deferred used on DOM ready
 var readyList;
 
@@ -8758,12 +7356,6 @@ jQuery.extend({
 
 		// If there are functions bound, to execute
 		readyList.resolveWith( document, [ jQuery ] );
-
-		// Trigger any bound ready events
-		if ( jQuery.fn.triggerHandler ) {
-			jQuery( document ).triggerHandler( "ready" );
-			jQuery( document ).off( "ready" );
-		}
 	}
 });
 
@@ -8771,8 +7363,8 @@ jQuery.extend({
  * The ready event handler and self cleanup method
  */
 function completed() {
-	document.removeEventListener( "DOMContentLoaded", completed, false );
-	window.removeEventListener( "load", completed, false );
+	document.removeEventListener( "DOMContentLoaded", completed );
+	window.removeEventListener( "load", completed );
 	jQuery.ready();
 }
 
@@ -8788,22 +7380,22 @@ jQuery.ready.promise = function( obj ) {
 		// discovered by ChrisS here: http://bugs.jquery.com/ticket/12282#comment:15
 		if ( document.readyState === "complete" ) {
 			// Handle it asynchronously to allow scripts the opportunity to delay ready
-			setTimeout( jQuery.ready );
+			window.setTimeout( jQuery.ready );
 
 		} else {
 
 			// Use the handy event callback
-			document.addEventListener( "DOMContentLoaded", completed, false );
+			document.addEventListener( "DOMContentLoaded", completed );
 
 			// A fallback to window.onload, that will always work
-			window.addEventListener( "load", completed, false );
+			window.addEventListener( "load", completed );
 		}
 	}
 	return readyList.promise( obj );
 };
 
 // Kick off the DOM ready check even if the user does not
-// jQuery.ready.promise();
+jQuery.ready.promise();
 
 
 
@@ -8860,6 +7452,328 @@ var access = jQuery.access = function( elems, fn, key, value, chainable, emptyGe
 			fn.call( elems ) :
 			len ? fn( elems[0], key ) : emptyGet;
 };
+
+
+/**
+ * Determines whether an object can have data
+ */
+jQuery.acceptData = function( owner ) {
+	// Accepts only:
+	//  - Node
+	//    - Node.ELEMENT_NODE
+	//    - Node.DOCUMENT_NODE
+	//  - Object
+	//    - Any
+	/* jshint -W018 */
+	return owner.nodeType === 1 || owner.nodeType === 9 || !( +owner.nodeType );
+};
+
+
+function Data() {
+	this.expando = jQuery.expando + Data.uid++;
+}
+
+Data.uid = 1;
+Data.accepts = jQuery.acceptData;
+
+Data.prototype = {
+
+	register: function( owner ) {
+		var value = {};
+
+		// If it is a node unlikely to be stringify-ed or looped over
+		// use plain assignment
+		if ( owner.nodeType ) {
+			owner[ this.expando ] = value;
+
+		// Otherwise secure it in a non-enumerable, non-writable property
+		// configurability must be true to allow the property to be
+		// deleted with the delete operator
+		} else {
+			Object.defineProperty( owner, this.expando, {
+				value: value,
+				writable: true,
+				configurable: true
+			});
+		}
+		return owner[ this.expando ];
+	},
+	cache: function( owner ) {
+
+		// We can accept data for non-element nodes in modern browsers,
+		// but we should not, see #8335.
+		// Always return an empty object.
+		if ( !Data.accepts( owner ) ) {
+			return {};
+		}
+
+		// Check if the owner object already has a cache
+		var cache = owner[ this.expando ];
+
+		// If so, return it
+		if ( cache ) {
+			return cache;
+		}
+
+		// If not, register one
+		return this.register( owner );
+	},
+	set: function( owner, data, value ) {
+		var prop,
+			cache = this.cache( owner );
+
+		// Handle: [ owner, key, value ] args
+		// Always use camelCase key (gh-2257)
+		if ( typeof data === "string" ) {
+			cache[ jQuery.camelCase( data ) ] = value;
+
+		// Handle: [ owner, { properties } ] args
+		} else {
+
+			// Copy the properties one-by-one to the cache object
+			for ( prop in data ) {
+				cache[ jQuery.camelCase( prop ) ] = data[ prop ];
+			}
+		}
+		return cache;
+	},
+	get: function( owner, key ) {
+		var cache = this.cache( owner );
+
+		return key === undefined ?
+			cache :
+
+			// Always use camelCase key (gh-2257)
+			cache[ jQuery.camelCase( key ) ];
+	},
+	access: function( owner, key, value ) {
+
+		// In cases where either:
+		//
+		//   1. No key was specified
+		//   2. A string key was specified, but no value provided
+		//
+		// Take the "read" path and allow the get method to determine
+		// which value to return, respectively either:
+		//
+		//   1. The entire cache object
+		//   2. The data stored at the key
+		//
+		if ( key === undefined ||
+				( ( key && typeof key === "string" ) && value === undefined ) ) {
+
+			return this.get( owner, key );
+		}
+
+		// [*]When the key is not a string, or both a key and value
+		// are specified, set or extend (existing objects) with either:
+		//
+		//   1. An object of properties
+		//   2. A key and value
+		//
+		this.set( owner, key, value );
+
+		// Since the "set" path can have two possible entry points
+		// return the expected data based on which path was taken[*]
+		return value !== undefined ? value : key;
+	},
+	remove: function( owner, key ) {
+		var i,
+			cache = owner[ this.expando ];
+
+		if ( cache === undefined ) {
+			return;
+		}
+
+		if ( key !== undefined ) {
+
+			// Support array or space separated string of keys
+			if ( jQuery.isArray( key ) ) {
+
+				// If key is an array of keys...
+				// We always set camelCase keys, so remove that.
+				key = key.map( jQuery.camelCase );
+			} else {
+				key = jQuery.camelCase( key );
+
+				// If a key with the spaces exists, use it.
+				// Otherwise, create an array by matching non-whitespace
+				key = key in cache ?
+					[ key ] :
+					( key.match( rnotwhite ) || [] );
+			}
+
+			i = key.length;
+
+			while ( i-- ) {
+				delete cache[ key[ i ] ];
+			}
+		}
+
+		// Remove the expando if there's no more data
+		if ( key === undefined || jQuery.isEmptyObject( cache ) ) {
+			delete owner[ this.expando ];
+		}
+	},
+	hasData: function( owner ) {
+		var cache = owner[ this.expando ];
+		return cache !== undefined && !jQuery.isEmptyObject( cache );
+	}
+};
+var dataPriv = new Data();
+
+var dataUser = new Data();
+
+
+
+//	Implementation Summary
+//
+//	1. Enforce API surface and semantic compatibility with 1.9.x branch
+//	2. Improve the module's maintainability by reducing the storage
+//		paths to a single mechanism.
+//	3. Use the same single mechanism to support "private" and "user" data.
+//	4. _Never_ expose "private" data to user code (TODO: Drop _data, _removeData)
+//	5. Avoid exposing implementation details on user objects (eg. expando properties)
+//	6. Provide a clear path for implementation upgrade to WeakMap in 2014
+
+var rbrace = /^(?:\{[\w\W]*\}|\[[\w\W]*\])$/,
+	rmultiDash = /[A-Z]/g;
+
+function dataAttr( elem, key, data ) {
+	var name;
+
+	// If nothing was found internally, try to fetch any
+	// data from the HTML5 data-* attribute
+	if ( data === undefined && elem.nodeType === 1 ) {
+		name = "data-" + key.replace( rmultiDash, "-$&" ).toLowerCase();
+		data = elem.getAttribute( name );
+
+		if ( typeof data === "string" ) {
+			try {
+				data = data === "true" ? true :
+					data === "false" ? false :
+					data === "null" ? null :
+					// Only convert to a number if it doesn't change the string
+					+data + "" === data ? +data :
+					rbrace.test( data ) ? jQuery.parseJSON( data ) :
+					data;
+			} catch ( e ) {}
+
+			// Make sure we set the data so it isn't changed later
+			dataUser.set( elem, key, data );
+		} else {
+			data = undefined;
+		}
+	}
+	return data;
+}
+
+jQuery.extend({
+	hasData: function( elem ) {
+		return dataUser.hasData( elem ) || dataPriv.hasData( elem );
+	},
+
+	data: function( elem, name, data ) {
+		return dataUser.access( elem, name, data );
+	},
+
+	removeData: function( elem, name ) {
+		dataUser.remove( elem, name );
+	},
+
+	// TODO: Now that all calls to _data and _removeData have been replaced
+	// with direct calls to dataPriv methods, these can be deprecated.
+	_data: function( elem, name, data ) {
+		return dataPriv.access( elem, name, data );
+	},
+
+	_removeData: function( elem, name ) {
+		dataPriv.remove( elem, name );
+	}
+});
+
+jQuery.fn.extend({
+	data: function( key, value ) {
+		var i, name, data,
+			elem = this[ 0 ],
+			attrs = elem && elem.attributes;
+
+		// Gets all values
+		if ( key === undefined ) {
+			if ( this.length ) {
+				data = dataUser.get( elem );
+
+				if ( elem.nodeType === 1 && !dataPriv.get( elem, "hasDataAttrs" ) ) {
+					i = attrs.length;
+					while ( i-- ) {
+
+						// Support: IE11+
+						// The attrs elements can be null (#14894)
+						if ( attrs[ i ] ) {
+							name = attrs[ i ].name;
+							if ( name.indexOf( "data-" ) === 0 ) {
+								name = jQuery.camelCase( name.slice(5) );
+								dataAttr( elem, name, data[ name ] );
+							}
+						}
+					}
+					dataPriv.set( elem, "hasDataAttrs", true );
+				}
+			}
+
+			return data;
+		}
+
+		// Sets multiple values
+		if ( typeof key === "object" ) {
+			return this.each(function() {
+				dataUser.set( this, key );
+			});
+		}
+
+		return access( this, function( value ) {
+			var data;
+
+			// The calling jQuery object (element matches) is not empty
+			// (and therefore has an element appears at this[ 0 ]) and the
+			// `value` parameter was not undefined. An empty jQuery object
+			// will result in `undefined` for elem = this[ 0 ] which will
+			// throw an exception if an attempt to read a data cache is made.
+			if ( elem && value === undefined ) {
+
+				// Attempt to get data from the cache
+				// The key will always be camelCased in Data
+				data = dataUser.get( elem, key );
+				if ( data !== undefined ) {
+					return data;
+				}
+
+				// Attempt to "discover" the data in
+				// HTML5 custom data-* attrs
+				data = dataAttr( elem, key );
+				if ( data !== undefined ) {
+					return data;
+				}
+
+				// We tried really hard, but the data doesn't exist.
+				return;
+			}
+
+			// Set the data...
+			this.each(function() {
+
+				// We always store the camelCased key
+				dataUser.set( this, key, value );
+			});
+		}, null, value, arguments.length > 1, null, true );
+	},
+
+	removeData: function( key ) {
+		return this.each(function() {
+			dataUser.remove( this, key );
+		});
+	}
+});
 
 
 jQuery.extend({
@@ -8996,8 +7910,168 @@ jQuery.fn.extend({
 });
 var pnum = (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source;
 
+var rcssNum = new RegExp( "^(?:([+-])=|)(" + pnum + ")([a-z%]*)$", "i" );
+
+
 var rcheckableType = (/^(?:checkbox|radio)$/i);
 
+var rtagName = ( /<([\w:-]+)/ );
+
+var rscriptType = ( /^$|\/(?:java|ecma)script/i );
+
+
+
+// We have to close these tags to support XHTML (#13200)
+var wrapMap = {
+
+	// Support: IE9
+	option: [ 1, "<select multiple='multiple'>", "</select>" ],
+
+	thead: [ 1, "<table>", "</table>" ],
+
+	// Some of the following wrappers are not fully defined, because
+	// their parent elements (except for "table" element) could be omitted
+	// since browser parsers are smart enough to auto-insert them
+
+	// Support: Android 2.3
+	// Android browser doesn't auto-insert colgroup
+	col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
+
+	// Auto-insert "tbody" element
+	tr: [ 2, "<table>", "</table>" ],
+
+	// Auto-insert "tbody" and "tr" elements
+	td: [ 3, "<table>", "</table>" ],
+
+	_default: [ 0, "", "" ]
+};
+
+// Support: IE9
+wrapMap.optgroup = wrapMap.option;
+
+wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
+wrapMap.th = wrapMap.td;
+
+
+function getAll( context, tag ) {
+	// Support: IE9-11+
+	// Use typeof to avoid zero-argument method invocation on host objects (#15151)
+	var ret = typeof context.getElementsByTagName !== "undefined" ?
+			context.getElementsByTagName( tag || "*" ) :
+			typeof context.querySelectorAll !== "undefined" ?
+				context.querySelectorAll( tag || "*" ) :
+			[];
+
+	return tag === undefined || tag && jQuery.nodeName( context, tag ) ?
+		jQuery.merge( [ context ], ret ) :
+		ret;
+}
+
+
+// Mark scripts as having already been evaluated
+function setGlobalEval( elems, refElements ) {
+	var i = 0,
+		l = elems.length;
+
+	for ( ; i < l; i++ ) {
+		dataPriv.set(
+			elems[ i ],
+			"globalEval",
+			!refElements || dataPriv.get( refElements[ i ], "globalEval" )
+		);
+	}
+}
+
+
+var rhtml = /<|&#?\w+;/;
+
+function buildFragment( elems, context, scripts, selection, ignored ) {
+	var elem, tmp, tag, wrap, contains, j,
+		fragment = context.createDocumentFragment(),
+		nodes = [],
+		i = 0,
+		l = elems.length;
+
+	for ( ; i < l; i++ ) {
+		elem = elems[ i ];
+
+		if ( elem || elem === 0 ) {
+
+			// Add nodes directly
+			if ( jQuery.type( elem ) === "object" ) {
+				// Support: Android<4.1, PhantomJS<2
+				// push.apply(_, arraylike) throws on ancient WebKit
+				jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
+
+			// Convert non-html into a text node
+			} else if ( !rhtml.test( elem ) ) {
+				nodes.push( context.createTextNode( elem ) );
+
+			// Convert html into DOM nodes
+			} else {
+				tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
+
+				// Deserialize a standard representation
+				tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+				wrap = wrapMap[ tag ] || wrapMap._default;
+				tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
+
+				// Descend through wrappers to the right content
+				j = wrap[ 0 ];
+				while ( j-- ) {
+					tmp = tmp.lastChild;
+				}
+
+				// Support: Android<4.1, PhantomJS<2
+				// push.apply(_, arraylike) throws on ancient WebKit
+				jQuery.merge( nodes, tmp.childNodes );
+
+				// Remember the top-level container
+				tmp = fragment.firstChild;
+
+				// Ensure the created nodes are orphaned (#12392)
+				tmp.textContent = "";
+			}
+		}
+	}
+
+	// Remove wrapper from fragment
+	fragment.textContent = "";
+
+	i = 0;
+	while ( ( elem = nodes[ i++ ] ) ) {
+
+		// Skip elements already in the context collection (trac-4087)
+		if ( selection && jQuery.inArray( elem, selection ) > -1 ) {
+			if ( ignored ) {
+				ignored.push( elem );
+			}
+			continue;
+		}
+
+		contains = jQuery.contains( elem.ownerDocument, elem );
+
+		// Append to fragment
+		tmp = getAll( fragment.appendChild( elem ), "script" );
+
+		// Preserve script evaluation history
+		if ( contains ) {
+			setGlobalEval( tmp );
+		}
+
+		// Capture executables
+		if ( scripts ) {
+			j = 0;
+			while ( ( elem = tmp[ j++ ] ) ) {
+				if ( rscriptType.test( elem.type || "" ) ) {
+					scripts.push( elem );
+				}
+			}
+		}
+	}
+
+	return fragment;
+}
 
 
 (function() {
@@ -9026,7 +8100,7 @@ var rcheckableType = (/^(?:checkbox|radio)$/i);
 })();
 
 
-support.focusinBubbles = "onfocusin" in window;
+support.focusin = "onfocusin" in window;
 
 
 var
@@ -9043,10 +8117,64 @@ function returnFalse() {
 	return false;
 }
 
+// Support: IE9
+// See #13393 for more info
 function safeActiveElement() {
 	try {
 		return document.activeElement;
 	} catch ( err ) { }
+}
+
+function on( elem, types, selector, data, fn, one ) {
+	var origFn, type;
+
+	// Types can be a map of types/handlers
+	if ( typeof types === "object" ) {
+		// ( types-Object, selector, data )
+		if ( typeof selector !== "string" ) {
+			// ( types-Object, data )
+			data = data || selector;
+			selector = undefined;
+		}
+		for ( type in types ) {
+			on( elem, type, selector, data, types[ type ], one );
+		}
+		return elem;
+	}
+
+	if ( data == null && fn == null ) {
+		// ( types, fn )
+		fn = selector;
+		data = selector = undefined;
+	} else if ( fn == null ) {
+		if ( typeof selector === "string" ) {
+			// ( types, selector, fn )
+			fn = data;
+			data = undefined;
+		} else {
+			// ( types, data, fn )
+			fn = data;
+			data = selector;
+			selector = undefined;
+		}
+	}
+	if ( fn === false ) {
+		fn = returnFalse;
+	}
+
+	if ( one === 1 ) {
+		origFn = fn;
+		fn = function( event ) {
+			// Can use an empty set, since event contains the info
+			jQuery().off( event );
+			return origFn.apply( this, arguments );
+		};
+		// Use same guid so caller can remove using origFn
+		fn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
+	}
+	return elem.each( function() {
+		jQuery.event.add( this, types, fn, data, selector );
+	});
 }
 
 /*
@@ -9138,7 +8266,7 @@ jQuery.event = {
 					special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
 
 					if ( elem.addEventListener ) {
-						elem.addEventListener( type, eventHandle, false );
+						elem.addEventListener( type, eventHandle );
 					}
 				}
 			}
@@ -9231,10 +8359,9 @@ jQuery.event = {
 			}
 		}
 
-		// Remove the expando if it's no longer used
+		// Remove data and the expando if it's no longer used
 		if ( jQuery.isEmptyObject( events ) ) {
-			delete elemData.handle;
-			dataPriv.remove( elem, "events" );
+			dataPriv.remove( elem, "handle events" );
 		}
 	},
 
@@ -9437,8 +8564,11 @@ jQuery.event = {
 			delegateCount = handlers.delegateCount,
 			cur = event.target;
 
+		// Support (at least): Chrome, IE9
 		// Find delegate handlers
 		// Black-hole SVG <use> instance trees (#13180)
+		//
+		// Support: Firefox
 		// Avoid non-left-click bubbling in Firefox (#3861)
 		if ( delegateCount && cur.nodeType && (!event.button || event.type !== "click") ) {
 
@@ -9614,24 +8744,31 @@ jQuery.event = {
 		}
 	},
 
-	simulate: function( type, elem, event, bubble ) {
-		// Piggyback on a donor event to simulate a different one.
-		// Fake originalEvent to avoid donor's stopPropagation, but if the
-		// simulated event prevents default then we do the same on the donor.
+	// Piggyback on a donor event to simulate a different one
+	simulate: function( type, elem, event ) {
 		var e = jQuery.extend(
 			new jQuery.Event(),
 			event,
 			{
 				type: type,
-				isSimulated: true,
-				originalEvent: {}
+				isSimulated: true
+				// Previously, `originalEvent: {}` was set here, so stopPropagation call
+				// would not be triggered on donor event, since in our own
+				// jQuery.event.stopPropagation function we had a check for existence of
+				// originalEvent.stopPropagation method, so, consequently it would be a noop.
+				//
+				// But now, this "simulate" function is used only for events
+				// for which stopPropagation() is noop, so there is no need for that anymore.
+				//
+				// For the compat branch though, guard for "click" and "submit"
+				// events is still used, but was moved to jQuery.event.stopPropagation function
+				// because `originalEvent` should point to the original event for the constancy
+				// with other events and for more focused logic
 			}
 		);
-		if ( bubble ) {
-			jQuery.event.trigger( e, null, elem );
-		} else {
-			jQuery.event.dispatch.call( elem, e );
-		}
+
+		jQuery.event.trigger( e, null, elem );
+
 		if ( e.isDefaultPrevented() ) {
 			event.preventDefault();
 		}
@@ -9639,8 +8776,10 @@ jQuery.event = {
 };
 
 jQuery.removeEvent = function( elem, type, handle ) {
+
+	// This "if" is needed for plain objects
 	if ( elem.removeEventListener ) {
-		elem.removeEventListener( type, handle, false );
+		elem.removeEventListener( type, handle );
 	}
 };
 
@@ -9694,7 +8833,7 @@ jQuery.Event.prototype = {
 
 		this.isDefaultPrevented = returnTrue;
 
-		if ( e && e.preventDefault ) {
+		if ( e ) {
 			e.preventDefault();
 		}
 	},
@@ -9703,7 +8842,7 @@ jQuery.Event.prototype = {
 
 		this.isPropagationStopped = returnTrue;
 
-		if ( e && e.stopPropagation ) {
+		if ( e ) {
 			e.stopPropagation();
 		}
 	},
@@ -9712,7 +8851,7 @@ jQuery.Event.prototype = {
 
 		this.isImmediatePropagationStopped = returnTrue;
 
-		if ( e && e.stopImmediatePropagation ) {
+		if ( e ) {
 			e.stopImmediatePropagation();
 		}
 
@@ -9723,9 +8862,11 @@ jQuery.Event.prototype = {
 // Create mouseenter/leave events using mouseover/out and event-time checks
 // so that event delegation works in jQuery.
 // Do the same for pointerenter/pointerleave and pointerover/pointerout
+//
 // Support: Safari<7.0
 // Safari doesn't support mouseenter/mouseleave at all.
-// Support: Chrome 40+
+//
+// Support: Chrome 34+
 // Mouseenter doesn't perform while left mouse button is pressed
 // (and initiated outside the observed element)
 // https://code.google.com/p/chromium/issues/detail?id=333868
@@ -9757,15 +8898,21 @@ jQuery.each({
 	};
 });
 
-// Support: Firefox, Chrome, Safari
-// Create "bubbling" focus and blur events
-if ( !support.focusinBubbles ) {
+// Support: Firefox
+// Firefox doesn't have focus(in | out) events
+// Related ticket - https://bugzilla.mozilla.org/show_bug.cgi?id=687787
+//
+// Support: Chrome, Safari
+// focus(in | out) events fire after focus & blur events,
+// which is spec violation - http://www.w3.org/TR/DOM-Level-3-Events/#events-focusevent-event-order
+// Related ticket - https://code.google.com/p/chromium/issues/detail?id=449857
+if ( !support.focusin ) {
 	jQuery.each({ focus: "focusin", blur: "focusout" }, function( orig, fix ) {
 
 		// Attach a single capturing handler on the document while someone wants focusin/focusout
 		var handler = function( event ) {
-				jQuery.event.simulate( fix, event.target, jQuery.event.fix( event ), true );
-			};
+			jQuery.event.simulate( fix, event.target, jQuery.event.fix( event ) );
+		};
 
 		jQuery.event.special[ fix ] = {
 			setup: function() {
@@ -9795,61 +8942,11 @@ if ( !support.focusinBubbles ) {
 
 jQuery.fn.extend({
 
-	on: function( types, selector, data, fn, /*INTERNAL*/ one ) {
-		var origFn, type;
-
-		// Types can be a map of types/handlers
-		if ( typeof types === "object" ) {
-			// ( types-Object, selector, data )
-			if ( typeof selector !== "string" ) {
-				// ( types-Object, data )
-				data = data || selector;
-				selector = undefined;
-			}
-			for ( type in types ) {
-				this.on( type, selector, data, types[ type ], one );
-			}
-			return this;
-		}
-
-		if ( data == null && fn == null ) {
-			// ( types, fn )
-			fn = selector;
-			data = selector = undefined;
-		} else if ( fn == null ) {
-			if ( typeof selector === "string" ) {
-				// ( types, selector, fn )
-				fn = data;
-				data = undefined;
-			} else {
-				// ( types, data, fn )
-				fn = data;
-				data = selector;
-				selector = undefined;
-			}
-		}
-		if ( fn === false ) {
-			fn = returnFalse;
-		} else if ( !fn ) {
-			return this;
-		}
-
-		if ( one === 1 ) {
-			origFn = fn;
-			fn = function( event ) {
-				// Can use an empty set, since event contains the info
-				jQuery().off( event );
-				return origFn.apply( this, arguments );
-			};
-			// Use same guid so caller can remove using origFn
-			fn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
-		}
-		return this.each( function() {
-			jQuery.event.add( this, types, fn, data, selector );
-		});
+	on: function( types, selector, data, fn ) {
+		return on( this, types, selector, data, fn );
 	},
 	one: function( types, selector, data, fn ) {
-		return this.on( types, selector, data, fn, 1 );
+		return on( this, types, selector, data, fn, 1 );
 	},
 	off: function( types, selector, fn ) {
 		var handleObj, type;
@@ -9901,45 +8998,11 @@ jQuery.fn.extend({
 
 var
 	rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:-]+)[^>]*)\/>/gi,
-	rtagName = /<([\w:-]+)/,
-	rhtml = /<|&#?\w+;/,
 	rnoInnerhtml = /<(?:script|style|link)/i,
 	// checked="checked" or checked
 	rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,
-	rscriptType = /^$|\/(?:java|ecma)script/i,
 	rscriptTypeMasked = /^true\/(.*)/,
-	rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g,
-
-	// We have to close these tags to support XHTML (#13200)
-	wrapMap = {
-
-		// Support: IE9
-		option: [ 1, "<select multiple='multiple'>", "</select>" ],
-
-		thead: [ 1, "<table>", "</table>" ],
-
-		// Some of the following wrappers are not fully defined, because
-		// their parent elements (except for "table" element) could be omitted
-		// since browser parsers are smart enough to auto-insert them
-
-		// Support: Android 2.3
-		// Android browser doesn't auto-insert colgroup
-		col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
-
-		// Auto-insert "tbody" element
-		tr: [ 2, "<table>", "</table>" ],
-
-		// Auto-insert "tbody" and "tr" elements
-		td: [ 3, "<table>", "</table>" ],
-
-		_default: [ 0, "", "" ]
-	};
-
-// Support: IE9
-wrapMap.optgroup = wrapMap.option;
-
-wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
-wrapMap.th = wrapMap.td;
+	rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g;
 
 function manipulationTarget( elem, content ) {
 	if ( jQuery.nodeName( elem, "table" ) &&
@@ -9966,18 +9029,6 @@ function restoreScript( elem ) {
 	}
 
 	return elem;
-}
-
-// Mark scripts as having already been evaluated
-function setGlobalEval( elems, refElements ) {
-	var i = 0,
-		l = elems.length;
-
-	for ( ; i < l; i++ ) {
-		dataPriv.set(
-			elems[ i ], "globalEval", !refElements || dataPriv.get( refElements[ i ], "globalEval" )
-		);
-	}
 }
 
 function cloneCopyEvent( src, dest ) {
@@ -10014,20 +9065,6 @@ function cloneCopyEvent( src, dest ) {
 	}
 }
 
-function getAll( context, tag ) {
-	// Support: IE9-11+
-	// Use typeof to avoid zero-argument method invocation on host objects (#15151)
-	var ret = typeof context.getElementsByTagName !== "undefined" ?
-			context.getElementsByTagName( tag || "*" ) :
-			typeof context.querySelectorAll !== "undefined" ?
-				context.querySelectorAll( tag || "*" ) :
-			[];
-
-	return tag === undefined || tag && jQuery.nodeName( context, tag ) ?
-		jQuery.merge( [ context ], ret ) :
-		ret;
-}
-
 // Fix IE bugs, see support tests
 function fixInput( src, dest ) {
 	var nodeName = dest.nodeName.toLowerCase();
@@ -10042,7 +9079,120 @@ function fixInput( src, dest ) {
 	}
 }
 
+function domManip( collection, args, callback, ignored ) {
+
+	// Flatten any nested arrays
+	args = concat.apply( [], args );
+
+	var fragment, first, scripts, hasScripts, node, doc,
+		i = 0,
+		l = collection.length,
+		iNoClone = l - 1,
+		value = args[ 0 ],
+		isFunction = jQuery.isFunction( value );
+
+	// We can't cloneNode fragments that contain checked, in WebKit
+	if ( isFunction ||
+			( l > 1 && typeof value === "string" &&
+				!support.checkClone && rchecked.test( value ) ) ) {
+		return collection.each(function( index ) {
+			var self = collection.eq( index );
+			if ( isFunction ) {
+				args[ 0 ] = value.call( this, index, self.html() );
+			}
+			domManip( self, args, callback, ignored );
+		});
+	}
+
+	if ( l ) {
+		fragment = buildFragment( args, collection[ 0 ].ownerDocument, false, collection, ignored );
+		first = fragment.firstChild;
+
+		if ( fragment.childNodes.length === 1 ) {
+			fragment = first;
+		}
+
+		// Require either new content or an interest in ignored elements to invoke the callback
+		if ( first || ignored ) {
+			scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+			hasScripts = scripts.length;
+
+			// Use the original fragment for the last item
+			// instead of the first because it can end up
+			// being emptied incorrectly in certain situations (#8070).
+			for ( ; i < l; i++ ) {
+				node = fragment;
+
+				if ( i !== iNoClone ) {
+					node = jQuery.clone( node, true, true );
+
+					// Keep references to cloned scripts for later restoration
+					if ( hasScripts ) {
+						// Support: Android<4.1, PhantomJS<2
+						// push.apply(_, arraylike) throws on ancient WebKit
+						jQuery.merge( scripts, getAll( node, "script" ) );
+					}
+				}
+
+				callback.call( collection[ i ], node, i );
+			}
+
+			if ( hasScripts ) {
+				doc = scripts[ scripts.length - 1 ].ownerDocument;
+
+				// Reenable scripts
+				jQuery.map( scripts, restoreScript );
+
+				// Evaluate executable scripts on first document insertion
+				for ( i = 0; i < hasScripts; i++ ) {
+					node = scripts[ i ];
+					if ( rscriptType.test( node.type || "" ) &&
+						!dataPriv.access( node, "globalEval" ) &&
+						jQuery.contains( doc, node ) ) {
+
+						if ( node.src ) {
+							// Optional AJAX dependency, but won't run scripts if not present
+							if ( jQuery._evalUrl ) {
+								jQuery._evalUrl( node.src );
+							}
+						} else {
+							jQuery.globalEval( node.textContent.replace( rcleanScript, "" ) );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return collection;
+}
+
+function remove( elem, selector, keepData ) {
+	var node,
+		nodes = selector ? jQuery.filter( selector, elem ) : elem,
+		i = 0;
+
+	for ( ; (node = nodes[i]) != null; i++ ) {
+		if ( !keepData && node.nodeType === 1 ) {
+			jQuery.cleanData( getAll( node ) );
+		}
+
+		if ( node.parentNode ) {
+			if ( keepData && jQuery.contains( node.ownerDocument, node ) ) {
+				setGlobalEval( getAll( node, "script" ) );
+			}
+			node.parentNode.removeChild( node );
+		}
+	}
+
+	return elem;
+}
+
 jQuery.extend({
+	htmlPrefilter: function( html ) {
+		return html.replace( rxhtmlTag, "<$1></$2>" );
+	},
+
 	clone: function( elem, dataAndEvents, deepDataAndEvents ) {
 		var i, l, srcElements, destElements,
 			clone = elem.cloneNode( true ),
@@ -10085,126 +9235,39 @@ jQuery.extend({
 		return clone;
 	},
 
-	buildFragment: function( elems, context, scripts, selection ) {
-		var elem, tmp, tag, wrap, contains, j,
-			fragment = context.createDocumentFragment(),
-			nodes = [],
-			i = 0,
-			l = elems.length;
-
-		for ( ; i < l; i++ ) {
-			elem = elems[ i ];
-
-			if ( elem || elem === 0 ) {
-
-				// Add nodes directly
-				if ( jQuery.type( elem ) === "object" ) {
-					// Support: Android<4.1, PhantomJS<2
-					// push.apply(_, arraylike) throws on ancient WebKit
-					jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
-
-				// Convert non-html into a text node
-				} else if ( !rhtml.test( elem ) ) {
-					nodes.push( context.createTextNode( elem ) );
-
-				// Convert html into DOM nodes
-				} else {
-					tmp = tmp || fragment.appendChild( context.createElement("div") );
-
-					// Deserialize a standard representation
-					tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
-					wrap = wrapMap[ tag ] || wrapMap._default;
-					tmp.innerHTML = wrap[ 1 ] + elem.replace( rxhtmlTag, "<$1></$2>" ) + wrap[ 2 ];
-
-					// Descend through wrappers to the right content
-					j = wrap[ 0 ];
-					while ( j-- ) {
-						tmp = tmp.lastChild;
-					}
-
-					// Support: Android<4.1, PhantomJS<2
-					// push.apply(_, arraylike) throws on ancient WebKit
-					jQuery.merge( nodes, tmp.childNodes );
-
-					// Remember the top-level container
-					tmp = fragment.firstChild;
-
-					// Ensure the created nodes are orphaned (#12392)
-					tmp.textContent = "";
-				}
-			}
-		}
-
-		// Remove wrapper from fragment
-		fragment.textContent = "";
-
-		i = 0;
-		while ( (elem = nodes[ i++ ]) ) {
-
-			// #4087 - If origin and destination elements are the same, and this is
-			// that element, do not do anything
-			if ( selection && jQuery.inArray( elem, selection ) > -1 ) {
-				continue;
-			}
-
-			contains = jQuery.contains( elem.ownerDocument, elem );
-
-			// Append to fragment
-			tmp = getAll( fragment.appendChild( elem ), "script" );
-
-			// Preserve script evaluation history
-			if ( contains ) {
-				setGlobalEval( tmp );
-			}
-
-			// Capture executables
-			if ( scripts ) {
-				j = 0;
-				while ( (elem = tmp[ j++ ]) ) {
-					if ( rscriptType.test( elem.type || "" ) ) {
-						scripts.push( elem );
-					}
-				}
-			}
-		}
-
-		return fragment;
-	},
-
 	cleanData: function( elems ) {
-		var data, elem, type, key,
+		var data, elem, type,
 			special = jQuery.event.special,
 			i = 0;
 
 		for ( ; (elem = elems[ i ]) !== undefined; i++ ) {
-			if ( jQuery.acceptData( elem ) ) {
-				key = elem[ dataPriv.expando ];
+			if ( jQuery.acceptData( elem ) && (data = elem[ dataPriv.expando ])) {
+				if ( data.events ) {
+					for ( type in data.events ) {
+						if ( special[ type ] ) {
+							jQuery.event.remove( elem, type );
 
-				if ( key && (data = dataPriv.cache[ key ]) ) {
-					if ( data.events ) {
-						for ( type in data.events ) {
-							if ( special[ type ] ) {
-								jQuery.event.remove( elem, type );
-
-							// This is a shortcut to avoid jQuery.event.remove's overhead
-							} else {
-								jQuery.removeEvent( elem, type, data.handle );
-							}
+						// This is a shortcut to avoid jQuery.event.remove's overhead
+						} else {
+							jQuery.removeEvent( elem, type, data.handle );
 						}
 					}
-					if ( dataPriv.cache[ key ] ) {
-						// Discard any remaining `private` data
-						delete dataPriv.cache[ key ];
-					}
 				}
+				delete elem[ dataPriv.expando ];
 			}
-			// Discard any remaining `user` data
-			delete dataUser.cache[ elem[ dataUser.expando ] ];
 		}
 	}
 });
 
 jQuery.fn.extend({
+	detach: function( selector ) {
+		return remove( this, selector, true );
+	},
+
+	remove: function( selector ) {
+		return remove( this, selector );
+	},
+
 	text: function( value ) {
 		return access( this, function( value ) {
 			return value === undefined ?
@@ -10218,7 +9281,7 @@ jQuery.fn.extend({
 	},
 
 	append: function() {
-		return this.domManip( arguments, function( elem ) {
+		return domManip( this, arguments, function( elem ) {
 			if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
 				var target = manipulationTarget( this, elem );
 				target.appendChild( elem );
@@ -10227,7 +9290,7 @@ jQuery.fn.extend({
 	},
 
 	prepend: function() {
-		return this.domManip( arguments, function( elem ) {
+		return domManip( this, arguments, function( elem ) {
 			if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
 				var target = manipulationTarget( this, elem );
 				target.insertBefore( elem, target.firstChild );
@@ -10236,7 +9299,7 @@ jQuery.fn.extend({
 	},
 
 	before: function() {
-		return this.domManip( arguments, function( elem ) {
+		return domManip( this, arguments, function( elem ) {
 			if ( this.parentNode ) {
 				this.parentNode.insertBefore( elem, this );
 			}
@@ -10244,32 +9307,11 @@ jQuery.fn.extend({
 	},
 
 	after: function() {
-		return this.domManip( arguments, function( elem ) {
+		return domManip( this, arguments, function( elem ) {
 			if ( this.parentNode ) {
 				this.parentNode.insertBefore( elem, this.nextSibling );
 			}
 		});
-	},
-
-	remove: function( selector, keepData /* Internal Use Only */ ) {
-		var elem,
-			elems = selector ? jQuery.filter( selector, this ) : this,
-			i = 0;
-
-		for ( ; (elem = elems[i]) != null; i++ ) {
-			if ( !keepData && elem.nodeType === 1 ) {
-				jQuery.cleanData( getAll( elem ) );
-			}
-
-			if ( elem.parentNode ) {
-				if ( keepData && jQuery.contains( elem.ownerDocument, elem ) ) {
-					setGlobalEval( getAll( elem, "script" ) );
-				}
-				elem.parentNode.removeChild( elem );
-			}
-		}
-
-		return this;
 	},
 
 	empty: function() {
@@ -10313,7 +9355,7 @@ jQuery.fn.extend({
 			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
 				!wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
 
-				value = value.replace( rxhtmlTag, "<$1></$2>" );
+				value = jQuery.htmlPrefilter( value );
 
 				try {
 					for ( ; i < l; i++ ) {
@@ -10339,113 +9381,21 @@ jQuery.fn.extend({
 	},
 
 	replaceWith: function() {
-		var arg = arguments[ 0 ];
+		var ignored = [];
 
-		// Make the changes, replacing each context element with the new content
-		this.domManip( arguments, function( elem ) {
-			arg = this.parentNode;
+		// Make the changes, replacing each non-ignored context element with the new content
+		return domManip( this, arguments, function( elem ) {
+			var parent = this.parentNode;
 
-			jQuery.cleanData( getAll( this ) );
-
-			if ( arg ) {
-				arg.replaceChild( elem, this );
-			}
-		});
-
-		// Force removal if there was no new content (e.g., from empty arguments)
-		return arg && (arg.length || arg.nodeType) ? this : this.remove();
-	},
-
-	detach: function( selector ) {
-		return this.remove( selector, true );
-	},
-
-	domManip: function( args, callback ) {
-
-		// Flatten any nested arrays
-		args = concat.apply( [], args );
-
-		var fragment, first, scripts, hasScripts, node, doc,
-			i = 0,
-			l = this.length,
-			set = this,
-			iNoClone = l - 1,
-			value = args[ 0 ],
-			isFunction = jQuery.isFunction( value );
-
-		// We can't cloneNode fragments that contain checked, in WebKit
-		if ( isFunction ||
-				( l > 1 && typeof value === "string" &&
-					!support.checkClone && rchecked.test( value ) ) ) {
-			return this.each(function( index ) {
-				var self = set.eq( index );
-				if ( isFunction ) {
-					args[ 0 ] = value.call( this, index, self.html() );
-				}
-				self.domManip( args, callback );
-			});
-		}
-
-		if ( l ) {
-			fragment = jQuery.buildFragment( args, this[ 0 ].ownerDocument, false, this );
-			first = fragment.firstChild;
-
-			if ( fragment.childNodes.length === 1 ) {
-				fragment = first;
-			}
-
-			if ( first ) {
-				scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
-				hasScripts = scripts.length;
-
-				// Use the original fragment for the last item
-				// instead of the first because it can end up
-				// being emptied incorrectly in certain situations (#8070).
-				for ( ; i < l; i++ ) {
-					node = fragment;
-
-					if ( i !== iNoClone ) {
-						node = jQuery.clone( node, true, true );
-
-						// Keep references to cloned scripts for later restoration
-						if ( hasScripts ) {
-							// Support: Android<4.1, PhantomJS<2
-							// push.apply(_, arraylike) throws on ancient WebKit
-							jQuery.merge( scripts, getAll( node, "script" ) );
-						}
-					}
-
-					callback.call( this[ i ], node, i );
-				}
-
-				if ( hasScripts ) {
-					doc = scripts[ scripts.length - 1 ].ownerDocument;
-
-					// Reenable scripts
-					jQuery.map( scripts, restoreScript );
-
-					// Evaluate executable scripts on first document insertion
-					for ( i = 0; i < hasScripts; i++ ) {
-						node = scripts[ i ];
-						if ( rscriptType.test( node.type || "" ) &&
-							!dataPriv.access( node, "globalEval" ) &&
-							jQuery.contains( doc, node ) ) {
-
-							if ( node.src ) {
-								// Optional AJAX dependency, but won't run scripts if not present
-								if ( jQuery._evalUrl ) {
-									jQuery._evalUrl( node.src );
-								}
-							} else {
-								jQuery.globalEval( node.textContent.replace( rcleanScript, "" ) );
-							}
-						}
-					}
+			if ( jQuery.inArray( this, ignored ) < 0 ) {
+				jQuery.cleanData( getAll( this ) );
+				if ( parent ) {
+					parent.replaceChild( elem, this );
 				}
 			}
-		}
 
-		return this;
+		// Force callback invocation
+		}, ignored );
 	}
 });
 
@@ -10486,9 +9436,9 @@ jQuery.fn.delay = function( time, type ) {
 	type = type || "fx";
 
 	return this.queue( type, function( next, hooks ) {
-		var timeout = setTimeout( next, time );
+		var timeout = window.setTimeout( next, time );
 		hooks.stop = function() {
-			clearTimeout( timeout );
+			window.clearTimeout( timeout );
 		};
 	});
 };
@@ -10523,7 +9473,7 @@ jQuery.fn.delay = function( time, type ) {
 })();
 
 
-var nodeHook, boolHook,
+var boolHook,
 	attrHandle = jQuery.expr.attrHandle;
 
 jQuery.fn.extend({
@@ -10540,11 +9490,11 @@ jQuery.fn.extend({
 
 jQuery.extend({
 	attr: function( elem, name, value ) {
-		var hooks, ret,
+		var ret, hooks,
 			nType = elem.nodeType;
 
-		// don't get/set attributes on text, comment and attribute nodes
-		if ( !elem || nType === 3 || nType === 8 || nType === 2 ) {
+		// Don't get/set attributes on text, comment and attribute nodes
+		if ( nType === 3 || nType === 8 || nType === 2 ) {
 			return;
 		}
 
@@ -10558,55 +9508,32 @@ jQuery.extend({
 		if ( nType !== 1 || !jQuery.isXMLDoc( elem ) ) {
 			name = name.toLowerCase();
 			hooks = jQuery.attrHooks[ name ] ||
-				( jQuery.expr.match.bool.test( name ) ? boolHook : nodeHook );
+				( jQuery.expr.match.bool.test( name ) ? boolHook : undefined );
 		}
 
 		if ( value !== undefined ) {
-
 			if ( value === null ) {
 				jQuery.removeAttr( elem, name );
+				return;
+			}
 
-			} else if ( hooks && "set" in hooks &&
-				(ret = hooks.set( elem, value, name )) !== undefined ) {
-
+			if ( hooks && "set" in hooks &&
+				( ret = hooks.set( elem, value, name ) ) !== undefined ) {
 				return ret;
-
-			} else {
-				elem.setAttribute( name, value + "" );
-				return value;
 			}
 
-		} else if ( hooks && "get" in hooks && (ret = hooks.get( elem, name )) !== null ) {
+			elem.setAttribute( name, value + "" );
+			return value;
+		}
+
+		if ( hooks && "get" in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
 			return ret;
-
-		} else {
-			ret = jQuery.find.attr( elem, name );
-
-			// Non-existent attributes return null, we normalize to undefined
-			return ret == null ?
-				undefined :
-				ret;
 		}
-	},
 
-	removeAttr: function( elem, value ) {
-		var name, propName,
-			i = 0,
-			attrNames = value && value.match( rnotwhite );
+		ret = jQuery.find.attr( elem, name );
 
-		if ( attrNames && elem.nodeType === 1 ) {
-			while ( (name = attrNames[i++]) ) {
-				propName = jQuery.propFix[ name ] || name;
-
-				// Boolean attributes get special treatment (#10870)
-				if ( jQuery.expr.match.bool.test( name ) ) {
-					// Set corresponding property to false
-					elem[ propName ] = false;
-				}
-
-				elem.removeAttribute( name );
-			}
-		}
+		// Non-existent attributes return null, we normalize to undefined
+		return ret == null ? undefined : ret;
 	},
 
 	attrHooks: {
@@ -10621,6 +9548,27 @@ jQuery.extend({
 					}
 					return value;
 				}
+			}
+		}
+	},
+
+	removeAttr: function( elem, value ) {
+		var name, propName,
+			i = 0,
+			attrNames = value && value.match( rnotwhite );
+
+		if ( attrNames && elem.nodeType === 1 ) {
+			while ( ( name = attrNames[i++] ) ) {
+				propName = jQuery.propFix[ name ] || name;
+
+				// Boolean attributes get special treatment (#10870)
+				if ( jQuery.expr.match.bool.test( name ) ) {
+
+					// Set corresponding property to false
+					elem[ propName ] = false;
+				}
+
+				elem.removeAttribute( name );
 			}
 		}
 	}
@@ -10674,38 +9622,36 @@ jQuery.fn.extend({
 });
 
 jQuery.extend({
-	propFix: {
-		"for": "htmlFor",
-		"class": "className"
-	},
-
 	prop: function( elem, name, value ) {
-		var ret, hooks, notxml,
+		var ret, hooks,
 			nType = elem.nodeType;
 
 		// Don't get/set properties on text, comment and attribute nodes
-		if ( !elem || nType === 3 || nType === 8 || nType === 2 ) {
+		if ( nType === 3 || nType === 8 || nType === 2 ) {
 			return;
 		}
 
-		notxml = nType !== 1 || !jQuery.isXMLDoc( elem );
+		if ( nType !== 1 || !jQuery.isXMLDoc( elem ) ) {
 
-		if ( notxml ) {
 			// Fix name and attach hooks
 			name = jQuery.propFix[ name ] || name;
 			hooks = jQuery.propHooks[ name ];
 		}
 
 		if ( value !== undefined ) {
-			return hooks && "set" in hooks && (ret = hooks.set( elem, value, name )) !== undefined ?
-				ret :
-				( elem[ name ] = value );
+			if ( hooks && "set" in hooks &&
+				( ret = hooks.set( elem, value, name ) ) !== undefined ) {
+				return ret;
+			}
 
-		} else {
-			return hooks && "get" in hooks && (ret = hooks.get( elem, name )) !== null ?
-				ret :
-				elem[ name ];
+			return ( elem[ name ] = value );
 		}
+
+		if ( hooks && "get" in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
+			return ret;
+		}
+
+		return elem[ name ];
 	},
 
 	propHooks: {
@@ -10717,6 +9663,11 @@ jQuery.extend({
 						-1;
 			}
 		}
+	},
+
+	propFix: {
+		"for": "htmlFor",
+		"class": "className"
 	}
 });
 
@@ -10752,16 +9703,20 @@ jQuery.each([
 
 var rclass = /[\t\r\n\f]/g;
 
+function getClass( elem ) {
+	return elem.getAttribute && elem.getAttribute( "class" ) || "";
+}
+
 jQuery.fn.extend({
 	addClass: function( value ) {
-		var classes, elem, cur, clazz, j, finalValue,
+		var classes, elem, cur, curValue, clazz, j, finalValue,
 			proceed = typeof value === "string" && value,
 			i = 0,
 			len = this.length;
 
 		if ( jQuery.isFunction( value ) ) {
 			return this.each(function( j ) {
-				jQuery( this ).addClass( value.call( this, j, this.className ) );
+				jQuery( this ).addClass( value.call( this, j, getClass( this ) ) );
 			});
 		}
 
@@ -10771,10 +9726,9 @@ jQuery.fn.extend({
 
 			for ( ; i < len; i++ ) {
 				elem = this[ i ];
-				cur = elem.nodeType === 1 && ( elem.className ?
-					( " " + elem.className + " " ).replace( rclass, " " ) :
-					" "
-				);
+				curValue = getClass( elem );
+				cur = elem.nodeType === 1 &&
+					( " " + curValue + " " ).replace( rclass, " " );
 
 				if ( cur ) {
 					j = 0;
@@ -10786,8 +9740,8 @@ jQuery.fn.extend({
 
 					// only assign if different to avoid unneeded rendering.
 					finalValue = jQuery.trim( cur );
-					if ( elem.className !== finalValue ) {
-						elem.className = finalValue;
+					if ( curValue !== finalValue ) {
+						elem.setAttribute( "class", finalValue );
 					}
 				}
 			}
@@ -10797,14 +9751,14 @@ jQuery.fn.extend({
 	},
 
 	removeClass: function( value ) {
-		var classes, elem, cur, clazz, j, finalValue,
+		var classes, elem, cur, curValue, clazz, j, finalValue,
 			proceed = arguments.length === 0 || typeof value === "string" && value,
 			i = 0,
 			len = this.length;
 
 		if ( jQuery.isFunction( value ) ) {
 			return this.each(function( j ) {
-				jQuery( this ).removeClass( value.call( this, j, this.className ) );
+				jQuery( this ).removeClass( value.call( this, j, getClass( this ) ) );
 			});
 		}
 		if ( proceed ) {
@@ -10812,11 +9766,11 @@ jQuery.fn.extend({
 
 			for ( ; i < len; i++ ) {
 				elem = this[ i ];
+				curValue = getClass( elem );
+
 				// This expression is here for better compressibility (see addClass)
-				cur = elem.nodeType === 1 && ( elem.className ?
-					( " " + elem.className + " " ).replace( rclass, " " ) :
-					""
-				);
+				cur = elem.nodeType === 1 &&
+					( " " + curValue + " " ).replace( rclass, " " );
 
 				if ( cur ) {
 					j = 0;
@@ -10829,8 +9783,8 @@ jQuery.fn.extend({
 
 					// Only assign if different to avoid unneeded rendering.
 					finalValue = value ? jQuery.trim( cur ) : "";
-					if ( elem.className !== finalValue ) {
-						elem.className = finalValue;
+					if ( curValue !== finalValue ) {
+						elem.setAttribute( "class", finalValue );
 					}
 				}
 			}
@@ -10849,20 +9803,24 @@ jQuery.fn.extend({
 		if ( jQuery.isFunction( value ) ) {
 			return this.each(function( i ) {
 				jQuery( this ).toggleClass(
-					value.call(this, i, this.className, stateVal), stateVal
+					value.call( this, i, getClass( this ), stateVal ),
+					stateVal
 				);
 			});
 		}
 
 		return this.each(function() {
-			if ( type === "string" ) {
-				// Toggle individual class names
-				var className,
-					i = 0,
-					self = jQuery( this ),
-					classNames = value.match( rnotwhite ) || [];
+			var className, i, self, classNames;
 
-				while ( (className = classNames[ i++ ]) ) {
+			if ( type === "string" ) {
+
+				// Toggle individual class names
+				i = 0;
+				self = jQuery( this );
+				classNames = value.match( rnotwhite ) || [];
+
+				while ( ( className = classNames[ i++ ] ) ) {
+
 					// Check each className given, space separated list
 					if ( self.hasClass( className ) ) {
 						self.removeClass( className );
@@ -10873,18 +9831,24 @@ jQuery.fn.extend({
 
 			// Toggle whole class name
 			} else if ( value === undefined || type === "boolean" ) {
-				if ( this.className ) {
+				className = getClass( this );
+				if ( className ) {
+
 					// store className if set
-					dataPriv.set( this, "__className__", this.className );
+					dataPriv.set( this, "__className__", className );
 				}
 
 				// If the element has a class name or if we're passed `false`,
 				// then remove the whole classname (if there was one, the above saved it).
 				// Otherwise bring back whatever was previously saved (if anything),
 				// falling back to the empty string if nothing was stored.
-				this.className = this.className || value === false ?
-					"" :
-					dataPriv.get( this, "__className__" ) || "";
+				if ( this.setAttribute ) {
+					this.setAttribute( "class",
+						className || value === false ?
+						"" :
+						dataPriv.get( this, "__className__" ) || ""
+					);
+				}
 			}
 		});
 	},
@@ -10895,8 +9859,9 @@ jQuery.fn.extend({
 			l = this.length;
 		for ( ; i < l; i++ ) {
 			if ( this[i].nodeType === 1 &&
-				(" " + this[i].className + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
-
+				( " " + getClass( this[i] ) + " " ).replace( rclass, " " )
+					.indexOf( className ) > -1
+			) {
 				return true;
 			}
 		}
@@ -11069,6 +10034,45 @@ jQuery.each([ "radio", "checkbox" ], function() {
 // Return jQuery for attributes-only inclusion
 
 
+jQuery.each( ("blur focus focusin focusout resize scroll click dblclick " +
+	"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
+	"change select submit keydown keypress keyup contextmenu").split(" "),
+	function( i, name ) {
+
+	// Handle event binding
+	jQuery.fn[ name ] = function( data, fn ) {
+		return arguments.length > 0 ?
+			this.on( name, null, data, fn ) :
+			this.trigger( name );
+	};
+});
+
+jQuery.fn.extend({
+	hover: function( fnOver, fnOut ) {
+		return this.mouseenter( fnOver ).mouseleave( fnOut || fnOver );
+	},
+
+	bind: function( types, data, fn ) {
+		return this.on( types, null, data, fn );
+	},
+	unbind: function( types, fn ) {
+		return this.off( types, null, fn );
+	},
+
+	delegate: function( selector, types, data, fn ) {
+		return this.on( types, selector, data, fn );
+	},
+	undelegate: function( selector, types, fn ) {
+		// ( namespace ) or ( selector, types [, fn] )
+		return arguments.length === 1 ?
+			this.off( selector, "**" ) :
+			this.off( types, selector || "**", fn );
+	}
+});
+
+
+
+
 var r20 = /%20/g,
 	rbracket = /\[\]$/,
 	rCRLF = /\r?\n/g,
@@ -11177,14 +10181,9 @@ jQuery.fn.extend({
 
 
 support.createHTMLDocument = (function() {
-	var doc = document.implementation.createHTMLDocument( "" );
-	// Support: Node with jsdom<=1.5.0+
-	// jsdom's document created via the above method doesn't contain the body
-	if ( !doc.body ) {
-		return false;
-	}
-	doc.body.innerHTML = "<form></form><form></form>";
-	return doc.body.childNodes.length === 2;
+	var body = document.implementation.createHTMLDocument( "" ).body;
+	body.innerHTML = "<form></form><form></form>";
+	return body.childNodes.length === 2;
 })();
 
 
@@ -11214,7 +10213,7 @@ jQuery.parseHTML = function( data, context, keepScripts ) {
 		return [ context.createElement( parsed[1] ) ];
 	}
 
-	parsed = jQuery.buildFragment( [ data ], context, scripts );
+	parsed = buildFragment( [ data ], context, scripts );
 
 	if ( scripts && scripts.length ) {
 		jQuery( scripts ).remove();
@@ -11294,6 +10293,9 @@ module.exports = {
     var c, custom, field, fields, mappedField, newValue, o, post, pre, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
     this.args = args;
     fields = [];
+    if (this.args.mappedFields.fields == null) {
+      return fields;
+    }
     _ref = this.args.mappedFields.fields;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       mappedField = _ref[_i];
@@ -11369,7 +10371,7 @@ module.exports = {
       field.el.classList.add('pop-filled');
       field.el.classList.add('pop-highlight');
       console.log(field.el.className);
-      setTimeout(function() {
+      window.setTimeout(function() {
         return field.el.classList.remove('pop-highlight');
       }, 2000);
     }
@@ -11553,7 +10555,7 @@ module.exports = DateFormatter = (function() {
   DateFormatter.getPart = function(dt, partSpecifier) {
     var javaSucks;
     javaSucks = 100;
-    switch (partSpecifier) {
+    switch (partSpecifier.toLowerCase()) {
       case "d":
         return dt.getDate().toString();
       case "dd":
@@ -11622,9 +10624,9 @@ module.exports = Default = (function() {
 });
 
 require.register("widget/pop/formatters/factory", function(exports, require, module) {
-var Address, Date, Default, FormatterFactory, Phone, formatters;
+var Address, Date, Default, FormatterFactory, MonthYear, Phone, formatters;
 
-formatters = [Address = require('widget/pop/formatters/address'), Phone = require('widget/pop/formatters/phone'), Date = require('widget/pop/formatters/date'), Default = require('widget/pop/formatters/default')];
+formatters = [Address = require('widget/pop/formatters/address'), Phone = require('widget/pop/formatters/phone'), Date = require('widget/pop/formatters/date'), MonthYear = require('widget/pop/formatters/monthyear'), Default = require('widget/pop/formatters/default')];
 
 module.exports = FormatterFactory = (function() {
   function FormatterFactory() {}
@@ -11642,12 +10644,58 @@ module.exports = FormatterFactory = (function() {
         return Phone;
       case 'Date':
         return Date;
+      case 'MonthYear':
+        return MonthYear;
       default:
         return Default;
     }
   };
 
   return FormatterFactory;
+
+})();
+
+});
+
+require.register("widget/pop/formatters/monthyear", function(exports, require, module) {
+var DateFormatter, MonthYearFormatter;
+
+DateFormatter = require('./date');
+
+module.exports = MonthYearFormatter = (function() {
+  function MonthYearFormatter() {}
+
+  MonthYearFormatter.process = function(field, payload) {
+    var dateFormat, dt, value;
+    dateFormat = this.findMonthYearFormat(field.placeholder) || this.findMonthYearFormat(field.label) || ["mm-yyyy", "mm", "-", "yyyy"];
+    console.log('dateFormat', dateFormat);
+    value = DateFormatter.value(field, payload);
+    dt = this.parsePayloadMonthYear(value);
+    return this.formatMonthYear(dt, dateFormat);
+  };
+
+  MonthYearFormatter.findMonthYearFormat = function(text) {
+    var datePattern;
+    if (!text) {
+      return null;
+    }
+    datePattern = /(m{1,2}|y{2,4})([\s-\/]+)(m{1,2}|y{2,4})/i;
+    return text.match(datePattern);
+  };
+
+  MonthYearFormatter.formatMonthYear = function(dt, dateFormat) {
+    var result;
+    result = DateFormatter.getPart(dt, dateFormat[1]);
+    result += dateFormat[2];
+    result += DateFormatter.getPart(dt, dateFormat[3]);
+    return result;
+  };
+
+  MonthYearFormatter.parsePayloadMonthYear = function(s) {
+    return new Date(s.slice(3, 7), parseInt(s.slice(0, 2)) - 1, 1);
+  };
+
+  return MonthYearFormatter;
 
 })();
 
@@ -11701,7 +10749,7 @@ StateSelectField = require 'widget/pop/helpers/state_select'
 
 var DefaultHelper, FieldPopHelper, fields;
 
-fields = [require('widget/pop/helpers/month_select'), require('widget/pop/helpers/country_code_select'), require('widget/pop/helpers/country_select'), require('widget/pop/helpers/state_select'), require('widget/pop/helpers/select'), require('widget/pop/helpers/two_digits'), require('widget/pop/helpers/number'), require('widget/pop/helpers/text'), require('widget/pop/helpers/radio'), require('widget/pop/helpers/checkbox')];
+fields = [require('widget/pop/helpers/jqselect_box'), require('widget/pop/helpers/month_select'), require('widget/pop/helpers/country_code_select'), require('widget/pop/helpers/country_select'), require('widget/pop/helpers/state_select'), require('widget/pop/helpers/select'), require('widget/pop/helpers/two_digits'), require('widget/pop/helpers/number'), require('widget/pop/helpers/text'), require('widget/pop/helpers/radio'), require('widget/pop/helpers/checkbox')];
 
 DefaultHelper = require('widget/pop/helpers/text');
 
@@ -11775,7 +10823,7 @@ module.exports = FieldPopHelper = (function() {
 require.register("widget/pop/helpers/base", function(exports, require, module) {
 var BaseField, IsVisible, Preferences, jQuery;
 
-Preferences = require('widget/config/preferences').page;
+Preferences = require('widget/config/preferences');
 
 IsVisible = require('widget/lib/isvisible');
 
@@ -11792,7 +10840,7 @@ module.exports = BaseField = (function() {
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       val = _ref[_i];
-      _results.push("" + Preferences.cssPrefix + "-" + val);
+      _results.push("" + Preferences.page.cssPrefix + "-" + val);
     }
     return _results;
   })();
@@ -11854,10 +10902,14 @@ module.exports = BaseField = (function() {
     if (((_ref = this.field.el) != null ? _ref.dispatchEvent : void 0) != null) {
       this.field.el.dispatchEvent(evtA);
     }
-    evtB = document.createEvent('HTMLEvents');
-    evtB.initEvent('click', true, true);
-    if (((_ref1 = this.field.el) != null ? _ref1.dispatchEvent : void 0) != null) {
-      return this.field.el.dispatchEvent(evtB);
+    if (Preferences.browserType === 'Fennec') {
+      return console.log("Skipping click event because Fennec");
+    } else {
+      evtB = document.createEvent('HTMLEvents');
+      evtB.initEvent('click', true, true);
+      if (((_ref1 = this.field.el) != null ? _ref1.dispatchEvent : void 0) != null) {
+        return this.field.el.dispatchEvent(evtB);
+      }
     }
   };
 
@@ -12126,24 +11178,24 @@ module.exports = CountrySelect = (function(_super) {
     CountrySelect.__super__.constructor.call(this, field);
     this.options = this.field.el.children;
     this.optionValues = (function() {
-      var _i, _len, _ref, _results;
+      var _i, _len, _ref, _ref1, _results;
       _ref = this.options;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         option = _ref[_i];
-        country = Countries.filter(function(o) {
-          var as;
-          return o.name.toLowerCase() === option.value.toLowerCase() || ~((function() {
-            var _j, _len1, _ref1, _results1;
-            _ref1 = o.altSpellings;
+        country = (_ref1 = Countries.filter(function(o) {
+          var as, _ref2, _ref3;
+          return o.name.toLowerCase() === (option != null ? (_ref2 = option.value) != null ? _ref2.toLowerCase() : void 0 : void 0) || ~((function() {
+            var _j, _len1, _ref4, _results1;
+            _ref4 = o.altSpellings;
             _results1 = [];
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              as = _ref1[_j];
+            for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+              as = _ref4[_j];
               _results1.push(as.toLowerCase());
             }
             return _results1;
-          })()).indexOf(option.value.toLowerCase());
-        })[0];
+          })()).indexOf(option != null ? (_ref3 = option.value) != null ? _ref3.toLowerCase() : void 0 : void 0);
+        })) != null ? _ref1.shift() : void 0;
         if (country != null) {
           selections = [].concat.apply([], [country.name, option.value].concat([country.altSpellings]));
           _results.push([
@@ -12197,6 +11249,49 @@ module.exports = CountrySelect = (function(_super) {
 
 });
 
+require.register("widget/pop/helpers/jqselect_box", function(exports, require, module) {
+var JQSelectBoxField, SelectField, jQuery,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+SelectField = require('widget/pop/helpers/select');
+
+jQuery = require('widget/lib/jquery');
+
+module.exports = JQSelectBoxField = (function(_super) {
+  __extends(JQSelectBoxField, _super);
+
+  JQSelectBoxField.detect = function(el) {
+    return SelectField.detect(el) && this._detect(el);
+  };
+
+  JQSelectBoxField._detect = function(el) {
+    return el.el.hasAttribute('sb');
+  };
+
+  function JQSelectBoxField(field) {
+    JQSelectBoxField.__super__.constructor.call(this, field);
+  }
+
+  JQSelectBoxField.prototype.fill = function(value) {
+    var el, evt, newVal, sbId;
+    JQSelectBoxField.__super__.fill.call(this, value);
+    newVal = jQuery(this.field.el).val();
+    sbId = '#sbOptions_' + this.field.el.getAttribute('sb');
+    el = jQuery("" + sbId + " a[rel=" + newVal + "]");
+    evt = document.createEvent('HTMLEvents');
+    evt.initEvent('click', true, true);
+    if (el.length > 0) {
+      el[0].dispatchEvent(evt);
+    }
+  };
+
+  return JQSelectBoxField;
+
+})(SelectField);
+
+});
+
 require.register("widget/pop/helpers/month_select", function(exports, require, module) {
 var BaseField, MonthSelectField,
   __hasProp = {}.hasOwnProperty,
@@ -12214,20 +11309,23 @@ module.exports = MonthSelectField = (function(_super) {
   }
 
   MonthSelectField.detect = function(field) {
-    var first, januaries, param, _ref;
+    var first, januaries, param, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
     januaries = ['january', 'januarie', 'januar', 'januari', '一月'];
-    if (field.el.tagName !== 'SELECT') {
+    if ((field != null ? (_ref = field.el) != null ? _ref.options : void 0 : void 0) == null) {
       return false;
     }
-    if (field.el.options.length !== 13) {
+    if ((field != null ? (_ref1 = field.el) != null ? _ref1.tagName : void 0 : void 0) !== 'SELECT') {
+      return false;
+    }
+    if ((field != null ? (_ref2 = field.el) != null ? (_ref3 = _ref2.options) != null ? _ref3.length : void 0 : void 0 : void 0) !== 13) {
       return false;
     }
     param = field.mapping.shift().split('.').pop();
     if (param !== 'Month') {
       return false;
     }
-    first = field.el.options[1].innerText.trim();
-    if (_ref = first.toLowerCase(), __indexOf.call(januaries, _ref) < 0) {
+    first = (_ref4 = field.el.options[1].innerText) != null ? _ref4.trim() : void 0;
+    if (_ref5 = first != null ? first.toLowerCase() : void 0, __indexOf.call(januaries, _ref5) < 0) {
       return false;
     }
     return true;
@@ -12419,7 +11517,8 @@ module.exports = SelectField = (function(_super) {
   }
 
   SelectField.detect = function(field) {
-    return field.el.tagName === 'SELECT';
+    var _ref;
+    return (field != null ? (_ref = field.el) != null ? _ref.tagName : void 0 : void 0) === 'SELECT';
   };
 
   SelectField.prototype.fill = function(value) {
@@ -12458,30 +11557,30 @@ module.exports = SelectField = (function(_super) {
   SelectField.prototype._strategies = ['_exactStrategy', '_prefixStrategy', '_fuzzyValueStrategy', '_fuzzyTextStrategy'];
 
   SelectField.prototype._exactStrategy = function(value) {
-    var option, v, _i, _len, _ref;
+    var option, v, _i, _len, _ref, _ref1, _ref2;
     _ref = this.options;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       option = _ref[_i];
       v = value.toLowerCase();
-      if (option.value.toLowerCase() === v) {
+      if ((option != null ? (_ref1 = option.value) != null ? _ref1.toLowerCase() : void 0 : void 0) === v) {
         return this.field.el.value = option.value;
       }
-      if (option.text.toLowerCase() === v) {
+      if ((option != null ? (_ref2 = option.text) != null ? _ref2.toLowerCase() : void 0 : void 0) === v) {
         return this.field.el.value = option.value;
       }
     }
   };
 
   SelectField.prototype._prefixStrategy = function(value) {
-    var option, v, _i, _len, _ref;
+    var option, v, _i, _len, _ref, _ref1, _ref2;
     _ref = this.options;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       option = _ref[_i];
       v = value.toLowerCase();
-      if (option.value.toLowerCase().indexOf(v) === 0) {
+      if ((option != null ? (_ref1 = option.value) != null ? _ref1.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
         return this.field.el.value = option.value;
       }
-      if (option.text.toLowerCase().indexOf(v) === 0) {
+      if ((option != null ? (_ref2 = option.text) != null ? _ref2.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
         return this.field.el.value = option.value;
       }
     }
@@ -12571,7 +11670,7 @@ module.exports = StateSelectField = (function(_super) {
   };
 
   StateSelectField.prototype._attachObserver = function() {
-    var MAX_FILLS, blankObserver, config, el, fillCount, observer, target,
+    var MAX_FILLS, MutationObserver, blankObserver, config, el, fillCount, observer, target,
       _this = this;
     target = this.field.el.parentNode;
     if ((target == null) || target.length === 0) {
@@ -12590,6 +11689,7 @@ module.exports = StateSelectField = (function(_super) {
       characterData: true,
       subtree: true
     };
+    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     blankObserver = new MutationObserver(function(mutations) {});
     blankObserver.observe(target, config);
     MAX_FILLS = 1;
@@ -12690,14 +11790,17 @@ module.exports = TwoDigitsField = (function(_super) {
   TwoDigitsField.detect = function(field) {
     var metadata, _ref, _ref1, _ref2, _ref3, _ref4;
     metadata = field.metadata;
-    return metadata.tag_name === 'input' && (((_ref = metadata.placeholder) != null ? _ref.length : void 0) === 2 || metadata.max_length === 2 || ((_ref1 = ((_ref2 = metadata.label) != null ? _ref2.toLowerCase() : void 0) || ((_ref3 = metadata.name) != null ? _ref3.toLowerCase() : void 0) || ((_ref4 = metadata.id) != null ? _ref4.toLowerCase() : void 0)) === 'yy' || _ref1 === 'mm'));
+    return metadata.tag_name === 'input' && (((_ref = metadata.placeholder) != null ? _ref.length : void 0) === 2 || metadata.max_length === '2' || ((_ref1 = ((_ref2 = metadata.label) != null ? _ref2.toLowerCase() : void 0) || ((_ref3 = metadata.name) != null ? _ref3.toLowerCase() : void 0) || ((_ref4 = metadata.id) != null ? _ref4.toLowerCase() : void 0)) === 'yy' || _ref1 === 'mm'));
   };
 
   TwoDigitsField.prototype.fill = function(value) {
+    var javaSucks;
     TwoDigitsField.__super__.fill.call(this, value);
     value = Number(value);
     if (!isNaN(value)) {
-      value = value.toString().slice(-2);
+      javaSucks = 100;
+      value = value % javaSucks;
+      value = value.toString();
       if (isNaN) {
         this.field.el.value = value;
       }
@@ -12776,9 +11879,6 @@ module.exports = PublisherApi = (function() {
 
   PublisherApi.fields = function() {
     var evt, parameterDiv;
-    if (typeof window.FillrPublisher === void 0) {
-      return;
-    }
     parameterDiv = this.getParameterDiv();
     evt = document.createEvent('Event');
     evt.initEvent('fillr_publisher_get_fields', true, true);
@@ -12790,16 +11890,15 @@ module.exports = PublisherApi = (function() {
   };
 
   PublisherApi.populate = function(payload) {
-    var evt, parameterDiv;
-    if (typeof window.FillrPublisher === void 0) {
-      return;
-    }
+    var evt, parameterDiv, result;
     parameterDiv = this.getParameterDiv();
     parameterDiv.innerText = JSON.stringify(payload);
     evt = document.createEvent('Event');
     evt.initEvent('fillr_publisher_populate', true, true);
     window.dispatchEvent(evt);
-    if (parameterDiv.innerText === "true") {
+    result = parameterDiv.innerText;
+    parameterDiv.innerText = '';
+    if (result === "true") {
       return true;
     } else {
       return false;
