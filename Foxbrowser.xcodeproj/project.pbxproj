@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		212359CB1BC5EEC200B1A5D6 /* libFillrSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
+		21BE48D11BF2F8100042DAAC /* libFillrSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
 		F4047E4C19E766D500D27001 /* UICKeyChainStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4B19E766D500D27001 /* UICKeyChainStore.m */; };
 		F406C028195F25A300A84C76 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = F406C005195F25A300A84C76 /* NSData+Base64.m */; };
@@ -370,7 +370,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				212359CB1BC5EEC200B1A5D6 /* libFillrSDK.a in Frameworks */,
+				21BE48D11BF2F8100042DAAC /* libFillrSDK.a in Frameworks */,
 				21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */,
 				F4ADE13F19AFC00900A5B380 /* libsqlite3.0.dylib in Frameworks */,
 				F42CC123195652D8005411EA /* CoreGraphics.framework in Frameworks */,
@@ -1236,7 +1236,7 @@
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1249,7 +1249,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "a183a5e6-cc89-42c6-bbe7-20c265b1d6a2";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Adhoc;
@@ -1314,7 +1314,7 @@
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1327,7 +1327,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1342,7 +1342,7 @@
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1355,7 +1355,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/PopAnyFormiOS/FillrSDK/**";
+				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/FillrSDK/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
