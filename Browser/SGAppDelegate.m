@@ -85,10 +85,16 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [Appirater appLaunched:YES];
     
     [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" andUrlSchema:@"com.fillr.foxbrowser"];
-    [[Fillr sharedInstance] setBrowserName:@"Fox Browser" toolbarBrowserName:@"Fox Browser"];
+    [[Fillr sharedInstance] setBrowserName:@"Dolphin Browser" toolbarBrowserName:@"Dolphin Browser"];
+    [Fillr sharedInstance].isDolphin = YES;
+    [Fillr sharedInstance].themeColor = [UIColor colorWithRed:0.0f green:0.64f blue:0.72f alpha:1.0f];
     //[Fillr sharedInstance].overlayInputAccessoryView = YES;
     [[Fillr sharedInstance] setEnabled:YES];
     [Fillr sharedInstance].delegate = self;
+    [Fillr sharedInstance].disableHandler = ^() {
+        NSLog(@"SDK disabled by Dolphin Browser");
+    };
+    //[[Fillr sharedInstance] enableFillr];
     //[Fillr sharedInstance].rootViewController = self.browserViewController;
     
     return YES;
