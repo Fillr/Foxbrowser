@@ -90,14 +90,30 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [Fillr sharedInstance].themeColor = [UIColor colorWithRed:0.0f green:0.64f blue:0.72f alpha:1.0f];
     //[Fillr sharedInstance].overlayInputAccessoryView = YES;
     [[Fillr sharedInstance] setEnabled:YES];
+    [[Fillr sharedInstance] setVisible:YES];
     [Fillr sharedInstance].delegate = self;
-    [Fillr sharedInstance].disableHandler = ^() {
-        NSLog(@"SDK disabled by Dolphin Browser");
-    };
-    //[[Fillr sharedInstance] enableFillr];
+    //[[Fillr sharedInstance] showDownloadDialog];
     //[Fillr sharedInstance].rootViewController = self.browserViewController;
     
     return YES;
+}
+
+- (void)fillrStateChanged:(FillrSessionState)state currentWebView:(UIView *)currentWebView {
+    if (state == FillrStateDownloadingApp || state == FillrStateOpenApp) {
+
+    }
+}
+
+- (void)onDismissThresholdExceeded {
+    NSLog(@"Toolbar dismiss exceeded threshold");
+}
+
+- (void)onToolbarVisibilityChanged:(BOOL)isVisible isFillrInstalled:(BOOL)isFillrInstalled {
+    NSLog(@"Toolbar is %@, Fillr is %@", isVisible ? @"visible" : @"invisible", isFillrInstalled ? @"installed" : @"not installed");
+}
+
+- (void)onToolbarFillClicked:(BOOL)isFillrInstalled {
+    NSLog(@"Toolbar is clicked, Fillr is %@", isFillrInstalled ? @"installed" : @"not installed");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
@@ -255,12 +271,6 @@ viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents
                                                                action:@"Remind Later"
                                                                 label:nil
                                                                 value:nil] build]];
-}
-
-- (void)fillrStateChanged:(FillrSessionState)state currentWebView:(UIView *)currentWebView {
-    if (state == FillrStateDownloadingApp || state == FillrStateOpenApp) {
-        NSLog(@"Fillr App Called");
-    }
 }
 
 @end
