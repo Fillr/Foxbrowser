@@ -105,7 +105,7 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     }
 }
 
-- (void)onDismissThresholdExceeded {
+- (void)onFillrDismissThresholdExceeded {
     NSLog(@"Toolbar dismiss exceeded threshold");
     
     UIAlertController *alert = [UIAlertController
@@ -131,11 +131,11 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [self.window.rootViewController presentViewController:alert animated:YES completion:nil];
 }
 
-- (void)onToolbarVisibilityChanged:(BOOL)isVisible isFillrInstalled:(BOOL)isFillrInstalled {
+- (void)onFillrToolbarVisibilityChanged:(BOOL)isVisible isFillrInstalled:(BOOL)isFillrInstalled {
     NSLog(@"Toolbar is %@, Fillr is %@", isVisible ? @"visible" : @"invisible", isFillrInstalled ? @"installed" : @"not installed");
 }
 
-- (void)onToolbarFillClicked:(BOOL)isFillrInstalled {
+- (void)onFillrToolbarClicked:(BOOL)isFillrInstalled {
     NSLog(@"Toolbar is clicked, Fillr is %@", isFillrInstalled ? @"installed" : @"not installed");
 }
 
