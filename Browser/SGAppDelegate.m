@@ -88,7 +88,7 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [[Fillr sharedInstance] setBrowserName:@"Dolphin Browser" toolbarBrowserName:@"Dolphin Browser"];
     [Fillr sharedInstance].isDolphin = YES;
     [Fillr sharedInstance].toolbarTextColor = [UIColor colorWithRed:0.0f green:0.64f blue:0.72f alpha:1.0f];
-    [Fillr sharedInstance].toolbarThemeColor = [UIColor blackColor];
+    //[Fillr sharedInstance].toolbarThemeColor = [UIColor blackColor];
     //[Fillr sharedInstance].overlayInputAccessoryView = YES;
     [[Fillr sharedInstance] setEnabled:YES];
     [[Fillr sharedInstance] setVisible:YES];
@@ -107,6 +107,28 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
 
 - (void)onDismissThresholdExceeded {
     NSLog(@"Toolbar dismiss exceeded threshold");
+    
+    UIAlertController *alert = [UIAlertController
+                                alertControllerWithTitle:nil
+                                message:@"You can disable autofill toolbar in Settings."
+                                preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancelAction = [UIAlertAction
+                               actionWithTitle:@"Not Now"
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction * action)
+                               {
+                                   
+                               }];
+    [alert addAction:cancelAction];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:@"Go to Settings"
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction * action)
+                               {
+
+                               }];
+    [alert addAction:okAction];
+    [self.window.rootViewController presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)onToolbarVisibilityChanged:(BOOL)isVisible isFillrInstalled:(BOOL)isFillrInstalled {
