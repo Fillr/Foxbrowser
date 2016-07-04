@@ -12,7 +12,7 @@
 			<key>Key</key>
 			<string>org.graetzer.search</string>
 			<key>DefaultValue</key>
-			<string>https://duckduckgo.com/?q=%@&amp;kl=%@&amp;t=foxbrowser</string>
+			<string>http://www.google.com/search?q=%@&amp;hl=%@</string>
 			<key>Titles</key>
 			<array>
 				<string>DuckDuckGo</string>
@@ -54,7 +54,7 @@
 			<key>Key</key>
 			<string>org.graetzer.startpageurl</string>
 			<key>DefaultValue</key>
-			<string>https://duckduckgo.com/</string>
+			<string>https://google.com/</string>
 		</dict>
 		<dict>
 			<key>Type</key>
