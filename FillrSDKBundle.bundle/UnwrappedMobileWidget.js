@@ -1,4 +1,4 @@
-//version:1.2.15
+//version:1.9.2
 (function() {
 'use strict';
 
@@ -96,34 +96,22 @@ globals.require.brunch = true;
 // = end tweaked common.js =
 // =========================
 
-require.register("widget/config/environment", function(exports, require, module) {
+require.register("widget/config/error_codes", function(exports, require, module) {
 module.exports = {
-  css: '/mobile-widget.css',
-  mappings: {
-    countries: function() {
-      return '//popanyform.s3.amazonaws.com/extension/countries.json';
-    }
-  }
+  NO_INPUT: 1,
+  NO_FIELDS: 2,
+  IFRAME_DETECTED: 4,
+  ALREADY_FILLED: 8
 };
 
 });
 
 require.register("widget/config/preferences", function(exports, require, module) {
-var Environment, _ref;
-
-Environment = require('widget/config/environment');
+var _ref;
 
 module.exports = {
   browserType: typeof window !== "undefined" && window !== null ? (_ref = window.navigator) != null ? _ref.product : void 0 : void 0,
   name: 'Fillr widget',
-  mappings: {
-    countries: function() {
-      return Environment.mappings.countries();
-    }
-  },
-  css: {
-    url: Environment.css
-  },
   page: {
     cssPrefix: 'pop-widget',
     animate: {
@@ -141,7 +129,7 @@ module.exports = {
 });
 
 require.register("widget/controller", function(exports, require, module) {
-var Fields, Mappings, Pop, PublisherApi;
+var Affiliate, Fields, Mappings, Pop, PublisherApi, perfWrap;
 
 Mappings = require('widget/pop/mappings');
 
@@ -151,18 +139,41 @@ Pop = require('widget/pop');
 
 PublisherApi = require('widget/pop/publisher_api');
 
+Affiliate = require('widget/lib/affiliate');
+
+perfWrap = require('widget/lib/perf-wrap');
+
 module.exports = {
   getFields: function() {
-    return Mappings.payload(Fields.detect(document));
+    console.log("getFields");
+    return perfWrap('getFields', function() {
+      var errors, fields, _ref;
+      _ref = Fields.detect(document), errors = _ref[0], fields = _ref[1];
+      return Mappings.payload(errors, fields);
+    });
   },
   getPublisherFields: function() {
-    return PublisherApi.fields();
+    return perfWrap('getPublisherFields', function() {
+      return PublisherApi.fields();
+    });
   },
   populateWithMappings: function(mappedFields, popData) {
-    return Pop.create({
-      mappedFields: mappedFields,
-      popData: popData
-    });
+    var e, res;
+    res = null;
+    try {
+      return res = perfWrap('populateWithMappings', function() {
+        return res = Pop.create({
+          mappedFields: mappedFields,
+          popData: popData
+        });
+      });
+    } catch (_error) {
+      e = _error;
+      return console.log("Filling Error:", e);
+    } finally {
+      Affiliate.create(mappedFields.affiliate);
+      return res;
+    }
   },
   publisherPopulate: function(popData) {
     return PublisherApi.populate(popData);
@@ -214,13 +225,19 @@ module.exports = Domains = {
 });
 
 require.register("widget/fields", function(exports, require, module) {
-var FormInput, IsVisible, jQuery;
+var ErrorCodes, Fom, FormInput, IsVisible, SectionHint, jQuery;
 
 FormInput = require('widget/fields/input');
+
+SectionHint = require('widget/fields/section_hint');
 
 IsVisible = require('widget/lib/isvisible');
 
 jQuery = require('widget/lib/jquery');
+
+Fom = require('widget/fields/fom');
+
+ErrorCodes = require('widget/config/error_codes');
 
 module.exports = {
   fields: void 0,
@@ -228,76 +245,38 @@ module.exports = {
   sectionHints: {},
   nextGroup: 0,
   detect: function() {
-    return this.fields = this._detect(document);
+    var error, _ref;
+    this.fom = Fom.create();
+    return _ref = this._detect(document), error = _ref[0], this.fields = _ref[1], _ref;
   },
   _detect: function(searchRoot) {
-    var field, fields, group, newField;
+    var allFields, err, error, field, fields, newField, _ref;
+    _ref = this._allFields(), err = _ref[0], allFields = _ref[1];
     fields = (function() {
-      var _i, _len, _ref, _results;
-      _ref = this._allFields();
+      var _i, _len, _results;
       _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        field = _ref[_i];
+      for (_i = 0, _len = allFields.length; _i < _len; _i++) {
+        field = allFields[_i];
         newField = new FormInput(field);
         if (newField.ignore()) {
           continue;
         } else {
-          group = this._findGroup(field);
-          newField.metadata.section_hint = this.sectionHints[group];
+          newField.metadata.section_hint = this._sectionHint(field);
           _results.push(newField);
         }
       }
       return _results;
     }).call(this);
     if (fields.length === 0) {
-      return new Error('No popable fields on the page');
-    } else {
-      return fields;
+      err |= ErrorCodes.NO_FIELDS;
     }
-  },
-  _findGroup: function(el) {
-    var e, initial, key, nextEl, result, totalFieldsCount, val, _i, _len, _ref;
-    _ref = this.groups;
-    for (key in _ref) {
-      val = _ref[key];
-      for (_i = 0, _len = val.length; _i < _len; _i++) {
-        e = val[_i];
-        if (el === e) {
-          return key;
-        }
-      }
-    }
-    this.nextGroup++;
-    if (document.getElementById('specinator-ui')) {
-      totalFieldsCount = document.querySelectorAll('select,input').length - document.getElementById('specinator-ui').querySelectorAll('select,input').length;
-    } else {
-      totalFieldsCount = document.querySelectorAll('select,input').length;
-    }
-    nextEl = el.parentElement;
-    initial = el.parentElement.querySelectorAll('select,input');
-    result = initial;
-    if (result.length === 1) {
-      while (nextEl = nextEl.parentElement) {
-        if (nextEl.parentElement.tagName.toLowerCase() === 'body') {
-          break;
-        }
-        result = nextEl.querySelectorAll('select,input');
-        if (result.length >= totalFieldsCount) {
-          result = initial;
-          break;
-        }
-        if (result.length > initial.length) {
-          break;
-        }
-      }
-    }
-    this.groups[this.nextGroup] = Array.prototype.slice.call(result);
-    this.sectionHints[this.nextGroup] = this._sectionHint(el);
-    return this.nextGroup;
+    error = err;
+    return [error, fields];
   },
   _allFields: function() {
-    var div, doc, e, element, elements, field, fieldset, form, i, selectors, things, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
-    selectors = ['input:not([type=button]):not([type=submit]):not([type=reset]):not([type=password]):not([type=radio]):not([type=checkbox]):not([type=image])', 'select', 'textarea'].join(', ');
+    var div, doc, e, element, elements, err, field, fieldset, form, i, selectors, things, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    err = 0x0;
+    selectors = ['input:not([type=button]):not([type=submit]):not([type=reset]):not([type=radio]):not([type=checkbox]):not([type=image]):not([readonly=readonly]):not([role=button]):not([name=q]):not([type=search])', 'select', 'textarea'].join(', ');
     things = [];
     elements = document.querySelectorAll(selectors);
     for (_i = 0, _len = elements.length; _i < _len; _i++) {
@@ -308,6 +287,7 @@ module.exports = {
       _ref = document.getElementsByTagName('iframe');
       for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
         doc = _ref[_j];
+        err |= ErrorCodes.IFRAME_DETECTED;
         if (!this._sameOrigin(doc.src)) {
           continue;
         }
@@ -316,6 +296,27 @@ module.exports = {
           elements = doc.contentDocument.querySelectorAll(selectors);
           for (_k = 0, _len2 = elements.length; _k < _len2; _k++) {
             element = elements[_k];
+            things.push(element);
+          }
+        }
+      }
+    } catch (_error) {
+      e = _error;
+      console.log(e);
+    }
+    try {
+      _ref3 = document.getElementsByTagName('frame');
+      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+        doc = _ref3[_l];
+        err |= ErrorCodes.IFRAME_DETECTED;
+        if (!this._sameOrigin(doc.src)) {
+          continue;
+        }
+        if ((doc != null ? (_ref4 = doc.contentWindow) != null ? (_ref5 = _ref4.Element) != null ? _ref5.prototype : void 0 : void 0 : void 0) != null) {
+          doc.contentWindow.Element.prototype.isVisible = window.Element.prototype.isVisible;
+          elements = doc.contentDocument.querySelectorAll(selectors);
+          for (_m = 0, _len4 = elements.length; _m < _len4; _m++) {
+            element = elements[_m];
             things.push(element);
           }
         }
@@ -343,11 +344,9 @@ module.exports = {
         continue;
       }
       if (field.classList && field.classList.contains('pop-filled')) {
-        if (field.type === 'select-one' && field.selectedIndex !== 0) {
+        if ((field.type === 'select-one' && field.selectedIndex !== 0) || field.value !== '') {
           things.splice(i, 1);
-          continue;
-        } else if (field.value !== '') {
-          things.splice(i, 1);
+          err |= ErrorCodes.ALREADY_FILLED;
           continue;
         }
       }
@@ -360,7 +359,7 @@ module.exports = {
         continue;
       }
     }
-    return things;
+    return [err, things];
   },
   _closest: function(elem, selector) {
     while (elem) {
@@ -383,54 +382,213 @@ module.exports = {
     return a.hostname === loc.hostname && a.port === loc.port && a.protocol === loc.protocol;
   },
   _sectionHint: function(el) {
-    var $dom, best, dom, error, hint, hints, lineRgx, p, search, sel, specialCharacterRgx, splitterToken, text, txt, winner, _i, _len;
-    hints = ['bill', 'ship', 'postal', 'delivery', 'residential', 'payment'];
-    specialCharacterRgx = /([ #;&,.+*~\':"!^$[\]()=>|\/])/g;
-    lineRgx = /\s{2,}/gi;
-    splitterToken = 'FILLRSECTIONSPLIT';
-    p = el.parentElement;
-    while (p.tagName.toLowerCase() !== 'body') {
-      try {
-        dom = p.cloneNode(true);
-        $dom = jQuery(dom);
-        if (!!el.id) {
-          sel = el.id.replace(specialCharacterRgx, '\\$1');
-          $dom.find("#" + sel).replaceWith(splitterToken);
-        } else if (!!el.name) {
-          sel = el.name.replace(specialCharacterRgx, '\\$1');
-          $dom.find("[name=" + sel + "]").replaceWith(splitterToken);
-        } else {
-          $dom.find('input,select').filter(function(i, e) {
-            return e.isEqualNode(el);
-          }).replaceWith(splitterToken);
+    return SectionHint.process(el);
+  }
+};
+
+});
+
+require.register("widget/fields/fom", function(exports, require, module) {
+var _cloneNode, _elementNode, _nodeFilter,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+_elementNode = function() {
+  var elementNode;
+  if (typeof Ci !== 'undefined') {
+    elementNode = Ci.nsIDOMNode;
+  } else if (typeof Node !== 'undefined') {
+    elementNode = Node;
+  }
+  if (typeof elementNode === 'undefined' || elementNode === null) {
+    return {
+      'ELEMENT_NODE': 1
+    };
+  }
+  return elementNode;
+};
+
+_nodeFilter = function() {
+  var nodeFilter;
+  if (typeof Ci !== 'undefined') {
+    nodeFilter = Ci.nsIDOMNodeFilter;
+  } else if (typeof NodeFilter !== 'undefined') {
+    nodeFilter = NodeFilter;
+  }
+  if (typeof nodeFilter === 'undefined' || nodeFilter === null) {
+    return {
+      'SHOW_TEXT': 4
+    };
+  }
+  return nodeFilter;
+};
+
+_cloneNode = function(node, excludeList) {
+  var child, childClone, retVal, _i, _len, _ref, _ref1;
+  if (excludeList == null) {
+    excludeList = [];
+  }
+  if (node.nodeType !== _elementNode().ELEMENT_NODE) {
+    return node.cloneNode(true);
+  }
+  if (_ref = node.tagName.toLowerCase(), __indexOf.call(excludeList.map(function(e) {
+    return e.toLowerCase();
+  }), _ref) >= 0) {
+    return null;
+  }
+  retVal = node.cloneNode(false);
+  if (node.hasChildNodes()) {
+    _ref1 = node.childNodes;
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      child = _ref1[_i];
+      if (child != null) {
+        childClone = _cloneNode(child, excludeList);
+        if (childClone != null) {
+          retVal.appendChild(childClone);
         }
-        $dom.find('select,option,script,input,style').each(function(i, theEl) {
-          return theEl.parentNode.removeChild(theEl);
-        });
-        text = $dom.text().replace(lineRgx, '\n');
-        text = text.split(splitterToken).shift();
-        winner = void 0;
-        best = 999999;
-        txt = text.toLowerCase();
-        for (_i = 0, _len = hints.length; _i < _len; _i++) {
-          hint = hints[_i];
-          search = txt.indexOf(hint);
-          if (search >= 0 && search < best) {
-            best = search;
-            winner = hint;
-          }
-        }
-        if (winner != null) {
-          return winner;
-        }
-        p = p.parentElement;
-      } catch (_error) {
-        error = _error;
-        console.log("Section Error:", error);
-        break;
       }
     }
-    return void 0;
+  }
+  return retVal;
+};
+
+module.exports = {
+  fom: void 0,
+  headings: {},
+  labels: {},
+  trimRgx: /\s{2,}/gi,
+  titleRgx: /(title|head)/gi,
+  errorRgx: /error/gi,
+  wordRgx: /\n[^A-Za-z\u4e00-\u9eff]*\n/gi,
+  create: function(force) {
+    var _this = this;
+    if (force == null) {
+      force = false;
+    }
+    if (this.fom && !force) {
+      return this.fom;
+    }
+    this.processHeadings();
+    this.dom = _cloneNode(document.body, ['img']);
+    Array.prototype.slice.call(this.dom.querySelectorAll('script,style,img,iframe,option,a,button')).map(function(aNode) {
+      return aNode.parentElement.removeChild(aNode);
+    });
+    Array.prototype.slice.call(this.dom.querySelectorAll('p,div,span,small')).map(function(aNode) {
+      var _ref, _ref1;
+      if (((_ref = aNode.style) != null ? _ref.visibility : void 0) === 'hidden') {
+        aNode.parentElement.removeChild(aNode);
+        return;
+      }
+      if (((_ref1 = aNode.style) != null ? _ref1.display : void 0) === 'none') {
+        aNode.parentElement.removeChild(aNode);
+        return;
+      }
+      if (_this.errorRgx.test(aNode.getAttribute('class'))) {
+        aNode.parentElement.removeChild(aNode);
+      }
+    });
+    Array.prototype.slice.call(this.dom.querySelectorAll('input,select')).map(function(aNode) {
+      return aNode.parentElement.replaceChild(document.createTextNode(aNode.outerHTML), aNode);
+    });
+    Array.prototype.slice.call(this.dom.querySelectorAll('*')).map(function(aNode) {
+      return typeof aNode.insertAdjacentHTML === "function" ? aNode.insertAdjacentHTML('afterbegin', '\n') : void 0;
+    });
+    this.fom = this.dom.innerText || this.dom.textContent;
+    this.fom = this.fom.replace(/[\s\n]*(?=<\/select>)/gim, '');
+    this.fom = this.fom.replace(/([^\n])(?=\<(input|select))/gi, '$1\n');
+    this.fom = this.fom.replace(/">([^\n])/gi, '">\n$1');
+    this.fom = this.fom.replace('><', '>\n<');
+    this.fom = this.fom.replace(/\n<\/select>/gim, '</select>');
+    this.fom = this.fom.replace(this.wordRgx, '\n');
+    this.fom = this.fom.split('\n');
+    return this.fom = this.fom.map(function(line) {
+      return line.trim();
+    });
+  },
+  indexOf: function(el) {
+    var outerHtml;
+    if (el === null || typeof el === 'undefined') {
+      return -1;
+    }
+    if (!this.fom) {
+      this.create();
+    }
+    outerHtml = el.cloneNode(false).outerHTML;
+    return this.fom.indexOf(outerHtml);
+  },
+  processHeadings: function() {
+    var avg, exclude, n, px, s, sum, t, walk, _ref, _results,
+      _this = this;
+    px = Array.prototype.slice.call(document.body.querySelectorAll('div,p,span,h1,h2,h3,h4,h5,h6,h7,li,b')).map(function(aNode) {
+      var i;
+      i = parseInt(window.getComputedStyle(aNode).fontSize);
+      if (!isNaN(i)) {
+        return i;
+      } else {
+        return -1;
+      }
+    });
+    px = px.filter(function(n) {
+      return n > 0;
+    });
+    sum = px.reduce(function(a, b) {
+      return a + b;
+    }, 0);
+    avg = sum / px.length;
+    Array.prototype.slice.call(document.body.querySelectorAll('h1,h2,h3,h4,h5,h6,h7,legend')).map(function(aNode) {
+      var c, n, t, walk, _results;
+      if (aNode.querySelectorAll('input').length > 0) {
+        return;
+      }
+      t = aNode.textContent.trim();
+      if (aNode.parentElement.offsetParent && window.getComputedStyle(aNode).display !== 'none') {
+        _this.headings[t] = aNode;
+      }
+      walk = document.createTreeWalker(aNode, _nodeFilter().SHOW_TEXT, null, false);
+      _results = [];
+      while (n = walk.nextNode()) {
+        if (n.parentElement.offsetParent === null) {
+          continue;
+        }
+        c = n.textContent.trim();
+        if (c !== '' && typeof _this.headings[c] === 'undefined') {
+          _results.push(_this.headings[c] = aNode);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    });
+    exclude = ['script', 'style', 'option', 'label', 'button'];
+    walk = document.createTreeWalker(document.body, _nodeFilter().SHOW_TEXT, null, false);
+    _results = [];
+    while (n = walk.nextNode()) {
+      if (n.parentElement && !~exclude.indexOf(n.parentElement.nodeName.toLowerCase())) {
+        if ((n.parentElement.closest != null) && n.parentElement.closest('label') && !n.parentElement.closest('h1,h2,h3,h4,h5,h6,h7')) {
+          continue;
+        }
+        s = parseInt(window.getComputedStyle(n.parentElement).fontSize);
+        t = n.textContent.trim();
+        if (s >= avg && t !== '') {
+          if (t.length < 50 && !this.headings.hasOwnProperty(t)) {
+            if (n.parentElement.offsetParent) {
+              this.headings[t] = n;
+            }
+          }
+        }
+        if (this.titleRgx.test((_ref = n.parentElement) != null ? _ref.getAttribute('class') : void 0)) {
+          if (n.parentElement.offsetParent) {
+            _results.push(this.headings[t] = n);
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
   }
 };
 
@@ -465,9 +623,11 @@ module.exports = FormInput = (function() {
 });
 
 require.register("widget/fields/label", function(exports, require, module) {
-var LabelHelper, jQuery;
+var Fom, LabelHelper, jQuery;
 
 jQuery = require('widget/lib/jquery');
+
+Fom = require('widget/fields/fom');
 
 module.exports = LabelHelper = (function() {
   LabelHelper.detect = function(el) {
@@ -482,12 +642,15 @@ module.exports = LabelHelper = (function() {
 
   LabelHelper.prototype.process = function() {
     var e, label, labels, strategy, _i, _j, _len, _len1, _ref, _ref1;
+    if (this.el === null || typeof this.el === 'undefined') {
+      return;
+    }
     labels = [];
-    if (this.el.labels !== null && typeof this.el.labels !== 'undefined') {
-      _ref = this.el.labels;
+    if (this.el.get(0).labels !== null && typeof this.el.get(0).labels !== 'undefined') {
+      _ref = this.el.get(0).labels;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         e = _ref[_i];
-        labels.push(this.labelTextContent(e));
+        labels.push(this.trim(this.labelTextContent(e)));
       }
     }
     if (labels.length > 0) {
@@ -498,8 +661,7 @@ module.exports = LabelHelper = (function() {
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         strategy = _ref1[_j];
         if (label = this.trim(strategy.call(this))) {
-          if (label.length <= 30) {
-            console.log("Label", this.el, label, strategy);
+          if (this._valid(label)) {
             this.confidence = 0.1;
             this.label = label;
             return;
@@ -509,34 +671,68 @@ module.exports = LabelHelper = (function() {
     }
   };
 
-  LabelHelper.prototype.trim = function(el) {
-    var val;
-    if (el) {
-      val = '';
-      if (typeof el === 'object') {
-        if (el.length === 1 && this.valid(el)) {
-          val = el.text();
-        }
-      } else {
-        val = el;
-      }
-      val = val.trim();
-      val = val.replace(/[&\/\\#,+()$~%.'"*?<>{}]/g, '');
-      val = val.replace(/[\*\:\s]*$/g, '').trim();
-      if (val !== '') {
-        this.selector = el.selector;
-        return val;
-      }
+  LabelHelper.prototype._valid = function(label) {
+    if (label.replace(/\(.*\)/gi, '').length > 30) {
       return false;
     }
+    return true;
+  };
+
+  LabelHelper.prototype.trim = function(el) {
+    var val;
+    if ((el == null) || typeof el === 'undefined') {
+      return null;
+    }
+    val = '';
+    if (el instanceof jQuery) {
+      if (el.length === 1 && this.valid(el)) {
+        el = this.stripHiddenValidationText(el);
+        val = el.text();
+      }
+    } else if (el instanceof window.HTMLElement) {
+      if (this.valid(jQuery(el))) {
+        val = el.innerText;
+      }
+    } else if (el.nodeType === 3) {
+      val = el.data;
+    } else {
+      val = el;
+    }
+    if (typeof val !== 'string') {
+      return null;
+    }
+    val = val.trim();
+    val = val.replace(/[&\\#,+()$~%.'"*?<>{}•\t]/g, '');
+    val = val.replace(/[\*\:\s]*$/g, '').trim();
+    if (val !== '') {
+      this.selector = el.selector;
+      return val;
+    }
+    return null;
   };
 
   LabelHelper.prototype.valid = function(el) {
-    if (el.first().attr('for') === this.el.attr('id') || el.first().attr('for') === this.el.attr('name') || el.first().attr('for') === '' || el.first().attr('for') === void 0) {
+    var $first, first, _ref;
+    $first = el.first();
+    first = $first != null ? $first.get(0) : void 0;
+    if ((first != null ? (_ref = first.nodeName) != null ? _ref.toLowerCase() : void 0 : void 0) === 'label' && first.control === null) {
+      return true;
+    }
+    if ($first.attr('for') === this.el.attr('id') || $first.attr('for') === this.el.attr('name') || $first.attr('for') === '' || $first.attr('for') === void 0) {
       return true;
     } else {
       return false;
     }
+  };
+
+  LabelHelper.prototype.stripHiddenValidationText = function(el) {
+    el = el.clone();
+    el.find('*').each(function(index, child) {
+      if (child.style.display === 'none' || child.style.visibility === 'hidden') {
+        return child.remove();
+      }
+    });
+    return el;
   };
 
   LabelHelper.prototype.strategies = function() {
@@ -544,10 +740,25 @@ module.exports = LabelHelper = (function() {
       function() {
         return jQuery('label[for="' + this.el.attr('name') + '"]');
       }, function() {
+        var _ref, _ref1;
+        if (((_ref = this.el.prevAll('label')) != null ? (_ref1 = _ref.first()) != null ? _ref1.length : void 0 : void 0) === 1) {
+          return this.el.prevAll('label').first();
+        }
+      }, function() {
+        var _ref, _ref1;
+        if (((_ref = this.el.get(0).nextElementSibling) != null ? _ref.nodeName.toLowerCase() : void 0) === 'label' && ((_ref1 = this.el.get(0).previousElementSibling) != null ? _ref1.nodeName.toLowerCase() : void 0) !== 'label') {
+          return this.el.get(0).nextElementSibling;
+        }
+      }, function() {
+        var _ref, _ref1;
+        if (((_ref = this.el.get(0).previousElementSibling) != null ? _ref.nodeName.toLowerCase() : void 0) === 'label' && ((_ref1 = this.el.get(0).nextElementSibling) != null ? _ref1.nodeName.toLowerCase() : void 0) !== 'label') {
+          return this.el.get(0).previousElementSibling;
+        }
+      }, function() {
         var cloned, lbl, txt;
         lbl = this.el.closest('label');
         if (lbl.length > 0) {
-          cloned = lbl.clone();
+          cloned = this.stripHiddenValidationText(lbl);
           cloned.find('select,option,script,input,style').remove();
           txt = cloned.text().trim();
           if (txt.length > 0 && txt.length < 30) {
@@ -565,37 +776,38 @@ module.exports = LabelHelper = (function() {
           }
         }
       }, function() {
+        var lbl;
         if (this.el.prev().prop('tagName') === "P") {
-          if (this.el.prev().contents().length === 1) {
-            return this.el.prev().contents().first();
+          lbl = this.stripHiddenValidationText(this.el.prev());
+          if (lbl.contents().length === 1) {
+            return lbl.contents().first();
           }
         }
       }, function() {
-        var chunks, cloned, prior, sel, text;
-        cloned = this.el.closest('body').clone();
-        if (cloned.length === 0) {
+        var l, _ref, _ref1;
+        l = (_ref = this.el.get(0).parentElement) != null ? (_ref1 = _ref.parentElement) != null ? _ref1.querySelectorAll('[class*=label]') : void 0 : void 0;
+        if ((l != null ? l.length : void 0) === 1) {
+          return l[0].textContent;
+        }
+      }, function() {
+        var idx, line, _i, _len, _ref;
+        if (this.el == null) {
+          return;
+        }
+        idx = Fom.indexOf(this.el.get(0));
+        if (idx < 0) {
           return null;
         }
-        if (typeof this.el.attr('id') !== 'undefined') {
-          sel = this.el.attr('id').replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g, '\\$1');
-          cloned.find("#" + sel).replaceWith('FILLRSPLIT');
-        } else if (typeof this.el.attr('name') !== 'undefined') {
-          sel = this.el.attr('name').replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g, '\\$1');
-          cloned.find("[name=" + sel + "]").replaceWith('FILLRSPLIT');
-        } else {
-          return null;
-        }
-        cloned.find('script,input,select,style').each(function(i, theEl) {
-          return theEl.parentNode.removeChild(theEl);
-        });
-        if (cloned.length === 0) {
-          return null;
-        }
-        text = cloned.text().replace(/\s{2,}/gi, '\n');
-        chunks = text.split('FILLRSPLIT');
-        if (chunks.length === 2) {
-          prior = chunks[0].trim().split('\n');
-          return prior.pop();
+        _ref = Fom.fom.slice(0, idx).reverse();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          line = _ref[_i];
+          if (line.indexOf('<') === 0) {
+            continue;
+          }
+          if (line.trim() === '') {
+            continue;
+          }
+          return line.substring(0);
         }
       }, function() {
         return this.el.closest('dd').prev('dt');
@@ -627,17 +839,17 @@ module.exports = LabelHelper = (function() {
         var input;
         input = this.el.closest('tr').find('input,select');
         if (input.length === 1 && input.get(0) === this.el.get(0)) {
-          return this.el.closest('tr').text().trim();
+          return this.stripHiddenValidationText(this.el.closest('tr')).text().trim();
         }
       }
     ];
   };
 
-  LabelHelper.labelTextContent = function(el) {
+  LabelHelper.prototype.labelTextContent = function(el) {
     var clone;
     clone = jQuery(el).clone();
-    clone.find('input,select').each(function(index, el) {
-      return el.parentNode.removeChild(el);
+    clone.find('input,select').each(function(index, elem) {
+      return elem.parentNode.removeChild(elem);
     });
     return clone[0].textContent;
   };
@@ -697,11 +909,15 @@ module.exports = MetaData = (function() {
     }
     this.type = this._buildType(el);
     this.tag_name = this._tagName(el);
-    this.pop_id = this._popID();
+    if (this._value(el, 'data-fillr-id')) {
+      this.pop_id = this._value(el, 'data-fillr-id');
+    } else {
+      this.pop_id = this._popID();
+    }
+    lh = Label.detect(el);
+    this.label = lh.label;
+    this.label_confidence = lh.confidence;
     if (!(this.ignore = this._buildIgnore(el))) {
-      lh = Label.detect(el);
-      this.label = lh.label;
-      this.label_confidence = lh.confidence;
       this.legend = Legend.detect(el);
       this.autocompletetype = this._value(el, 'x-autocompletetype');
       this.autocomplete = this._value(el, 'autocomplete');
@@ -715,7 +931,7 @@ module.exports = MetaData = (function() {
 
   MetaData.prototype._buildIgnore = function(el) {
     var _ref;
-    return (_ref = this._buildType(el)) === 'submit' || _ref === 'reset' || _ref === 'search' || _ref === 'password' || _ref === 'file' || _ref === 'hidden' || _ref === 'color';
+    return (_ref = this._buildType(el)) === 'submit' || _ref === 'reset' || _ref === 'search' || _ref === 'file' || _ref === 'hidden' || _ref === 'color';
   };
 
   MetaData.prototype._buildType = function(el) {
@@ -737,25 +953,111 @@ module.exports = MetaData = (function() {
 
 });
 
+require.register("widget/fields/section_hint", function(exports, require, module) {
+var Fom, IsVisible, jQuery;
+
+jQuery = require('widget/lib/jquery');
+
+Fom = require('widget/fields/fom');
+
+IsVisible = require('widget/lib/isvisible');
+
+module.exports = {
+  hints: ['bill', 'ship', 'postal', 'delivery', 'residential', 'payment', 'birth', '收货', '联系'],
+  specialCharacterRgx: /([ #;&,.+*~\':"!^$[\]()=>|\/])/g,
+  lineRgx: /\s{2,}/gi,
+  splitterToken: 'FILLRSECTIONSPLIT',
+  excludes: ['choose', 'same', 'type'],
+  process: function(el) {
+    return this.headingHintFor(el);
+  },
+  _checkHint: function(line) {
+    var h, hint, i, l, x, _i, _j, _len, _len1, _ref;
+    l = line.toLowerCase();
+    _ref = this.hints;
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      hint = _ref[i];
+      if (~l.indexOf(hint)) {
+        x = this.hints.slice();
+        x.splice(i, 1);
+        for (_j = 0, _len1 = x.length; _j < _len1; _j++) {
+          h = x[_j];
+          if (~l.indexOf(h)) {
+            return null;
+          }
+        }
+        return hint;
+      }
+    }
+    return null;
+  },
+  headingHintFor: function(el) {
+    var cloned, exclude, excluded, fom, hint, line, lines, start, titleHint, trimmedLine, _i, _j, _len, _len1, _ref, _ref1;
+    fom = Fom.create();
+    cloned = el.cloneNode(false);
+    start = fom.indexOf(cloned.outerHTML);
+    lines = fom.slice(0, start).reverse();
+    for (_i = 0, _len = lines.length; _i < _len; _i++) {
+      line = lines[_i];
+      trimmedLine = line.trim();
+      if (trimmedLine.indexOf('<') === 0) {
+        continue;
+      }
+      if (!((_ref = Fom.headings) != null ? _ref.hasOwnProperty(trimmedLine) : void 0)) {
+        continue;
+      }
+      excluded = false;
+      _ref1 = this.excludes;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        exclude = _ref1[_j];
+        if (~trimmedLine.toLowerCase().indexOf(exclude)) {
+          excluded = true;
+          break;
+        }
+      }
+      if (excluded) {
+        continue;
+      }
+      hint = this._checkHint(trimmedLine);
+      if (hint != null) {
+        return hint;
+      }
+    }
+    titleHint = this._titleHint();
+    if (titleHint) {
+      return titleHint;
+    }
+    return null;
+  },
+  _titleHint: function() {
+    var hint, i, l, _i, _len, _ref;
+    l = document.title.toLowerCase();
+    _ref = this.hints;
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      hint = _ref[i];
+      if ((~l.indexOf(hint)) && ((~l.indexOf('address')) || (~l.indexOf('地址')))) {
+        return hint;
+      }
+    }
+    return null;
+  }
+};
+
+});
+
 require.register("widget/interfaces/android_sdk", function(exports, require, module) {
-var Fields, Mappings, Pop;
+var Controller, Json;
 
-Mappings = require('widget/pop/mappings');
+Json = require('widget/lib/json');
 
-Fields = require('widget/fields');
-
-Pop = require('widget/pop');
+Controller = require('widget/controller');
 
 module.exports = {
   getFields: function() {
-    console.log("Get Fields Called");
-    return androidInterface.setFields(JSON.stringify(Mappings.payload(Fields.detect(document))));
+    return androidInterface.setFields(Json.stringify(Controller.getFields()));
   },
   populateWithMappings: function(mappedFields, popData) {
-    return Pop.create({
-      mappedFields: mappedFields,
-      popData: popData
-    });
+    return Controller.populateWithMappings(mappedFields, popData);
   },
   require: function(args) {
     return require(args);
@@ -765,29 +1067,53 @@ module.exports = {
 });
 
 require.register("widget/interfaces/ios_sdk", function(exports, require, module) {
-var Fields, Mappings, Pop;
+var Controller, Json;
 
-Mappings = require('widget/pop/mappings');
+Json = require('widget/lib/json');
 
-Fields = require('widget/fields');
-
-Pop = require('widget/pop');
+Controller = require('widget/controller');
 
 module.exports = {
   getFields: function() {
-    console.log("Get Fields Called");
-    return JSON.stringify(Mappings.payload(Fields.detect(document)));
+    return Json.stringify(Controller.getFields());
   },
   populateWithMappings: function(mappedFields, popData) {
-    return Pop.create({
-      mappedFields: mappedFields,
-      popData: popData
-    });
+    return Controller.populateWithMappings(mappedFields, popData);
   },
   require: function(args) {
     return require(args);
   }
 };
+
+});
+
+require.register("widget/lib/affiliate", function(exports, require, module) {
+var Affiliate;
+
+module.exports = Affiliate = (function() {
+  function Affiliate() {}
+
+  Affiliate.create = function(data) {
+    var clickURL, iframe, imgURL;
+    if (typeof data === 'undefined' || data === null) {
+      return;
+    }
+    if (typeof data.imgURL === 'string') {
+      imgURL = encodeURIComponent(data.imgURL);
+    }
+    if (typeof data.clickURL === 'string') {
+      clickURL = encodeURIComponent(data.clickURL);
+    }
+    iframe = document.createElement('iframe');
+    iframe.src = "https://affiliate.fillr.com/?imgURL=" + (imgURL || '') + "&clickURL=" + (clickURL || '');
+    iframe.width = iframe.height = 0;
+    iframe.style = "visibility: hidden;";
+    return document.body.appendChild(iframe);
+  };
+
+  return Affiliate;
+
+})();
 
 });
 
@@ -10275,12 +10601,79 @@ return jQuery;
 
 });
 
+require.register("widget/lib/json", function(exports, require, module) {
+module.exports = {
+  stringify: function(obj) {
+    var r, _array_tojson, _json_stringify;
+    if (this._shittyPrototypeExists()) {
+      _json_stringify = JSON.stringify;
+      _array_tojson = Array.prototype.toJSON;
+      delete Array.prototype.toJSON;
+      r = _json_stringify(obj);
+      Array.prototype.toJSON = _array_tojson;
+      return r;
+    }
+    return JSON.stringify(obj);
+  },
+  _shittyPrototypeExists: function() {
+    return typeof window.Prototype !== 'undefined' && parseFloat(window.Prototype.Version.substr(0, 3)) < 1.7 && typeof window.Array.prototype.toJSON !== 'undefined';
+  }
+};
+
+});
+
+require.register("widget/lib/perf-wrap", function(exports, require, module) {
+module.exports = function(label, cb) {
+  var et, res, st;
+  if (typeof performance === 'undefined' || typeof performance.now === 'undefined') {
+    return cb();
+  }
+  st = performance.now();
+  res = cb();
+  et = performance.now();
+  if (typeof res !== 'object') {
+    return res;
+  }
+  res.perf = {};
+  res.perf["w_" + label] = et - st;
+  return res;
+};
+
+});
+
+require.register("widget/lib/uuid", function(exports, require, module) {
+/**
+ * Fast UUID generator, RFC4122 version 4 compliant.
+ * @author Jeff Ward (jcward.com).
+ * @license MIT license
+ * @link http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
+ **/
+module.exports = (function() {
+  var self = {};
+  var lut = []; for (var i=0; i<256; i++) { lut[i] = (i<16?'0':'')+(i).toString(16); }
+  self.generate = function() {
+    var d0 = Math.random()*0xffffffff|0;
+    var d1 = Math.random()*0xffffffff|0;
+    var d2 = Math.random()*0xffffffff|0;
+    var d3 = Math.random()*0xffffffff|0;
+    return lut[d0&0xff]+lut[d0>>8&0xff]+lut[d0>>16&0xff]+lut[d0>>24&0xff]+'-'+
+      lut[d1&0xff]+lut[d1>>8&0xff]+'-'+lut[d1>>16&0x0f|0x40]+lut[d1>>24&0xff]+'-'+
+      lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
+      lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
+  }
+  return self;
+})();
+
+});
+
 require.register("widget/pop", function(exports, require, module) {
-var Fields, FormatterFactory, Helper, jQuery;
+var Fields, FormatterFactory, Helper, PostProcessors, jQuery;
 
 Fields = require('widget/fields');
 
 Helper = require('widget/pop/helper');
+
+PostProcessors = require('widget/pop/postprocessors');
 
 jQuery = require('widget/lib/jquery');
 
@@ -10290,9 +10683,10 @@ module.exports = {
   topPop: void 0,
   custom: ['woocommerce'],
   create: function(args) {
-    var c, custom, field, fields, mappedField, newValue, o, post, pre, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
+    var c, custom, field, fields, mappedField, newValue, o, post, pre, unfilled_fields, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
     this.args = args;
     fields = [];
+    unfilled_fields = [];
     if (this.args.mappedFields.fields == null) {
       return fields;
     }
@@ -10301,10 +10695,17 @@ module.exports = {
       mappedField = _ref[_i];
       if (field = this._findField(mappedField.pop_id)) {
         jQuery.extend(field, mappedField);
+        if (!Array.isArray(mappedField.params)) {
+          console.log('No params', mappedField);
+          unfilled_fields.push(field);
+          continue;
+        }
+        field.mapping = mappedField.params.slice();
         if (newValue = this._newValue(mappedField)) {
-          field.mapping = mappedField.params.slice();
           field.newValue = newValue;
           fields.push(field);
+        } else {
+          unfilled_fields.push(field);
         }
       }
     }
@@ -10321,6 +10722,7 @@ module.exports = {
         post = custom.postFill;
       }
     }
+    PostProcessors.process(fields, unfilled_fields);
     if (pre) {
       pre.call(custom, this);
     }
@@ -10352,10 +10754,13 @@ module.exports = {
       }
     }
   },
+  _locale: function() {
+    return (this.args.mappedFields.locale || 'en-us').toLowerCase();
+  },
   _newValue: function(mappedField) {
     var formatter;
     formatter = FormatterFactory.build(mappedField.type);
-    return formatter.process(mappedField, this.args.popData);
+    return formatter.process(mappedField, this.args.popData, this._locale());
   },
   _popField: function(field, reload) {
     var helper;
@@ -10370,7 +10775,6 @@ module.exports = {
       }
       field.el.classList.add('pop-filled');
       field.el.classList.add('pop-highlight');
-      console.log(field.el.className);
       window.setTimeout(function() {
         return field.el.classList.remove('pop-highlight');
       }, 2000);
@@ -10468,41 +10872,263 @@ module.exports = WooCommerce = (function(_super) {
 });
 
 require.register("widget/pop/formatters/address", function(exports, require, module) {
-var Address;
+var Address, Localizer, Punctuator;
+
+Localizer = (function() {
+  function Localizer() {}
+
+  Localizer.localize = function(param_tail, value, language, region) {
+    if (!value) {
+      return '';
+    }
+    if (this[param_tail]) {
+      return this[param_tail](value, language, region);
+    } else {
+      return value;
+    }
+  };
+
+  Localizer.POBox = function(poBox, language, region) {
+    if (poBox.split(' ').length > 1) {
+      return poBox;
+    } else {
+      switch (language) {
+        case 'fr':
+          return 'BP ' + poBox;
+        case 'it':
+          return 'Casella Postale ' + poBox;
+        case 'es':
+          return 'Apartado ' + poBox;
+        case 'pt':
+          return 'Caixa Postal ' + poBox;
+        case 'nl':
+          return 'Postbus ' + poBox;
+        case 'ru':
+          return 'a/ya. ' + poBox;
+        default:
+          return 'PO Box ' + poBox;
+      }
+    }
+  };
+
+  Localizer.LevelNumber = function(levelNumber, language, region) {
+    if (levelNumber.split(' ').length > 1) {
+      return levelNumber;
+    } else {
+      switch (language) {
+        case 'fr':
+          return 'Étage ' + levelNumber;
+        case 'it':
+          return 'Piano ' + levelNumber;
+        case 'de':
+          return 'Stock ' + levelNumber;
+        case 'es':
+          return levelNumber + 'º';
+        case 'nl':
+          return 'Etage ' + levelNumber;
+        case 'ms':
+          return 'Tingkat ' + levelNumber;
+        case 'id':
+          return levelNumber + ' Floor';
+        case 'ru':
+          return 'эта́ж ' + levelNumber;
+        default:
+          return 'Level ' + levelNumber;
+      }
+    }
+  };
+
+  Localizer.UnitNumber = function(unitNumber, language, region) {
+    if (unitNumber.split(' ').length > 1) {
+      return unitNumber;
+    } else {
+      switch (region) {
+        case 'gb':
+        case 'in':
+          return 'Flat ' + unitNumber;
+        case 'us':
+          return '#' + unitNumber;
+        case 'de':
+          return 'Appartment ' + unitNumber;
+        case 'it':
+          return 'Interno ' + unitNumber;
+        case 'id':
+          return 'No. ' + unitNumber;
+        case 'ru':
+          return 'kv. ' + unitNumber;
+        default:
+          return unitNumber;
+      }
+    }
+  };
+
+  Localizer.StreetNumber = function(streetNumber, language, region) {
+    if (streetNumber.split(' ').length > 1) {
+      return streetNumber;
+    } else {
+      switch (region) {
+        case 'ru':
+          return 'd. ' + streetNumber;
+        default:
+          return streetNumber;
+      }
+    }
+  };
+
+  return Localizer;
+
+})();
+
+Punctuator = (function() {
+  function Punctuator() {}
+
+  Punctuator.join = function(params, language, region) {
+    var a, b, i, parts;
+    params = params.filter(function(p) {
+      return p.value.length > 0;
+    });
+    parts = [];
+    i = 0;
+    while (i <= params.length - 2) {
+      a = params[i].param_tail;
+      b = params[i + 1].param_tail;
+      if (this["" + a + "_" + b]) {
+        parts.push(params[i].value);
+        parts.push(this["" + a + "_" + b](language, region));
+      } else if (this["" + a + "_ANY"]) {
+        parts.push(params[i].value);
+        parts.push(this["" + a + "_ANY"](language, region));
+      } else {
+        parts.push(params[i].value);
+        parts.push(' ');
+      }
+      i += 1;
+    }
+    if (params.length > 0) {
+      parts.push(params[params.length - 1].value);
+    }
+    return parts.join('').replace(/\s{2,}/, ' ').trim();
+  };
+
+  Punctuator.POBox_ANY = function(language, region) {
+    return ', ';
+  };
+
+  Punctuator.UnitNumber_StreetNumber = function(language, region) {
+    switch (region) {
+      case 'au':
+        return '/';
+      case 'ca':
+        return '-';
+      default:
+        return ', ';
+    }
+  };
+
+  Punctuator.LevelNumber_ANY = function(language, region) {
+    return ', ';
+  };
+
+  Punctuator.BuildingName_ANY = function(language, region) {
+    return ', ';
+  };
+
+  Punctuator.StreetNumber_UnitNumber = function(language, region) {
+    switch (region) {
+      case 'de':
+        return ' // ';
+      case 'es':
+      case 'id':
+        return ', ';
+      default:
+        return ' ';
+    }
+  };
+
+  Punctuator.StreetNumber_LevelNumber = function(language, region) {
+    switch (region) {
+      case 'es':
+      case 'id':
+        return ', ';
+      default:
+        return ' ';
+    }
+  };
+
+  Punctuator.StreetName_StreetNumber = function(language, region) {
+    switch (region) {
+      case 'br':
+        return ', ';
+      default:
+        return ' ';
+    }
+  };
+
+  Punctuator.UnitNumber_LevelNumber = function(language, region) {
+    switch (region) {
+      case 'id':
+        return ', ';
+      default:
+        return ' ';
+    }
+  };
+
+  return Punctuator;
+
+})();
 
 module.exports = Address = (function() {
   function Address() {}
 
-  Address.process = function(field, payload) {
-    var numberAndUnit, params, streetName, streetNumber, streetType, unitNumber;
-    params = this.parse(field.params);
-    unitNumber = payload[params.UnitNumber];
-    streetNumber = payload[params.StreetNumber];
-    streetName = payload[params.StreetName] || '';
-    streetType = payload[params.StreetType] || '';
-    numberAndUnit = '';
-    if (unitNumber && streetNumber) {
-      numberAndUnit = [unitNumber, streetNumber].join(" / ");
-    } else {
-      numberAndUnit = streetNumber || unitNumber || '';
-    }
-    return ("" + numberAndUnit + " " + streetName + " " + streetType).trim();
+  Address.process = function(field, payload, locale) {
+    var language, params, region, result, _ref;
+    _ref = locale.split('-'), language = _ref[0], region = _ref[1];
+    console.log('Address.process', field.params);
+    params = this.convertToHashes(field.params, payload, language, region);
+    console.log('params', params);
+    result = Punctuator.join(params, language, region);
+    console.log('result', result);
+    return result;
   };
 
-  Address.parse = function(params) {
-    var param, result, _fn, _i, _len;
-    result = {};
-    _fn = function(param) {
-      return result[param.split('.').pop()] = param;
-    };
+  Address.convertToHashes = function(params, payload, language, region) {
+    var param, param_tail, result, _i, _len;
+    result = [];
     for (_i = 0, _len = params.length; _i < _len; _i++) {
       param = params[_i];
-      _fn(param);
+      param_tail = param.split('.').pop();
+      result.push({
+        param: param,
+        param_tail: param_tail,
+        value: Localizer.localize(param_tail, payload[param], language, region)
+      });
     }
     return result;
   };
 
   return Address;
+
+})();
+
+});
+
+require.register("widget/pop/formatters/age", function(exports, require, module) {
+var Age;
+
+module.exports = Age = (function() {
+  function Age() {}
+
+  Age.process = function(field, payload, locale) {
+    var age, date, day, month, year;
+    year = parseInt(payload['PersonalDetails.BirthDate.Year'], 10);
+    month = parseInt(payload['PersonalDetails.BirthDate.Month'], 10);
+    day = parseInt(payload['PersonalDetails.BirthDate.Day'], 10);
+    date = new Date(year, month - 1, day);
+    age = (new Date(new Date() - date)).getFullYear() - 1970;
+    return "" + age;
+  };
+
+  return Age;
 
 })();
 
@@ -10528,7 +11154,7 @@ module.exports = DateFormatter = (function() {
     _ref = field.params;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       param = _ref[_i];
-      res.push(payload[param]);
+      res.push(this.twoDigits(payload[param]));
     }
     return res.join('-');
   };
@@ -10538,35 +11164,59 @@ module.exports = DateFormatter = (function() {
     if (!text) {
       return null;
     }
-    datePattern = /(d{1,2}|m{1,2}|y{2,4})([\s-\/])(d{1,2}|m{1,2})([\s-\/])(d{1,2}|m{1,2}|y{2,4})/i;
+    datePattern = /(d{1,2}|m{1,2}|y{2}\b|y{4}|\d{1,2}\b|\d{4})([\s-\/])(d{1,2}|m{1,2}|\d{1,2})([\s-\/])(d{1,2}|m{1,2}|y{2}\b|y{4}|\d{1,2}\b|\d{4})/i;
     return text.match(datePattern);
   };
 
   DateFormatter.formatDate = function(dt, dateFormat) {
     var result;
-    result = this.getPart(dt, dateFormat[1]);
+    result = this.getPart(dt, dateFormat[1], 1);
     result += dateFormat[2];
-    result += this.getPart(dt, dateFormat[3]);
+    result += this.getPart(dt, dateFormat[3], 2);
     result += dateFormat[4];
-    result += this.getPart(dt, dateFormat[5]);
+    result += this.getPart(dt, dateFormat[5], 3);
     return result;
   };
 
-  DateFormatter.getPart = function(dt, partSpecifier) {
-    var javaSucks;
+  DateFormatter.getPart = function(dt, partSpecifier, position) {
+    var javaSucks, part, val;
     javaSucks = 100;
-    switch (partSpecifier.toLowerCase()) {
-      case "d":
+    part = partSpecifier.toLowerCase();
+    switch (false) {
+      case !!isNaN(parseInt(part, 10)):
+        val = parseInt(part, 10);
+        if (part.length === 4 && (1 === position || 3 === position)) {
+          return dt.getFullYear().toString();
+        }
+        if (part.length === 2) {
+          if (val <= 12) {
+            return this.twoDigits(dt.getMonth() + 1);
+          }
+          if (val > 31 && (position === 1 || position === 3)) {
+            return (dt.getFullYear() % javaSucks).toString();
+          } else {
+            return this.twoDigits(dt.getDate());
+          }
+        }
+        if (part.length === 1) {
+          if (val <= 12) {
+            return (dt.getMonth() + 1).toString();
+          } else {
+            return dt.getDate().toString();
+          }
+        }
+        break;
+      case part !== "d":
         return dt.getDate().toString();
-      case "dd":
+      case part !== "dd":
         return this.twoDigits(dt.getDate());
-      case "m":
+      case part !== "m":
         return (dt.getMonth() + 1).toString();
-      case "mm":
+      case part !== "mm":
         return this.twoDigits(dt.getMonth() + 1);
-      case "yy":
+      case part !== "yy":
         return (dt.getFullYear() % javaSucks).toString();
-      case "yyyy":
+      case part !== "yyyy":
         return dt.getFullYear().toString();
     }
   };
@@ -10624,9 +11274,9 @@ module.exports = Default = (function() {
 });
 
 require.register("widget/pop/formatters/factory", function(exports, require, module) {
-var Address, Date, Default, FormatterFactory, MonthYear, Phone, formatters;
+var Address, Age, Date, Default, FormatterFactory, MonthYear, Phone, formatters;
 
-formatters = [Address = require('widget/pop/formatters/address'), Phone = require('widget/pop/formatters/phone'), Date = require('widget/pop/formatters/date'), MonthYear = require('widget/pop/formatters/monthyear'), Default = require('widget/pop/formatters/default')];
+formatters = [Address = require('widget/pop/formatters/address'), Age = require('widget/pop/formatters/age'), Phone = require('widget/pop/formatters/phone'), Date = require('widget/pop/formatters/date'), MonthYear = require('widget/pop/formatters/monthyear'), Default = require('widget/pop/formatters/default')];
 
 module.exports = FormatterFactory = (function() {
   function FormatterFactory() {}
@@ -10637,6 +11287,7 @@ module.exports = FormatterFactory = (function() {
       case 'CurrentResidency':
       case 'PreviousResidency':
       case 'PostalAddress':
+      case 'AddressLineTwo':
         return Address;
       case 'TelephoneNumber':
       case 'CellPhoneNumber':
@@ -10646,6 +11297,8 @@ module.exports = FormatterFactory = (function() {
         return Date;
       case 'MonthYear':
         return MonthYear;
+      case 'PersonAge':
+        return Age;
       default:
         return Default;
     }
@@ -10749,7 +11402,7 @@ StateSelectField = require 'widget/pop/helpers/state_select'
 
 var DefaultHelper, FieldPopHelper, fields;
 
-fields = [require('widget/pop/helpers/jqselect_box'), require('widget/pop/helpers/month_select'), require('widget/pop/helpers/country_code_select'), require('widget/pop/helpers/country_select'), require('widget/pop/helpers/state_select'), require('widget/pop/helpers/select'), require('widget/pop/helpers/two_digits'), require('widget/pop/helpers/number'), require('widget/pop/helpers/text'), require('widget/pop/helpers/radio'), require('widget/pop/helpers/checkbox')];
+fields = [require('widget/pop/helpers/jqselect_box'), require('widget/pop/helpers/month_select'), require('widget/pop/helpers/country_code_select'), require('widget/pop/helpers/country_select'), require('widget/pop/helpers/us_state_select'), require('widget/pop/helpers/state_select'), require('widget/pop/helpers/select'), require('widget/pop/helpers/two_digits'), require('widget/pop/helpers/number'), require('widget/pop/helpers/text'), require('widget/pop/helpers/radio'), require('widget/pop/helpers/checkbox')];
 
 DefaultHelper = require('widget/pop/helpers/text');
 
@@ -11309,7 +11962,7 @@ module.exports = MonthSelectField = (function(_super) {
   }
 
   MonthSelectField.detect = function(field) {
-    var first, januaries, param, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var first, januaries, param, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     januaries = ['january', 'januarie', 'januar', 'januari', '一月'];
     if ((field != null ? (_ref = field.el) != null ? _ref.options : void 0 : void 0) == null) {
       return false;
@@ -11320,12 +11973,12 @@ module.exports = MonthSelectField = (function(_super) {
     if ((field != null ? (_ref2 = field.el) != null ? (_ref3 = _ref2.options) != null ? _ref3.length : void 0 : void 0 : void 0) !== 13) {
       return false;
     }
-    param = field.mapping.shift().split('.').pop();
+    param = (_ref4 = field.mapping.shift()) != null ? (_ref5 = _ref4.split('.')) != null ? _ref5.pop() : void 0 : void 0;
     if (param !== 'Month') {
       return false;
     }
-    first = (_ref4 = field.el.options[1].innerText) != null ? _ref4.trim() : void 0;
-    if (_ref5 = first != null ? first.toLowerCase() : void 0, __indexOf.call(januaries, _ref5) < 0) {
+    first = (_ref6 = field.el.options[1].innerText) != null ? _ref6.trim() : void 0;
+    if (_ref7 = first != null ? first.toLowerCase() : void 0, __indexOf.call(januaries, _ref7) < 0) {
       return false;
     }
     return true;
@@ -11594,7 +12247,9 @@ module.exports = SelectField = (function(_super) {
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         option = _ref[_i];
-        _results.push(option.value);
+        if (option.value != null) {
+          _results.push(option.value);
+        }
       }
       return _results;
     }).call(this);
@@ -11612,7 +12267,9 @@ module.exports = SelectField = (function(_super) {
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         option = _ref[_i];
-        _results.push(option.text);
+        if (option.text != null) {
+          _results.push(option.text);
+        }
       }
       return _results;
     }).call(this);
@@ -11690,6 +12347,9 @@ module.exports = StateSelectField = (function(_super) {
       subtree: true
     };
     MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    if (MutationObserver === null || typeof MutationObserver === 'undefined') {
+      return;
+    }
     blankObserver = new MutationObserver(function(mutations) {});
     blankObserver.observe(target, config);
     MAX_FILLS = 1;
@@ -11788,9 +12448,18 @@ module.exports = TwoDigitsField = (function(_super) {
   }
 
   TwoDigitsField.detect = function(field) {
-    var metadata, _ref, _ref1, _ref2, _ref3, _ref4;
+    var metadata, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    if ((field.category != null) && (field.category != null) === 'Passwords') {
+      return false;
+    }
+    if ((field.lang != null) && ~(field != null ? (_ref = field.lang) != null ? _ref.indexOf('zh') : void 0 : void 0)) {
+      return false;
+    }
+    if (isNaN(parseInt(field.newValue))) {
+      return false;
+    }
     metadata = field.metadata;
-    return metadata.tag_name === 'input' && (((_ref = metadata.placeholder) != null ? _ref.length : void 0) === 2 || metadata.max_length === '2' || ((_ref1 = ((_ref2 = metadata.label) != null ? _ref2.toLowerCase() : void 0) || ((_ref3 = metadata.name) != null ? _ref3.toLowerCase() : void 0) || ((_ref4 = metadata.id) != null ? _ref4.toLowerCase() : void 0)) === 'yy' || _ref1 === 'mm'));
+    return metadata.tag_name === 'input' && (((_ref1 = metadata.placeholder) != null ? _ref1.length : void 0) === 2 || metadata.max_length === '2' || ((_ref2 = ((_ref3 = metadata.label) != null ? _ref3.toLowerCase() : void 0) || ((_ref4 = metadata.name) != null ? _ref4.toLowerCase() : void 0) || ((_ref5 = metadata.id) != null ? _ref5.toLowerCase() : void 0)) === 'yy' || _ref2 === 'mm'));
   };
 
   TwoDigitsField.prototype.fill = function(value) {
@@ -11818,17 +12487,149 @@ module.exports = TwoDigitsField = (function(_super) {
 
 });
 
+require.register("widget/pop/helpers/us_state_select", function(exports, require, module) {
+var StateSelectField, USStateSelectField,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+StateSelectField = require('widget/pop/helpers/state_select');
+
+module.exports = USStateSelectField = (function(_super) {
+  __extends(USStateSelectField, _super);
+
+  USStateSelectField.states = {
+    'Alabama': 'AL',
+    'Alaska': 'AK',
+    'Arizona': 'AZ',
+    'Arkansas': 'AR',
+    'California': 'CA',
+    'Colorado': 'CO',
+    'Connecticut': 'CT',
+    'Delaware': 'DE',
+    'Florida': 'FL',
+    'Georgia': 'GA',
+    'Hawaii': 'HI',
+    'Idaho': 'ID',
+    'Illinois': 'IL',
+    'Indiana': 'IN',
+    'Iowa': 'IA',
+    'Kansas': 'KS',
+    'Kentucky': 'KY',
+    'Louisiana': 'LA',
+    'Maine': 'ME',
+    'Maryland': 'MD',
+    'Massachusetts': 'MA',
+    'Michigan': 'MI',
+    'Minnesota': 'MN',
+    'Missouri': 'MO',
+    'Montana': 'MT',
+    'Nebraska': 'NE',
+    'Nevada': 'NV',
+    'New Hampshire': 'NH',
+    'New Jersey': 'NJ',
+    'New Mexico': 'NM',
+    'New York': 'NY',
+    'North Carolina': 'NC',
+    'Ohio': 'OH',
+    'Oklahoma': 'OK',
+    'Oregon': 'OR',
+    'Pennsylvania': 'PA',
+    'Rhode Island': 'RI',
+    'South Carolina': 'SC',
+    'South Dakota': 'SD',
+    'Tennessee': 'TN',
+    'Texas': 'TX',
+    'Utah': 'UT',
+    'Vermont': 'VT',
+    'Virginia': 'VA',
+    'Washington': 'WA',
+    'West Virginia': 'WV',
+    'Wisconsin': 'WI',
+    'Wyoming': 'WY',
+    'American Samoa': 'AS',
+    'District of Columbia': 'DC',
+    'Washington DC': 'DC',
+    'Federated States of Micronesia': 'FM',
+    'Guam': 'GU',
+    'Marshall Islands': 'MH',
+    'Northern Mariana Islands': 'MP',
+    'Palau': 'PW',
+    'Puerto Rico': 'PR',
+    'Virgin Islands': 'VI'
+  };
+
+  function USStateSelectField(field) {
+    USStateSelectField.__super__.constructor.call(this, field);
+  }
+
+  USStateSelectField.prototype.fill = function(value) {
+    var abbreviation, fullName, key, option, val, _i, _len, _ref, _ref1;
+    _ref = USStateSelectField.states;
+    for (key in _ref) {
+      val = _ref[key];
+      if (value.toLowerCase() === key.toLowerCase() || value.toLowerCase() === val.toLowerCase()) {
+        abbreviation = val.toLowerCase();
+        fullName = key.toLowerCase();
+        break;
+      }
+    }
+    _ref1 = this.options;
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      option = _ref1[_i];
+      if (option.value.toLowerCase() === abbreviation || option.text.toLowerCase() === abbreviation) {
+        USStateSelectField.__super__.fill.call(this, option.value);
+        return;
+      }
+      if (option.value.toLowerCase() === fullName || option.text.toLowerCase() === fullName) {
+        USStateSelectField.__super__.fill.call(this, option.value);
+        return;
+      }
+    }
+    return USStateSelectField.__super__.fill.call(this, value);
+  };
+
+  USStateSelectField.detect = function(el) {
+    var first, last, length, options, parent;
+    parent = USStateSelectField.__super__.constructor.detect.call(this, el);
+    if (!parent) {
+      return false;
+    }
+    options = el.el.children;
+    if (options.length <= 50) {
+      return false;
+    }
+    length = options.length;
+    first = options[1].text.toLowerCase();
+    last = options[length - 1].text.toLowerCase();
+    if (first === 'alabama' && last === 'wyoming' || first === 'al' && last === 'wy') {
+      return true;
+    }
+    return false;
+  };
+
+  return USStateSelectField;
+
+})(StateSelectField);
+
+});
+
 require.register("widget/pop/mappings", function(exports, require, module) {
-var Domain, Mappings;
+var Domain, ErrorCodes, Mappings, UUID;
 
 Domain = require('widget/domain');
+
+UUID = require('widget/lib/uuid');
+
+ErrorCodes = require('widget/config/error_codes');
 
 module.exports = Mappings = (function() {
   function Mappings() {}
 
-  Mappings.payload = function(fields) {
+  Mappings.payload = function(errors, fields) {
     return {
+      errors: this.mapErrors(errors),
       fields: this.fieldsForMappings(fields),
+      fill_id: UUID.generate(),
       location: {
         domain: Domain.full(),
         origin: Domain.origin(),
@@ -11865,14 +12666,118 @@ module.exports = Mappings = (function() {
     return _results;
   };
 
+  Mappings.mapErrors = function(errors) {
+    var key, _i, _len, _ref, _results;
+    _ref = Object.keys(ErrorCodes);
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      key = _ref[_i];
+      if (errors & ErrorCodes[key]) {
+        _results.push(key);
+      }
+    }
+    return _results;
+  };
+
   return Mappings;
 
 })();
 
 });
 
+require.register("widget/pop/postprocessors", function(exports, require, module) {
+var PostProcessors, processors;
+
+processors = [require('widget/pop/postprocessors/address_line_two')];
+
+module.exports = PostProcessors = (function() {
+  function PostProcessors() {}
+
+  PostProcessors.process = function(fields, unfilled_fields) {
+    var processor, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = processors.length; _i < _len; _i++) {
+      processor = processors[_i];
+      _results.push(processor.process(fields, unfilled_fields));
+    }
+    return _results;
+  };
+
+  return PostProcessors;
+
+})();
+
+});
+
+require.register("widget/pop/postprocessors/address_line_two", function(exports, require, module) {
+var AddressLineTwoPostProcessor;
+
+module.exports = AddressLineTwoPostProcessor = (function() {
+  function AddressLineTwoPostProcessor() {}
+
+  AddressLineTwoPostProcessor.process = function(fields, unfilled_fields) {
+    var field, fields_to_add, fields_to_remove, index, unfilled_line_one_field, _i, _j, _k, _len, _len1, _len2, _results;
+    fields_to_add = [];
+    fields_to_remove = [];
+    for (_i = 0, _len = fields.length; _i < _len; _i++) {
+      field = fields[_i];
+      if (this._is_line_two(field)) {
+        unfilled_line_one_field = this._matching_line_one_field(field, unfilled_fields);
+        if (unfilled_line_one_field) {
+          unfilled_line_one_field.newValue = field.newValue;
+          field.newValue = "";
+          fields_to_add.push(unfilled_line_one_field);
+          fields_to_remove.push(field);
+        }
+      }
+    }
+    for (_j = 0, _len1 = fields_to_add.length; _j < _len1; _j++) {
+      field = fields_to_add[_j];
+      fields.push(field);
+    }
+    _results = [];
+    for (_k = 0, _len2 = fields_to_remove.length; _k < _len2; _k++) {
+      field = fields_to_remove[_k];
+      index = fields.indexOf(field);
+      _results.push(fields.splice(index, 1));
+    }
+    return _results;
+  };
+
+  AddressLineTwoPostProcessor._is_line_two = function(field) {
+    var parts;
+    if (typeof field.param !== 'string') {
+      return false;
+    }
+    parts = field.param.split('.');
+    return parts.length > 2 && parts[parts.length - 1] === 'AddressLine2';
+  };
+
+  AddressLineTwoPostProcessor._matching_line_one_field = function(line_two_field, fields) {
+    var address_type, field, _i, _len;
+    if (typeof line_two_field.param !== 'string') {
+      return null;
+    }
+    address_type = line_two_field.param.split('.')[1];
+    for (_i = 0, _len = fields.length; _i < _len; _i++) {
+      field = fields[_i];
+      if (field.param === ("AddressDetails." + address_type + ".AddressLine1")) {
+        return field;
+      }
+    }
+    return null;
+  };
+
+  return AddressLineTwoPostProcessor;
+
+})();
+
+});
+
 require.register("widget/pop/publisher_api", function(exports, require, module) {
-var PublisherApi;
+var Json, PublisherApi;
+
+Json = require('widget/lib/json');
 
 module.exports = PublisherApi = (function() {
   function PublisherApi() {}
@@ -11892,7 +12797,7 @@ module.exports = PublisherApi = (function() {
   PublisherApi.populate = function(payload) {
     var evt, parameterDiv, result;
     parameterDiv = this.getParameterDiv();
-    parameterDiv.innerText = JSON.stringify(payload);
+    parameterDiv.innerText = Json.stringify(payload);
     evt = document.createEvent('Event');
     evt.initEvent('fillr_publisher_populate', true, true);
     window.dispatchEvent(evt);
