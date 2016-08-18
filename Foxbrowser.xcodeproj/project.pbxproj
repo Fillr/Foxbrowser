@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		212ABBBE1D6185020045A885 /* libFillrSDKFillrEmbeded.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 212ABBBD1D6184F80045A885 /* libFillrSDKFillrEmbeded.a */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
-		21BE48D11BF2F8100042DAAC /* libFillrSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
 		F4047E4C19E766D500D27001 /* UICKeyChainStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4B19E766D500D27001 /* UICKeyChainStore.m */; };
 		F406C028195F25A300A84C76 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = F406C005195F25A300A84C76 /* NSData+Base64.m */; };
@@ -125,12 +125,19 @@
 			remoteGlobalIDString = 211CCA021AF1E2DD00B13FBD;
 			remoteInfo = FillrSDKBundle;
 		};
-		212359C91BC5EEBB00B1A5D6 /* PBXContainerItemProxy */ = {
+		212ABBB61D6184F80045A885 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 21FD5CB61AEF51AE00300809;
-			remoteInfo = FillrSDK;
+			remoteGlobalIDString = 212ABB9E1D6170670045A885;
+			remoteInfo = FillrSDKFillrEmbeded;
+		};
+		212ABBBC1D6184F80045A885 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 212359BC1BC5EEAA00B1A5D6 /* FillrSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 212ABBAC1D6170670045A885;
+			remoteInfo = FillrSDKFillrEmbeded;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -370,7 +377,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				21BE48D11BF2F8100042DAAC /* libFillrSDK.a in Frameworks */,
+				212ABBBE1D6185020045A885 /* libFillrSDKFillrEmbeded.a in Frameworks */,
 				21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */,
 				F4ADE13F19AFC00900A5B380 /* libsqlite3.0.dylib in Frameworks */,
 				F42CC123195652D8005411EA /* CoreGraphics.framework in Frameworks */,
@@ -400,8 +407,9 @@
 			isa = PBXGroup;
 			children = (
 				212359C41BC5EEAA00B1A5D6 /* libFillrSDK.a */,
-				212359C61BC5EEAA00B1A5D6 /* FillrSDKTests.xctest */,
+				212ABBBD1D6184F80045A885 /* libFillrSDKFillrEmbeded.a */,
 				212359C81BC5EEAA00B1A5D6 /* FillrSDKBundle.bundle */,
+				212359C61BC5EEAA00B1A5D6 /* FillrSDKTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -882,7 +890,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				212359CA1BC5EEBB00B1A5D6 /* PBXTargetDependency */,
+				212ABBB71D6184F80045A885 /* PBXTargetDependency */,
 			);
 			name = Foxbrowser;
 			productName = Foxbrowser;
@@ -985,6 +993,13 @@
 			remoteRef = 212359C71BC5EEAA00B1A5D6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		212ABBBD1D6184F80045A885 /* libFillrSDKFillrEmbeded.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libFillrSDKFillrEmbeded.a;
+			remoteRef = 212ABBBC1D6184F80045A885 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1082,10 +1097,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		212359CA1BC5EEBB00B1A5D6 /* PBXTargetDependency */ = {
+		212ABBB71D6184F80045A885 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = FillrSDK;
-			targetProxy = 212359C91BC5EEBB00B1A5D6 /* PBXContainerItemProxy */;
+			name = FillrSDKFillrEmbeded;
+			targetProxy = 212ABBB61D6184F80045A885 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
