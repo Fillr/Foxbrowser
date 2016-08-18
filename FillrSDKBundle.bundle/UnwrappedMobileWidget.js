@@ -1,4 +1,4 @@
-//version:1.9.2
+//version:1.11.2
 (function() {
 'use strict';
 
@@ -96,6 +96,11 @@ globals.require.brunch = true;
 // = end tweaked common.js =
 // =========================
 
+
+require.register("widget/config/version", function(exports, require, module) {
+module.exports = { "version" : "1.11.2" };
+});
+
 require.register("widget/config/error_codes", function(exports, require, module) {
 module.exports = {
   NO_INPUT: 1,
@@ -110,6 +115,7 @@ require.register("widget/config/preferences", function(exports, require, module)
 var _ref;
 
 module.exports = {
+  debug: false,
   browserType: typeof window !== "undefined" && window !== null ? (_ref = window.navigator) != null ? _ref.product : void 0 : void 0,
   name: 'Fillr widget',
   page: {
@@ -129,7 +135,7 @@ module.exports = {
 });
 
 require.register("widget/controller", function(exports, require, module) {
-var Affiliate, Fields, Mappings, Pop, PublisherApi, perfWrap;
+var Affiliate, Fields, Mappings, Pop, Preferences, PublisherApi, perfWrap;
 
 Mappings = require('widget/pop/mappings');
 
@@ -141,16 +147,22 @@ PublisherApi = require('widget/pop/publisher_api');
 
 Affiliate = require('widget/lib/affiliate');
 
+Preferences = require('widget/config/preferences');
+
 perfWrap = require('widget/lib/perf-wrap');
 
 module.exports = {
   getFields: function() {
-    console.log("getFields");
-    return perfWrap('getFields', function() {
+    var p;
+    p = perfWrap('getFields', function() {
       var errors, fields, _ref;
       _ref = Fields.detect(document), errors = _ref[0], fields = _ref[1];
       return Mappings.payload(errors, fields);
     });
+    if (Preferences.debug) {
+      console.log("getFields", p);
+    }
+    return p;
   },
   getPublisherFields: function() {
     return perfWrap('getPublisherFields', function() {
@@ -159,6 +171,9 @@ module.exports = {
   },
   populateWithMappings: function(mappedFields, popData) {
     var e, res;
+    if (Preferences.debug) {
+      console.log("fill", mappedFields, popData);
+    }
     res = null;
     try {
       return res = perfWrap('populateWithMappings', function() {
@@ -10603,20 +10618,52 @@ return jQuery;
 
 require.register("widget/lib/json", function(exports, require, module) {
 module.exports = {
+  "native": true,
+  _stringify: function(obj) {
+    var _json;
+    if (this._isNative(JSON)) {
+      return JSON.stringify(obj);
+    } else {
+      _json = this._restoreJSON();
+      return _json.stringify(obj);
+    }
+  },
   stringify: function(obj) {
-    var r, _array_tojson, _json_stringify;
+    var r, _array_tojson;
+    this["native"] = this._isNative(JSON);
     if (this._shittyPrototypeExists()) {
-      _json_stringify = JSON.stringify;
       _array_tojson = Array.prototype.toJSON;
       delete Array.prototype.toJSON;
-      r = _json_stringify(obj);
+      r = this._stringify(obj, this._replacer);
       Array.prototype.toJSON = _array_tojson;
       return r;
     }
-    return JSON.stringify(obj);
+    return this._stringify(obj);
   },
   _shittyPrototypeExists: function() {
     return typeof window.Prototype !== 'undefined' && parseFloat(window.Prototype.Version.substr(0, 3)) < 1.7 && typeof window.Array.prototype.toJSON !== 'undefined';
+  },
+  _replacer: function(key, value) {
+    if (key[0] === "_") {
+      return void 0;
+    }
+    return value;
+  },
+  _isNative: function(jsonObj) {
+    var _ref, _ref1;
+    if (~(jsonObj != null ? (_ref = jsonObj.stringify) != null ? (_ref1 = _ref.toString()) != null ? _ref1.indexOf('[native code]') : void 0 : void 0 : void 0)) {
+      return true;
+    }
+    return false;
+  },
+  _restoreJSON: function() {
+    var f, _json;
+    f = document.createElement("iframe");
+    f.style.display = "none";
+    document.documentElement.appendChild(f);
+    _json = f.contentWindow.JSON;
+    document.documentElement.removeChild(f);
+    return _json;
   }
 };
 
@@ -11149,12 +11196,17 @@ module.exports = DateFormatter = (function() {
   };
 
   DateFormatter.value = function(field, payload) {
-    var param, res, _i, _len, _ref;
+    var param, res, val, _i, _len, _ref;
     res = [];
     _ref = field.params;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       param = _ref[_i];
-      res.push(this.twoDigits(payload[param]));
+      val = payload[param];
+      if (val == null) {
+        console.error("" + param + " not in date payload", field, Object.keys(payload));
+        return "";
+      }
+      res.push(this.twoDigits(val));
     }
     return res.join('-');
   };
@@ -11321,7 +11373,6 @@ module.exports = MonthYearFormatter = (function() {
   MonthYearFormatter.process = function(field, payload) {
     var dateFormat, dt, value;
     dateFormat = this.findMonthYearFormat(field.placeholder) || this.findMonthYearFormat(field.label) || ["mm-yyyy", "mm", "-", "yyyy"];
-    console.log('dateFormat', dateFormat);
     value = DateFormatter.value(field, payload);
     dt = this.parsePayloadMonthYear(value);
     return this.formatMonthYear(dt, dateFormat);
@@ -11549,18 +11600,22 @@ module.exports = BaseField = (function() {
   };
 
   BaseField.prototype.doChange = function(el) {
-    var evtA, evtB, _ref, _ref1;
-    evtA = document.createEvent('HTMLEvents');
-    evtA.initEvent('change', true, true);
-    if (((_ref = this.field.el) != null ? _ref.dispatchEvent : void 0) != null) {
-      this.field.el.dispatchEvent(evtA);
+    var evName, evtA, evtB, _i, _len, _ref, _ref1, _ref2;
+    _ref = ['keypress', 'keydown', 'keyup', 'input', 'change'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      evName = _ref[_i];
+      evtA = document.createEvent('HTMLEvents');
+      evtA.initEvent(evName, true, true);
+      if (((_ref1 = this.field.el) != null ? _ref1.dispatchEvent : void 0) != null) {
+        this.field.el.dispatchEvent(evtA);
+      }
     }
     if (Preferences.browserType === 'Fennec') {
       return console.log("Skipping click event because Fennec");
     } else {
       evtB = document.createEvent('HTMLEvents');
       evtB.initEvent('click', true, true);
-      if (((_ref1 = this.field.el) != null ? _ref1.dispatchEvent : void 0) != null) {
+      if (((_ref2 = this.field.el) != null ? _ref2.dispatchEvent : void 0) != null) {
         return this.field.el.dispatchEvent(evtB);
       }
     }
@@ -12207,18 +12262,43 @@ module.exports = SelectField = (function(_super) {
     return true;
   };
 
-  SelectField.prototype._strategies = ['_exactStrategy', '_prefixStrategy', '_fuzzyValueStrategy', '_fuzzyTextStrategy'];
+  SelectField.prototype._strategies = ['_exactStrategy', '_exactNumberStrategy', '_prefixStrategy', '_fuzzyValueStrategy', '_fuzzyTextStrategy'];
 
   SelectField.prototype._exactStrategy = function(value) {
     var option, v, _i, _len, _ref, _ref1, _ref2;
+    if (value == null) {
+      return;
+    }
+    v = value != null ? value.toLowerCase() : void 0;
     _ref = this.options;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       option = _ref[_i];
-      v = value.toLowerCase();
       if ((option != null ? (_ref1 = option.value) != null ? _ref1.toLowerCase() : void 0 : void 0) === v) {
         return this.field.el.value = option.value;
       }
       if ((option != null ? (_ref2 = option.text) != null ? _ref2.toLowerCase() : void 0 : void 0) === v) {
+        return this.field.el.value = option.value;
+      }
+    }
+  };
+
+  SelectField.prototype._exactNumberStrategy = function(value) {
+    var intVal, option, v, _i, _len, _ref;
+    if (value == null) {
+      return;
+    }
+    v = value != null ? value.toLowerCase() : void 0;
+    intVal = parseInt(v);
+    if (isNaN(v) || intVal === NaN) {
+      return;
+    }
+    _ref = this.options;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      option = _ref[_i];
+      if (intVal === parseInt(option != null ? option.value : void 0, 10)) {
+        return this.field.el.value = option.value;
+      }
+      if (intVal === parseInt(option != null ? option.text : void 0, 10)) {
         return this.field.el.value = option.value;
       }
     }
@@ -12614,13 +12694,15 @@ module.exports = USStateSelectField = (function(_super) {
 });
 
 require.register("widget/pop/mappings", function(exports, require, module) {
-var Domain, ErrorCodes, Mappings, UUID;
+var Domain, ErrorCodes, Mappings, UUID, WidgetVersion;
 
 Domain = require('widget/domain');
 
 UUID = require('widget/lib/uuid');
 
 ErrorCodes = require('widget/config/error_codes');
+
+WidgetVersion = require('widget/config/version');
 
 module.exports = Mappings = (function() {
   function Mappings() {}
@@ -12637,7 +12719,8 @@ module.exports = Mappings = (function() {
         referrer: Domain.referrer()
       },
       publisher_name: Domain.base(),
-      form_name: document.title
+      form_name: document.title,
+      widget_version: WidgetVersion.version || 'unknown'
     };
   };
 
