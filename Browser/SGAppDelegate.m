@@ -24,6 +24,7 @@
 #import "Appirater.h"
 
 #import "FillrSDK/Fillr.h"
+#import "DefaultFillProvider.h"
 
 @interface SGAppDelegate()<FillrDelegate>
 @end
@@ -84,9 +85,11 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     [Appirater setTimeBeforeReminding:2];
     [Appirater appLaunched:YES];
     
+    [DefaultFillProvider sharedInstance].rootViewController = self.window.rootViewController;
+    [Fillr sharedInstance].fillProvider = [DefaultFillProvider sharedInstance];
     [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" andUrlSchema:@"com.fillr.foxbrowser"];
     [[Fillr sharedInstance] setBrowserName:@"Dolphin Browser" toolbarBrowserName:@"Dolphin Browser"];
-    [Fillr sharedInstance].isDolphin = YES;
+    //[Fillr sharedInstance].isDolphin = YES;
     [Fillr sharedInstance].toolbarTextColor = [UIColor colorWithRed:0.0f green:0.64f blue:0.72f alpha:1.0f];
     //[Fillr sharedInstance].toolbarThemeColor = [UIColor blackColor];
     //[Fillr sharedInstance].overlayInputAccessoryView = YES;

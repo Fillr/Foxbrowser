@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2143E0461D6D24280036EF68 /* DropboxSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2143E0451D6D24280036EF68 /* DropboxSDK.framework */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
-		21BE8A461D657EC800EDF34F /* libFillrEmbededSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21BE8A3E1D657E7E00EDF34F /* libFillrEmbededSDK.a */; };
+		21BE8A791D659D8800EDF34F /* FillrEmbededSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */; };
+		21D793411D66A1E700208836 /* libFillrEmbededSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21D793401D66A1E700208836 /* libFillrEmbededSDK.a */; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
 		F4047E4C19E766D500D27001 /* UICKeyChainStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4B19E766D500D27001 /* UICKeyChainStore.m */; };
 		F406C028195F25A300A84C76 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = F406C005195F25A300A84C76 /* NSData+Base64.m */; };
@@ -103,83 +105,13 @@
 		F4FE7F2015B48F8900471BD1 /* SGAddButton.m in Sources */ = {isa = PBXBuildFile; fileRef = F4FE7F1F15B48F8900471BD1 /* SGAddButton.m */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		21BE8A2D1D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 339834721606FBB30006D13F;
-			remoteInfo = POP;
-		};
-		21BE8A2F1D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 21DBB83B1A145A3200C1B8E8;
-			remoteInfo = HSBC;
-		};
-		21BE8A311D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 2190682A1A2543E3003AAAC3;
-			remoteInfo = PayPal;
-		};
-		21BE8A331D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 21B408251A313C2700028211;
-			remoteInfo = Fillr;
-		};
-		21BE8A351D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 21383BDD1CA49C3800EE17BF;
-			remoteInfo = FillrConnect;
-		};
-		21BE8A371D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 21B4082D1A313ED900028211;
-			remoteInfo = FillrSafariExtension;
-		};
-		21BE8A391D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 2113558E1BABC10400C2B124;
-			remoteInfo = FillrUITests;
-		};
-		21BE8A3B1D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 217B663E1BCCDEDF002D1305;
-			remoteInfo = FillrTests;
-		};
-		21BE8A3D1D657E7E00EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 21BE8A041D657B4100EDF34F;
-			remoteInfo = FillrEmbededSDK;
-		};
-		21BE8A441D657E9200EDF34F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 21BE8A031D657B4100EDF34F;
-			remoteInfo = FillrEmbededSDK;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
+		2143E0451D6D24280036EF68 /* DropboxSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DropboxSDK.framework; sourceTree = "<group>"; };
 		21AFFECA1B4B927100D2EB84 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
-		21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = POP.xcodeproj; path = ../FillriOS/POP.xcodeproj; sourceTree = "<group>"; };
+		21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrEmbededSDKBundle.bundle; sourceTree = "<group>"; };
+		21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFillrEmbededSDK.a; path = "../../../Library/Developer/Xcode/DerivedData/POP-bsqllegiexqgpahhldkqovpxhybv/Build/Products/Debug-iphonesimulator/libFillrEmbededSDK.a"; sourceTree = "<group>"; };
+		21D793401D66A1E700208836 /* libFillrEmbededSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFillrEmbededSDK.a; sourceTree = "<group>"; };
 		BD9CA4ADA7D5460BAA5BBD6D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4047E4019E6E6B700D27001 /* DejalActivityView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DejalActivityView.h; sourceTree = "<group>"; };
 		F4047E4119E6E6B700D27001 /* DejalActivityView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DejalActivityView.m; sourceTree = "<group>"; };
@@ -412,7 +344,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				21BE8A461D657EC800EDF34F /* libFillrEmbededSDK.a in Frameworks */,
+				21D793411D66A1E700208836 /* libFillrEmbededSDK.a in Frameworks */,
 				21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */,
 				F4ADE13F19AFC00900A5B380 /* libsqlite3.0.dylib in Frameworks */,
 				F42CC123195652D8005411EA /* CoreGraphics.framework in Frameworks */,
@@ -421,6 +353,7 @@
 				F48A732716BFFF8B006B25CB /* CoreData.framework in Frameworks */,
 				F446638816A2E31F00047704 /* Social.framework in Frameworks */,
 				F4FCC8F915B77D4800207BEA /* Twitter.framework in Frameworks */,
+				2143E0461D6D24280036EF68 /* DropboxSDK.framework in Frameworks */,
 				F455171415A47D9100E0B54E /* MessageUI.framework in Frameworks */,
 				F407FABF17E6231E008179F4 /* libGoogleAnalyticsServices.a in Frameworks */,
 				F46700FE15A651FA00EACFBD /* libicucore.dylib in Frameworks */,
@@ -438,22 +371,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		21BE8A1C1D657E7D00EDF34F /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				21BE8A2E1D657E7E00EDF34F /* POP.app */,
-				21BE8A301D657E7E00EDF34F /* POP HSBC.app */,
-				21BE8A321D657E7E00EDF34F /* PayPal.app */,
-				21BE8A341D657E7E00EDF34F /* POP Safari.app */,
-				21BE8A361D657E7E00EDF34F /* FillrConnect.app */,
-				21BE8A381D657E7E00EDF34F /* FillrSafariExtension.appex */,
-				21BE8A3A1D657E7E00EDF34F /* FillrUITests.xctest */,
-				21BE8A3C1D657E7E00EDF34F /* FillrTests.xctest */,
-				21BE8A3E1D657E7E00EDF34F /* libFillrEmbededSDK.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		F4047E3E19E6E6B700D27001 /* ext */ = {
 			isa = PBXGroup;
 			children = (
@@ -843,8 +760,9 @@
 		F4FE2C3A159B6C58001B04D7 = {
 			isa = PBXGroup;
 			children = (
-				21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */,
+				21D793401D66A1E700208836 /* libFillrEmbededSDK.a */,
 				21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */,
+				21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */,
 				F406C000195F25A300A84C76 /* FXSync */,
 				F45516E315A47B8A00E0B54E /* External */,
 				F4FE2C4F159B6C58001B04D7 /* Browser */,
@@ -864,6 +782,8 @@
 		F4FE2C48159B6C58001B04D7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2143E0451D6D24280036EF68 /* DropboxSDK.framework */,
+				21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */,
 				21AFFECA1B4B927100D2EB84 /* WebKit.framework */,
 				F4ADE13E19AFC00900A5B380 /* libsqlite3.0.dylib */,
 				F42CC124195652E3005411EA /* JavaScriptCore.framework */,
@@ -930,7 +850,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				21BE8A451D657E9200EDF34F /* PBXTargetDependency */,
 			);
 			name = Foxbrowser;
 			productName = Foxbrowser;
@@ -998,12 +917,6 @@
 			mainGroup = F4FE2C3A159B6C58001B04D7;
 			productRefGroup = F4FE2C46159B6C58001B04D7 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 21BE8A1C1D657E7D00EDF34F /* Products */;
-					ProjectRef = 21BE8A1B1D657E7D00EDF34F /* POP.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				F4FE2C44159B6C58001B04D7 /* Foxbrowser */,
@@ -1011,78 +924,13 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXReferenceProxy section */
-		21BE8A2E1D657E7E00EDF34F /* POP.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = POP.app;
-			remoteRef = 21BE8A2D1D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A301D657E7E00EDF34F /* POP HSBC.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "POP HSBC.app";
-			remoteRef = 21BE8A2F1D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A321D657E7E00EDF34F /* PayPal.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = PayPal.app;
-			remoteRef = 21BE8A311D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A341D657E7E00EDF34F /* POP Safari.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "POP Safari.app";
-			remoteRef = 21BE8A331D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A361D657E7E00EDF34F /* FillrConnect.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = FillrConnect.app;
-			remoteRef = 21BE8A351D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A381D657E7E00EDF34F /* FillrSafariExtension.appex */ = {
-			isa = PBXReferenceProxy;
-			fileType = "wrapper.app-extension";
-			path = FillrSafariExtension.appex;
-			remoteRef = 21BE8A371D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A3A1D657E7E00EDF34F /* FillrUITests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = FillrUITests.xctest;
-			remoteRef = 21BE8A391D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A3C1D657E7E00EDF34F /* FillrTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = FillrTests.xctest;
-			remoteRef = 21BE8A3B1D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		21BE8A3E1D657E7E00EDF34F /* libFillrEmbededSDK.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libFillrEmbededSDK.a;
-			remoteRef = 21BE8A3D1D657E7E00EDF34F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
-
 /* Begin PBXResourcesBuildPhase section */
 		F4FE2C43159B6C58001B04D7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				F4B72E871A369BA8000E0753 /* safari.png in Resources */,
+				21BE8A791D659D8800EDF34F /* FillrEmbededSDKBundle.bundle in Resources */,
 				F4B72E861A369BA8000E0753 /* TUSafariActivity.strings in Resources */,
 				21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */,
 				F4BBDD3519E453450078D4AA /* AppiraterLocalizable.strings in Resources */,
@@ -1170,14 +1018,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		21BE8A451D657E9200EDF34F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = FillrEmbededSDK;
-			targetProxy = 21BE8A441D657E9200EDF34F /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		F4B72E671A369BA8000E0753 /* TUSafariActivity.strings */ = {
@@ -1324,6 +1164,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution: Pop Tech Pty Ltd (73449B82QX)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Pop Tech Pty Ltd (73449B82QX)";
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
 				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
@@ -1334,6 +1178,7 @@
 					"$(SRCROOT)/External/GoogleAnalytics",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
+					"$(PROJECT_DIR)",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1402,6 +1247,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer: Stuart Rowe (9K4BD54377)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Stuart Rowe (9K4BD54377)";
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
 				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
@@ -1412,10 +1261,12 @@
 					"$(SRCROOT)/External/GoogleAnalytics",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
+					"$(PROJECT_DIR)",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "a5857d80-998c-4c87-ab81-6bacd9a17c18";
+				PROVISIONING_PROFILE = "f18d18b4-fbfb-4a28-bd04-4c9f67e7ce0b";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "f18d18b4-fbfb-4a28-bd04-4c9f67e7ce0b";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
 				WRAPPER_EXTENSION = app;
@@ -1430,6 +1281,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution: Pop Tech Pty Ltd (73449B82QX)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Pop Tech Pty Ltd (73449B82QX)";
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
 				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
@@ -1440,6 +1295,7 @@
 					"$(SRCROOT)/External/GoogleAnalytics",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
+					"$(PROJECT_DIR)",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
