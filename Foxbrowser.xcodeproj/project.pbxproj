@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2143E0461D6D24280036EF68 /* DropboxSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2143E0451D6D24280036EF68 /* DropboxSDK.framework */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
 		21BE8A791D659D8800EDF34F /* FillrEmbededSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */; };
@@ -106,7 +105,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2143E0451D6D24280036EF68 /* DropboxSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DropboxSDK.framework; sourceTree = "<group>"; };
 		21AFFECA1B4B927100D2EB84 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
 		21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrEmbededSDKBundle.bundle; sourceTree = "<group>"; };
@@ -353,7 +351,6 @@
 				F48A732716BFFF8B006B25CB /* CoreData.framework in Frameworks */,
 				F446638816A2E31F00047704 /* Social.framework in Frameworks */,
 				F4FCC8F915B77D4800207BEA /* Twitter.framework in Frameworks */,
-				2143E0461D6D24280036EF68 /* DropboxSDK.framework in Frameworks */,
 				F455171415A47D9100E0B54E /* MessageUI.framework in Frameworks */,
 				F407FABF17E6231E008179F4 /* libGoogleAnalyticsServices.a in Frameworks */,
 				F46700FE15A651FA00EACFBD /* libicucore.dylib in Frameworks */,
@@ -782,7 +779,6 @@
 		F4FE2C48159B6C58001B04D7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2143E0451D6D24280036EF68 /* DropboxSDK.framework */,
 				21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */,
 				21AFFECA1B4B927100D2EB84 /* WebKit.framework */,
 				F4ADE13E19AFC00900A5B380 /* libsqlite3.0.dylib */,
