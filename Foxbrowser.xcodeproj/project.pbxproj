@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
+		21B6B8731D81184700FBC5CD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21B6B8721D81184700FBC5CD /* CoreFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		21BE8A791D659D8800EDF34F /* FillrEmbededSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */; };
 		21D793411D66A1E700208836 /* libFillrEmbededSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21D793401D66A1E700208836 /* libFillrEmbededSDK.a */; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
@@ -107,6 +108,7 @@
 /* Begin PBXFileReference section */
 		21AFFECA1B4B927100D2EB84 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
+		21B6B8721D81184700FBC5CD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		21BE8A781D659D8800EDF34F /* FillrEmbededSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrEmbededSDKBundle.bundle; sourceTree = "<group>"; };
 		21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFillrEmbededSDK.a; path = "../../../Library/Developer/Xcode/DerivedData/POP-bsqllegiexqgpahhldkqovpxhybv/Build/Products/Debug-iphonesimulator/libFillrEmbededSDK.a"; sourceTree = "<group>"; };
 		21D793401D66A1E700208836 /* libFillrEmbededSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFillrEmbededSDK.a; sourceTree = "<group>"; };
@@ -342,6 +344,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21B6B8731D81184700FBC5CD /* CoreFoundation.framework in Frameworks */,
 				21D793411D66A1E700208836 /* libFillrEmbededSDK.a in Frameworks */,
 				21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */,
 				F4ADE13F19AFC00900A5B380 /* libsqlite3.0.dylib in Frameworks */,
@@ -779,6 +782,7 @@
 		F4FE2C48159B6C58001B04D7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				21B6B8721D81184700FBC5CD /* CoreFoundation.framework */,
 				21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */,
 				21AFFECA1B4B927100D2EB84 /* WebKit.framework */,
 				F4ADE13E19AFC00900A5B380 /* libsqlite3.0.dylib */,
