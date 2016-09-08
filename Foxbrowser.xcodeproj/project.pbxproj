@@ -1265,8 +1265,8 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "f18d18b4-fbfb-4a28-bd04-4c9f67e7ce0b";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "f18d18b4-fbfb-4a28-bd04-4c9f67e7ce0b";
+				PROVISIONING_PROFILE = "0964bb89-7dc8-4665-a5a3-7d1ac7b194a3";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "0964bb89-7dc8-4665-a5a3-7d1ac7b194a3";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
 				WRAPPER_EXTENSION = app;
