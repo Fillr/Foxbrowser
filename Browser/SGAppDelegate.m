@@ -87,7 +87,7 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     
     [DefaultFillProvider sharedInstance].rootViewController = self.window.rootViewController;
     [Fillr sharedInstance].fillProvider = [DefaultFillProvider sharedInstance];
-    [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" andUrlSchema:@"com.fillr.foxbrowser"];
+    [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" secretKey:@"YTA4MmYyMWRmNTQwNjdjZjFhMGM4YzE=" andUrlScheme:@"com.fillr.foxbrowser"];
     [[Fillr sharedInstance] setBrowserName:@"Dolphin Browser" toolbarBrowserName:@"Dolphin Browser"];
     //[Fillr sharedInstance].isDolphin = YES;
     //[Fillr sharedInstance].toolbarTextColor = [UIColor colorWithRed:0.0f green:0.64f blue:0.72f alpha:1.0f];
@@ -142,10 +142,16 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     NSLog(@"Toolbar is clicked, Fillr is %@", isFillrInstalled ? @"installed" : @"not installed");
 }
 
+- (void)onFillrOpenURLInNewTab:(NSURL *)url {
+    [self.browserViewController addTabWithURLRequest:[NSMutableURLRequest requestWithURL:url] title:nil];
+}
+
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     [Appirater appEnteredForeground:YES];
     // 0.5 delay as a workaround so that modal views work
     [self performSelector:@selector(setupSync) withObject:nil afterDelay:0.5];
+    
+    [[Fillr sharedInstance] cancel];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {

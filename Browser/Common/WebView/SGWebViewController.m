@@ -212,6 +212,9 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     } else if ([scheme isEqualToString:@"closetab"]) {
         [browser removeViewController:self];
         return NO;
+    } else if ([[Fillr sharedInstance] canHandleWebViewRequest:request]) {
+        [[Fillr sharedInstance] handleWebViewRequest:request];
+        return NO;
     }
     
     if (navigationType != UIWebViewNavigationTypeOther) {
