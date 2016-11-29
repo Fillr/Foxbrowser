@@ -1,2 +1,11 @@
-Fix “whats this” button position and function
+—- Version 1.0.7 release notes -—
+
+MixPanel stats on when a user dismisses the autofill function on the keyboard
+MixPanel stats on when a user turns Fillr off in the browser settings
+
+Fix the following bugs:
+- Editing address inside the autofill profile, the current editing address closes when choosing street type, quadrant
+- Licenses - Choosing license type closes the current screen
+- Credit Card - Choosing credit card type closes the current screen
+- Cancel and done button disables when you tap it once in the fill screen modal
 
