@@ -1,3 +1,9 @@
+—- Version 1.0.8 release notes -—
+
+Update to latest widget
+Make v4 schema dropbox sync backward compatible with app using v3 schema
+
+
 —- Version 1.0.7 release notes -—
 
 MixPanel stats on when a user dismisses the autofill function on the keyboard
