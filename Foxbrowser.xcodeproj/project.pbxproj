@@ -1303,7 +1303,7 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "f2586fb8-e426-4981-aa3f-2250a34a582a";
+				PROVISIONING_PROFILE = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
 				WRAPPER_EXTENSION = app;
