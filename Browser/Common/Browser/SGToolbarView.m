@@ -22,7 +22,7 @@
 #import "TUSafariActivity.h"
 #import "NJKWebViewProgressView.h"
 
-#import "FillrEmbeddedSDK/FillrSDKSettingViewController.h"
+#import "FillrSDKSettingViewController.h"
 
 @implementation SGToolbarView
 

@@ -19,7 +19,7 @@
 #import "NSStringPunycodeAdditions.h"
 #import "GAI.h"
 
-#import "FillrSDK/Fillr.h"
+#import "Fillr.h"
 
 @implementation SGWebViewController {
     NSDictionary *_selected;

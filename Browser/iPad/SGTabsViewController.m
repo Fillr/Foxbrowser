@@ -16,7 +16,7 @@
 #import "UIWebView+WebViewAdditions.h"
 #import "SGBlankController.h"
 
-#import "FillrSDK/Fillr.h"
+#import "Fillr.h"
 
 @interface SGTabsViewController ()
 

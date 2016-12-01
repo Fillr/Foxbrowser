@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		219BAD661DB4792B00A689E9 /* FillrEmbeddedSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 219BAD651DB4792B00A689E9 /* FillrEmbeddedSDKBundle.bundle */; };
-		219BAD681DB4798E00A689E9 /* libFillrEmbeddedSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 219BAD671DB4798E00A689E9 /* libFillrEmbeddedSDK.a */; };
+		2130027F1DEFD49600225E3B /* FillrEmbeddedSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 213002761DEFD49600225E3B /* FillrEmbeddedSDKBundle.bundle */; };
+		213002801DEFD49600225E3B /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 213002771DEFD49600225E3B /* FillrSDKBundle.bundle */; };
+		213002811DEFD49600225E3B /* libFillrEmbeddedSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2130027E1DEFD49600225E3B /* libFillrEmbeddedSDK.a */; };
 		21AFFECB1B4B927100D2EB84 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AFFECA1B4B927100D2EB84 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */; };
 		21B6B8731D81184700FBC5CD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21B6B8721D81184700FBC5CD /* CoreFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F4047E4319E6E6B700D27001 /* DejalActivityView.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4119E6E6B700D27001 /* DejalActivityView.m */; };
 		F4047E4C19E766D500D27001 /* UICKeyChainStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F4047E4B19E766D500D27001 /* UICKeyChainStore.m */; };
@@ -106,10 +106,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		219BAD651DB4792B00A689E9 /* FillrEmbeddedSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrEmbeddedSDKBundle.bundle; sourceTree = "<group>"; };
-		219BAD671DB4798E00A689E9 /* libFillrEmbeddedSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFillrEmbeddedSDK.a; sourceTree = "<group>"; };
+		213002761DEFD49600225E3B /* FillrEmbeddedSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrEmbeddedSDKBundle.bundle; sourceTree = "<group>"; };
+		213002771DEFD49600225E3B /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
+		213002791DEFD49600225E3B /* DefaultFillProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultFillProvider.h; sourceTree = "<group>"; };
+		2130027B1DEFD49600225E3B /* Fillr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fillr.h; sourceTree = "<group>"; };
+		2130027C1DEFD49600225E3B /* FillrAutofillInputAccessoryView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FillrAutofillInputAccessoryView.h; sourceTree = "<group>"; };
+		2130027D1DEFD49600225E3B /* FillrSDKSettingViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FillrSDKSettingViewController.h; sourceTree = "<group>"; };
+		2130027E1DEFD49600225E3B /* libFillrEmbeddedSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFillrEmbeddedSDK.a; sourceTree = "<group>"; };
 		21AFFECA1B4B927100D2EB84 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FillrSDKBundle.bundle; sourceTree = "<group>"; };
 		21B6B8721D81184700FBC5CD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		21D7933E1D66A09300208836 /* libFillrEmbededSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFillrEmbededSDK.a; path = "../../../Library/Developer/Xcode/DerivedData/POP-bsqllegiexqgpahhldkqovpxhybv/Build/Products/Debug-iphonesimulator/libFillrEmbededSDK.a"; sourceTree = "<group>"; };
 		BD9CA4ADA7D5460BAA5BBD6D /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -363,7 +367,7 @@
 				F455171815A47D9E00E0B54E /* libz.dylib in Frameworks */,
 				F455171615A47D9800E0B54E /* CFNetwork.framework in Frameworks */,
 				F4FE2C4A159B6C58001B04D7 /* UIKit.framework in Frameworks */,
-				219BAD681DB4798E00A689E9 /* libFillrEmbeddedSDK.a in Frameworks */,
+				213002811DEFD49600225E3B /* libFillrEmbeddedSDK.a in Frameworks */,
 				F4FE2C4C159B6C58001B04D7 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -371,6 +375,36 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		213002751DEFD49600225E3B /* FillrEmbededSDKiOS */ = {
+			isa = PBXGroup;
+			children = (
+				213002761DEFD49600225E3B /* FillrEmbeddedSDKBundle.bundle */,
+				213002771DEFD49600225E3B /* FillrSDKBundle.bundle */,
+				213002781DEFD49600225E3B /* include */,
+				2130027E1DEFD49600225E3B /* libFillrEmbeddedSDK.a */,
+			);
+			path = FillrEmbededSDKiOS;
+			sourceTree = "<group>";
+		};
+		213002781DEFD49600225E3B /* include */ = {
+			isa = PBXGroup;
+			children = (
+				213002791DEFD49600225E3B /* DefaultFillProvider.h */,
+				2130027A1DEFD49600225E3B /* FillrSDK */,
+				2130027D1DEFD49600225E3B /* FillrSDKSettingViewController.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		2130027A1DEFD49600225E3B /* FillrSDK */ = {
+			isa = PBXGroup;
+			children = (
+				2130027B1DEFD49600225E3B /* Fillr.h */,
+				2130027C1DEFD49600225E3B /* FillrAutofillInputAccessoryView.h */,
+			);
+			path = FillrSDK;
+			sourceTree = "<group>";
+		};
 		F4047E3E19E6E6B700D27001 /* ext */ = {
 			isa = PBXGroup;
 			children = (
@@ -760,9 +794,7 @@
 		F4FE2C3A159B6C58001B04D7 = {
 			isa = PBXGroup;
 			children = (
-				219BAD671DB4798E00A689E9 /* libFillrEmbeddedSDK.a */,
-				21AFFEDF1B4BB7A000D2EB84 /* FillrSDKBundle.bundle */,
-				219BAD651DB4792B00A689E9 /* FillrEmbeddedSDKBundle.bundle */,
+				213002751DEFD49600225E3B /* FillrEmbededSDKiOS */,
 				F406C000195F25A300A84C76 /* FXSync */,
 				F45516E315A47B8A00E0B54E /* External */,
 				F4FE2C4F159B6C58001B04D7 /* Browser */,
@@ -931,7 +963,6 @@
 			files = (
 				F4B72E871A369BA8000E0753 /* safari.png in Resources */,
 				F4B72E861A369BA8000E0753 /* TUSafariActivity.strings in Resources */,
-				21AFFEE01B4BB7A000D2EB84 /* FillrSDKBundle.bundle in Resources */,
 				F4BBDD3519E453450078D4AA /* AppiraterLocalizable.strings in Resources */,
 				F4B72E8B1A369BA8000E0753 /* safari~iPad@2x.png in Resources */,
 				F455C5F51A02E74500F49C07 /* Icons.xcassets in Resources */,
@@ -940,9 +971,10 @@
 				F44870BC1687E0E700769EA4 /* JSTools.js in Resources */,
 				F4B72E891A369BA8000E0753 /* safari@3x.png in Resources */,
 				F4C6F7CB1A282EE500266392 /* FXSettingsViewController.xib in Resources */,
+				213002801DEFD49600225E3B /* FillrSDKBundle.bundle in Resources */,
 				F4D9F83C1A27BBD2003E1D0C /* FXSync.strings in Resources */,
-				219BAD661DB4792B00A689E9 /* FillrEmbeddedSDKBundle.bundle in Resources */,
 				F4B72E901A369C24000E0753 /* LICENSE in Resources */,
+				2130027F1DEFD49600225E3B /* FillrEmbeddedSDKBundle.bundle in Resources */,
 				F407FAB617E622D6008179F4 /* Images.xcassets in Resources */,
 				F4FD2B6615ADDB7B005DBAB4 /* Localizable.strings in Resources */,
 				F4C3906C161093D500349AA4 /* Settings.bundle in Resources */,
@@ -1171,7 +1203,7 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1180,13 +1212,14 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				USER_HEADER_SEARCH_PATHS = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Adhoc;
@@ -1256,7 +1289,7 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1265,13 +1298,14 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "27f02c93-ac8b-424d-ae50-8036000681a2";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "27f02c93-ac8b-424d-ae50-8036000681a2";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				USER_HEADER_SEARCH_PATHS = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1291,7 +1325,7 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Browser/Foxbrowser-Prefix.pch";
-				HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "Browser/Foxbrowser-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
@@ -1300,12 +1334,13 @@
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/FillrSDK",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "/Users/AlexZhaoBin/Documents/Projects/FillriOS/**";
+				USER_HEADER_SEARCH_PATHS = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

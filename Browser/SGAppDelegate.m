@@ -23,7 +23,7 @@
 #import "Reachability.h"
 #import "Appirater.h"
 
-#import "FillrSDK/Fillr.h"
+#import "Fillr.h"
 #import "DefaultFillProvider.h"
 
 @interface SGAppDelegate()<FillrDelegate>

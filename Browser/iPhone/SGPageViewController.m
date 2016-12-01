@@ -14,7 +14,7 @@
 #import "SGWebViewController.h"
 #import "SGBlankController.h"
 
-#import "FillrSDK/Fillr.h"
+#import "Fillr.h"
 
 CGFloat const kSGMinYScale = 0.84;
 CGFloat const kSGMinXScale = 0.84;
