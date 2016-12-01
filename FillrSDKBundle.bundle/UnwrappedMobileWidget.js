@@ -1,4 +1,4 @@
-//version:1.11.2
+//version:1.12.26
 (function() {
 'use strict';
 
@@ -96,11 +96,6 @@ globals.require.brunch = true;
 // = end tweaked common.js =
 // =========================
 
-
-require.register("widget/config/version", function(exports, require, module) {
-module.exports = { "version" : "1.11.2" };
-});
-
 require.register("widget/config/error_codes", function(exports, require, module) {
 module.exports = {
   NO_INPUT: 1,
@@ -112,11 +107,11 @@ module.exports = {
 });
 
 require.register("widget/config/preferences", function(exports, require, module) {
-var _ref;
+var ref;
 
 module.exports = {
   debug: false,
-  browserType: typeof window !== "undefined" && window !== null ? (_ref = window.navigator) != null ? _ref.product : void 0 : void 0,
+  browserType: typeof window !== "undefined" && window !== null ? (ref = window.navigator) != null ? ref.product : void 0 : void 0,
   name: 'Fillr widget',
   page: {
     cssPrefix: 'pop-widget',
@@ -155,8 +150,8 @@ module.exports = {
   getFields: function() {
     var p;
     p = perfWrap('getFields', function() {
-      var errors, fields, _ref;
-      _ref = Fields.detect(document), errors = _ref[0], fields = _ref[1];
+      var errors, fields, ref;
+      ref = Fields.detect(document), errors = ref[0], fields = ref[1];
       return Mappings.payload(errors, fields);
     });
     if (Preferences.debug) {
@@ -182,8 +177,8 @@ module.exports = {
           popData: popData
         });
       });
-    } catch (_error) {
-      e = _error;
+    } catch (error) {
+      e = error;
       return console.log("Filling Error:", e);
     } finally {
       Affiliate.create(mappedFields.affiliate);
@@ -260,27 +255,27 @@ module.exports = {
   sectionHints: {},
   nextGroup: 0,
   detect: function() {
-    var error, _ref;
+    var error, ref;
     this.fom = Fom.create();
-    return _ref = this._detect(document), error = _ref[0], this.fields = _ref[1], _ref;
+    return ref = this._detect(document), error = ref[0], this.fields = ref[1], ref;
   },
   _detect: function(searchRoot) {
-    var allFields, err, error, field, fields, newField, _ref;
-    _ref = this._allFields(), err = _ref[0], allFields = _ref[1];
+    var allFields, err, error, field, fields, newField, ref;
+    ref = this._allFields(), err = ref[0], allFields = ref[1];
     fields = (function() {
-      var _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = allFields.length; _i < _len; _i++) {
-        field = allFields[_i];
+      var j, len, results;
+      results = [];
+      for (j = 0, len = allFields.length; j < len; j++) {
+        field = allFields[j];
         newField = new FormInput(field);
         if (newField.ignore()) {
           continue;
         } else {
           newField.metadata.section_hint = this._sectionHint(field);
-          _results.push(newField);
+          results.push(newField);
         }
       }
-      return _results;
+      return results;
     }).call(this);
     if (fields.length === 0) {
       err |= ErrorCodes.NO_FIELDS;
@@ -289,55 +284,55 @@ module.exports = {
     return [error, fields];
   },
   _allFields: function() {
-    var div, doc, e, element, elements, err, field, fieldset, form, i, selectors, things, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var div, doc, e, element, elements, err, field, fieldset, form, i, j, k, l, len, len1, len2, len3, len4, m, n, ref, ref1, ref2, ref3, ref4, ref5, selectors, things;
     err = 0x0;
     selectors = ['input:not([type=button]):not([type=submit]):not([type=reset]):not([type=radio]):not([type=checkbox]):not([type=image]):not([readonly=readonly]):not([role=button]):not([name=q]):not([type=search])', 'select', 'textarea'].join(', ');
     things = [];
     elements = document.querySelectorAll(selectors);
-    for (_i = 0, _len = elements.length; _i < _len; _i++) {
-      element = elements[_i];
+    for (j = 0, len = elements.length; j < len; j++) {
+      element = elements[j];
       things.push(element);
     }
     try {
-      _ref = document.getElementsByTagName('iframe');
-      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
-        doc = _ref[_j];
+      ref = document.getElementsByTagName('iframe');
+      for (k = 0, len1 = ref.length; k < len1; k++) {
+        doc = ref[k];
         err |= ErrorCodes.IFRAME_DETECTED;
         if (!this._sameOrigin(doc.src)) {
           continue;
         }
-        if ((doc != null ? (_ref1 = doc.contentWindow) != null ? (_ref2 = _ref1.Element) != null ? _ref2.prototype : void 0 : void 0 : void 0) != null) {
+        if ((doc != null ? (ref1 = doc.contentWindow) != null ? (ref2 = ref1.Element) != null ? ref2.prototype : void 0 : void 0 : void 0) != null) {
           doc.contentWindow.Element.prototype.isVisible = window.Element.prototype.isVisible;
           elements = doc.contentDocument.querySelectorAll(selectors);
-          for (_k = 0, _len2 = elements.length; _k < _len2; _k++) {
-            element = elements[_k];
+          for (l = 0, len2 = elements.length; l < len2; l++) {
+            element = elements[l];
             things.push(element);
           }
         }
       }
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       console.log(e);
     }
     try {
-      _ref3 = document.getElementsByTagName('frame');
-      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-        doc = _ref3[_l];
+      ref3 = document.getElementsByTagName('frame');
+      for (m = 0, len3 = ref3.length; m < len3; m++) {
+        doc = ref3[m];
         err |= ErrorCodes.IFRAME_DETECTED;
         if (!this._sameOrigin(doc.src)) {
           continue;
         }
-        if ((doc != null ? (_ref4 = doc.contentWindow) != null ? (_ref5 = _ref4.Element) != null ? _ref5.prototype : void 0 : void 0 : void 0) != null) {
+        if ((doc != null ? (ref4 = doc.contentWindow) != null ? (ref5 = ref4.Element) != null ? ref5.prototype : void 0 : void 0 : void 0) != null) {
           doc.contentWindow.Element.prototype.isVisible = window.Element.prototype.isVisible;
           elements = doc.contentDocument.querySelectorAll(selectors);
-          for (_m = 0, _len4 = elements.length; _m < _len4; _m++) {
-            element = elements[_m];
+          for (n = 0, len4 = elements.length; n < len4; n++) {
+            element = elements[n];
             things.push(element);
           }
         }
       }
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       console.log(e);
     }
     i = things.length;
@@ -405,7 +400,7 @@ module.exports = {
 
 require.register("widget/fields/fom", function(exports, require, module) {
 var _cloneNode, _elementNode, _nodeFilter,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _elementNode = function() {
   var elementNode;
@@ -438,23 +433,23 @@ _nodeFilter = function() {
 };
 
 _cloneNode = function(node, excludeList) {
-  var child, childClone, retVal, _i, _len, _ref, _ref1;
+  var child, childClone, j, len, ref, ref1, retVal;
   if (excludeList == null) {
     excludeList = [];
   }
   if (node.nodeType !== _elementNode().ELEMENT_NODE) {
     return node.cloneNode(true);
   }
-  if (_ref = node.tagName.toLowerCase(), __indexOf.call(excludeList.map(function(e) {
+  if (ref = node.tagName.toLowerCase(), indexOf.call(excludeList.map(function(e) {
     return e.toLowerCase();
-  }), _ref) >= 0) {
+  }), ref) >= 0) {
     return null;
   }
   retVal = node.cloneNode(false);
   if (node.hasChildNodes()) {
-    _ref1 = node.childNodes;
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      child = _ref1[_i];
+    ref1 = node.childNodes;
+    for (j = 0, len = ref1.length; j < len; j++) {
+      child = ref1[j];
       if (child != null) {
         childClone = _cloneNode(child, excludeList);
         if (childClone != null) {
@@ -475,7 +470,6 @@ module.exports = {
   errorRgx: /error/gi,
   wordRgx: /\n[^A-Za-z\u4e00-\u9eff]*\n/gi,
   create: function(force) {
-    var _this = this;
     if (force == null) {
       force = false;
     }
@@ -487,26 +481,30 @@ module.exports = {
     Array.prototype.slice.call(this.dom.querySelectorAll('script,style,img,iframe,option,a,button')).map(function(aNode) {
       return aNode.parentElement.removeChild(aNode);
     });
-    Array.prototype.slice.call(this.dom.querySelectorAll('p,div,span,small')).map(function(aNode) {
-      var _ref, _ref1;
-      if (((_ref = aNode.style) != null ? _ref.visibility : void 0) === 'hidden') {
-        aNode.parentElement.removeChild(aNode);
-        return;
-      }
-      if (((_ref1 = aNode.style) != null ? _ref1.display : void 0) === 'none') {
-        aNode.parentElement.removeChild(aNode);
-        return;
-      }
-      if (_this.errorRgx.test(aNode.getAttribute('class'))) {
-        aNode.parentElement.removeChild(aNode);
-      }
-    });
+    Array.prototype.slice.call(this.dom.querySelectorAll('p,div,span,small')).map((function(_this) {
+      return function(aNode) {
+        var ref, ref1;
+        if (((ref = aNode.style) != null ? ref.visibility : void 0) === 'hidden') {
+          aNode.parentElement.removeChild(aNode);
+          return;
+        }
+        if (((ref1 = aNode.style) != null ? ref1.display : void 0) === 'none') {
+          aNode.parentElement.removeChild(aNode);
+          return;
+        }
+        if (_this.errorRgx.test(aNode.getAttribute('class'))) {
+          aNode.parentElement.removeChild(aNode);
+        }
+      };
+    })(this));
     Array.prototype.slice.call(this.dom.querySelectorAll('input,select')).map(function(aNode) {
       return aNode.parentElement.replaceChild(document.createTextNode(aNode.outerHTML), aNode);
     });
-    Array.prototype.slice.call(this.dom.querySelectorAll('*')).map(function(aNode) {
-      return typeof aNode.insertAdjacentHTML === "function" ? aNode.insertAdjacentHTML('afterbegin', '\n') : void 0;
-    });
+    Array.prototype.slice.call(this.dom.querySelectorAll('*')).map((function(_this) {
+      return function(aNode) {
+        return typeof aNode.insertAdjacentHTML === "function" ? aNode.insertAdjacentHTML('afterbegin', '\n') : void 0;
+      };
+    })(this));
     this.fom = this.dom.innerText || this.dom.textContent;
     this.fom = this.fom.replace(/[\s\n]*(?=<\/select>)/gim, '');
     this.fom = this.fom.replace(/([^\n])(?=\<(input|select))/gi, '$1\n');
@@ -531,8 +529,7 @@ module.exports = {
     return this.fom.indexOf(outerHtml);
   },
   processHeadings: function() {
-    var avg, exclude, n, px, s, sum, t, walk, _ref, _results,
-      _this = this;
+    var avg, exclude, n, px, ref, results, s, sum, t, walk;
     px = Array.prototype.slice.call(document.body.querySelectorAll('div,p,span,h1,h2,h3,h4,h5,h6,h7,li,b')).map(function(aNode) {
       var i;
       i = parseInt(window.getComputedStyle(aNode).fontSize);
@@ -549,33 +546,35 @@ module.exports = {
       return a + b;
     }, 0);
     avg = sum / px.length;
-    Array.prototype.slice.call(document.body.querySelectorAll('h1,h2,h3,h4,h5,h6,h7,legend')).map(function(aNode) {
-      var c, n, t, walk, _results;
-      if (aNode.querySelectorAll('input').length > 0) {
-        return;
-      }
-      t = aNode.textContent.trim();
-      if (aNode.parentElement.offsetParent && window.getComputedStyle(aNode).display !== 'none') {
-        _this.headings[t] = aNode;
-      }
-      walk = document.createTreeWalker(aNode, _nodeFilter().SHOW_TEXT, null, false);
-      _results = [];
-      while (n = walk.nextNode()) {
-        if (n.parentElement.offsetParent === null) {
-          continue;
+    Array.prototype.slice.call(document.body.querySelectorAll('h1,h2,h3,h4,h5,h6,h7,legend')).map((function(_this) {
+      return function(aNode) {
+        var c, n, results, t, walk;
+        if (aNode.querySelectorAll('input').length > 0) {
+          return;
         }
-        c = n.textContent.trim();
-        if (c !== '' && typeof _this.headings[c] === 'undefined') {
-          _results.push(_this.headings[c] = aNode);
-        } else {
-          _results.push(void 0);
+        t = aNode.textContent.trim();
+        if (aNode.parentElement.offsetParent && window.getComputedStyle(aNode).display !== 'none') {
+          _this.headings[t] = aNode;
         }
-      }
-      return _results;
-    });
+        walk = document.createTreeWalker(aNode, _nodeFilter().SHOW_TEXT, null, false);
+        results = [];
+        while (n = walk.nextNode()) {
+          if (n.parentElement.offsetParent === null) {
+            continue;
+          }
+          c = n.textContent.trim();
+          if (c !== '' && typeof _this.headings[c] === 'undefined') {
+            results.push(_this.headings[c] = aNode);
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      };
+    })(this));
     exclude = ['script', 'style', 'option', 'label', 'button'];
     walk = document.createTreeWalker(document.body, _nodeFilter().SHOW_TEXT, null, false);
-    _results = [];
+    results = [];
     while (n = walk.nextNode()) {
       if (n.parentElement && !~exclude.indexOf(n.parentElement.nodeName.toLowerCase())) {
         if ((n.parentElement.closest != null) && n.parentElement.closest('label') && !n.parentElement.closest('h1,h2,h3,h4,h5,h6,h7')) {
@@ -590,20 +589,20 @@ module.exports = {
             }
           }
         }
-        if (this.titleRgx.test((_ref = n.parentElement) != null ? _ref.getAttribute('class') : void 0)) {
+        if (this.titleRgx.test((ref = n.parentElement) != null ? ref.getAttribute('class') : void 0)) {
           if (n.parentElement.offsetParent) {
-            _results.push(this.headings[t] = n);
+            results.push(this.headings[t] = n);
           } else {
-            _results.push(void 0);
+            results.push(void 0);
           }
         } else {
-          _results.push(void 0);
+          results.push(void 0);
         }
       } else {
-        _results.push(void 0);
+        results.push(void 0);
       }
     }
-    return _results;
+    return results;
   }
 };
 
@@ -616,9 +615,9 @@ MetaData = require('widget/fields/metadata');
 
 module.exports = FormInput = (function() {
   function FormInput(el) {
-    var _ref;
+    var ref;
     this.el = el;
-    this.name = (_ref = this.el.attributes.name) != null ? _ref.value : void 0;
+    this.name = (ref = this.el.attributes.name) != null ? ref.value : void 0;
     this.metadata = new MetaData(this.el);
     this.mapping = void 0;
   }
@@ -656,15 +655,15 @@ module.exports = LabelHelper = (function() {
   }
 
   LabelHelper.prototype.process = function() {
-    var e, label, labels, strategy, _i, _j, _len, _len1, _ref, _ref1;
+    var e, i, j, label, labels, len, len1, ref, ref1, strategy;
     if (this.el === null || typeof this.el === 'undefined') {
       return;
     }
     labels = [];
     if (this.el.get(0).labels !== null && typeof this.el.get(0).labels !== 'undefined') {
-      _ref = this.el.get(0).labels;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        e = _ref[_i];
+      ref = this.el.get(0).labels;
+      for (i = 0, len = ref.length; i < len; i++) {
+        e = ref[i];
         labels.push(this.trim(this.labelTextContent(e)));
       }
     }
@@ -672,9 +671,9 @@ module.exports = LabelHelper = (function() {
       this.confidence = 1;
       return this.label = labels.join(' ');
     } else {
-      _ref1 = this.strategies();
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        strategy = _ref1[_j];
+      ref1 = this.strategies();
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        strategy = ref1[j];
         if (label = this.trim(strategy.call(this))) {
           if (this._valid(label)) {
             this.confidence = 0.1;
@@ -727,10 +726,10 @@ module.exports = LabelHelper = (function() {
   };
 
   LabelHelper.prototype.valid = function(el) {
-    var $first, first, _ref;
+    var $first, first, ref;
     $first = el.first();
     first = $first != null ? $first.get(0) : void 0;
-    if ((first != null ? (_ref = first.nodeName) != null ? _ref.toLowerCase() : void 0 : void 0) === 'label' && first.control === null) {
+    if ((first != null ? (ref = first.nodeName) != null ? ref.toLowerCase() : void 0 : void 0) === 'label' && first.control === null) {
       return true;
     }
     if ($first.attr('for') === this.el.attr('id') || $first.attr('for') === this.el.attr('name') || $first.attr('for') === '' || $first.attr('for') === void 0) {
@@ -755,18 +754,18 @@ module.exports = LabelHelper = (function() {
       function() {
         return jQuery('label[for="' + this.el.attr('name') + '"]');
       }, function() {
-        var _ref, _ref1;
-        if (((_ref = this.el.prevAll('label')) != null ? (_ref1 = _ref.first()) != null ? _ref1.length : void 0 : void 0) === 1) {
+        var ref, ref1;
+        if (((ref = this.el.prevAll('label')) != null ? (ref1 = ref.first()) != null ? ref1.length : void 0 : void 0) === 1) {
           return this.el.prevAll('label').first();
         }
       }, function() {
-        var _ref, _ref1;
-        if (((_ref = this.el.get(0).nextElementSibling) != null ? _ref.nodeName.toLowerCase() : void 0) === 'label' && ((_ref1 = this.el.get(0).previousElementSibling) != null ? _ref1.nodeName.toLowerCase() : void 0) !== 'label') {
+        var ref, ref1;
+        if (((ref = this.el.get(0).nextElementSibling) != null ? ref.nodeName.toLowerCase() : void 0) === 'label' && ((ref1 = this.el.get(0).previousElementSibling) != null ? ref1.nodeName.toLowerCase() : void 0) !== 'label') {
           return this.el.get(0).nextElementSibling;
         }
       }, function() {
-        var _ref, _ref1;
-        if (((_ref = this.el.get(0).previousElementSibling) != null ? _ref.nodeName.toLowerCase() : void 0) === 'label' && ((_ref1 = this.el.get(0).nextElementSibling) != null ? _ref1.nodeName.toLowerCase() : void 0) !== 'label') {
+        var ref, ref1;
+        if (((ref = this.el.get(0).previousElementSibling) != null ? ref.nodeName.toLowerCase() : void 0) === 'label' && ((ref1 = this.el.get(0).nextElementSibling) != null ? ref1.nodeName.toLowerCase() : void 0) !== 'label') {
           return this.el.get(0).previousElementSibling;
         }
       }, function() {
@@ -799,13 +798,13 @@ module.exports = LabelHelper = (function() {
           }
         }
       }, function() {
-        var l, _ref, _ref1;
-        l = (_ref = this.el.get(0).parentElement) != null ? (_ref1 = _ref.parentElement) != null ? _ref1.querySelectorAll('[class*=label]') : void 0 : void 0;
+        var l, ref, ref1;
+        l = (ref = this.el.get(0).parentElement) != null ? (ref1 = ref.parentElement) != null ? ref1.querySelectorAll('[class*=label]') : void 0 : void 0;
         if ((l != null ? l.length : void 0) === 1) {
           return l[0].textContent;
         }
       }, function() {
-        var idx, line, _i, _len, _ref;
+        var i, idx, len, line, ref;
         if (this.el == null) {
           return;
         }
@@ -813,9 +812,9 @@ module.exports = LabelHelper = (function() {
         if (idx < 0) {
           return null;
         }
-        _ref = Fom.fom.slice(0, idx).reverse();
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          line = _ref[_i];
+        ref = Fom.fom.slice(0, idx).reverse();
+        for (i = 0, len = ref.length; i < len; i++) {
+          line = ref[i];
           if (line.indexOf('<') === 0) {
             continue;
           }
@@ -940,18 +939,18 @@ module.exports = MetaData = (function() {
   }
 
   MetaData.prototype._value = function(el, val) {
-    var _ref;
-    return (_ref = el.attributes[val]) != null ? _ref.value : void 0;
+    var ref;
+    return (ref = el.attributes[val]) != null ? ref.value : void 0;
   };
 
   MetaData.prototype._buildIgnore = function(el) {
-    var _ref;
-    return (_ref = this._buildType(el)) === 'submit' || _ref === 'reset' || _ref === 'search' || _ref === 'file' || _ref === 'hidden' || _ref === 'color';
+    var ref;
+    return (ref = this._buildType(el)) === 'submit' || ref === 'reset' || ref === 'search' || ref === 'file' || ref === 'hidden' || ref === 'color';
   };
 
   MetaData.prototype._buildType = function(el) {
-    var _ref, _ref1;
-    return (_ref = el.attributes) != null ? (_ref1 = _ref.type) != null ? _ref1.value : void 0 : void 0;
+    var ref, ref1;
+    return (ref = el.attributes) != null ? (ref1 = ref.type) != null ? ref1.value : void 0 : void 0;
   };
 
   MetaData.prototype._tagName = function(el) {
@@ -987,16 +986,16 @@ module.exports = {
     return this.headingHintFor(el);
   },
   _checkHint: function(line) {
-    var h, hint, i, l, x, _i, _j, _len, _len1, _ref;
+    var h, hint, i, j, k, l, len, len1, ref, x;
     l = line.toLowerCase();
-    _ref = this.hints;
-    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-      hint = _ref[i];
+    ref = this.hints;
+    for (i = j = 0, len = ref.length; j < len; i = ++j) {
+      hint = ref[i];
       if (~l.indexOf(hint)) {
         x = this.hints.slice();
         x.splice(i, 1);
-        for (_j = 0, _len1 = x.length; _j < _len1; _j++) {
-          h = x[_j];
+        for (k = 0, len1 = x.length; k < len1; k++) {
+          h = x[k];
           if (~l.indexOf(h)) {
             return null;
           }
@@ -1007,24 +1006,24 @@ module.exports = {
     return null;
   },
   headingHintFor: function(el) {
-    var cloned, exclude, excluded, fom, hint, line, lines, start, titleHint, trimmedLine, _i, _j, _len, _len1, _ref, _ref1;
+    var cloned, exclude, excluded, fom, hint, j, k, len, len1, line, lines, ref, ref1, start, titleHint, trimmedLine;
     fom = Fom.create();
     cloned = el.cloneNode(false);
     start = fom.indexOf(cloned.outerHTML);
     lines = fom.slice(0, start).reverse();
-    for (_i = 0, _len = lines.length; _i < _len; _i++) {
-      line = lines[_i];
+    for (j = 0, len = lines.length; j < len; j++) {
+      line = lines[j];
       trimmedLine = line.trim();
       if (trimmedLine.indexOf('<') === 0) {
         continue;
       }
-      if (!((_ref = Fom.headings) != null ? _ref.hasOwnProperty(trimmedLine) : void 0)) {
+      if (!((ref = Fom.headings) != null ? ref.hasOwnProperty(trimmedLine) : void 0)) {
         continue;
       }
       excluded = false;
-      _ref1 = this.excludes;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        exclude = _ref1[_j];
+      ref1 = this.excludes;
+      for (k = 0, len1 = ref1.length; k < len1; k++) {
+        exclude = ref1[k];
         if (~trimmedLine.toLowerCase().indexOf(exclude)) {
           excluded = true;
           break;
@@ -1045,11 +1044,11 @@ module.exports = {
     return null;
   },
   _titleHint: function() {
-    var hint, i, l, _i, _len, _ref;
+    var hint, i, j, l, len, ref;
     l = document.title.toLowerCase();
-    _ref = this.hints;
-    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-      hint = _ref[i];
+    ref = this.hints;
+    for (i = j = 0, len = ref.length; j < len; i = ++j) {
+      hint = ref[i];
       if ((~l.indexOf(hint)) && ((~l.indexOf('address')) || (~l.indexOf('地址')))) {
         return hint;
       }
@@ -10629,7 +10628,7 @@ module.exports = {
     }
   },
   stringify: function(obj) {
-    var r, _array_tojson;
+    var _array_tojson, r;
     this["native"] = this._isNative(JSON);
     if (this._shittyPrototypeExists()) {
       _array_tojson = Array.prototype.toJSON;
@@ -10650,14 +10649,14 @@ module.exports = {
     return value;
   },
   _isNative: function(jsonObj) {
-    var _ref, _ref1;
-    if (~(jsonObj != null ? (_ref = jsonObj.stringify) != null ? (_ref1 = _ref.toString()) != null ? _ref1.indexOf('[native code]') : void 0 : void 0 : void 0)) {
+    var ref, ref1;
+    if (~(jsonObj != null ? (ref = jsonObj.stringify) != null ? (ref1 = ref.toString()) != null ? ref1.indexOf('[native code]') : void 0 : void 0 : void 0)) {
       return true;
     }
     return false;
   },
   _restoreJSON: function() {
-    var f, _json;
+    var _json, f;
     f = document.createElement("iframe");
     f.style.display = "none";
     document.documentElement.appendChild(f);
@@ -10714,7 +10713,7 @@ module.exports = (function() {
 });
 
 require.register("widget/pop", function(exports, require, module) {
-var Fields, FormatterFactory, Helper, PostProcessors, jQuery;
+var Fields, FormatterFactory, Helper, PostProcessors, Preferences, jQuery;
 
 Fields = require('widget/fields');
 
@@ -10726,20 +10725,27 @@ jQuery = require('widget/lib/jquery');
 
 FormatterFactory = require('widget/pop/formatters/factory');
 
+Preferences = require('widget/config/preferences');
+
 module.exports = {
   topPop: void 0,
   custom: ['woocommerce'],
   create: function(args) {
-    var c, custom, field, fields, mappedField, newValue, o, post, pre, unfilled_fields, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
+    var c, custom, field, fields, i, j, k, len, len1, len2, mappedField, newValue, o, post, pre, ref, sortedMappedFields, unfilled_fields;
     this.args = args;
     fields = [];
     unfilled_fields = [];
     if (this.args.mappedFields.fields == null) {
       return fields;
     }
-    _ref = this.args.mappedFields.fields;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      mappedField = _ref[_i];
+    sortedMappedFields = this._sort(this.args.mappedFields.fields);
+    if (Preferences.debug) {
+      console.log("sortedMappedFields", sortedMappedFields.map(function(el) {
+        return el.param;
+      }));
+    }
+    for (i = 0, len = sortedMappedFields.length; i < len; i++) {
+      mappedField = sortedMappedFields[i];
       if (field = this._findField(mappedField.pop_id)) {
         jQuery.extend(field, mappedField);
         if (!Array.isArray(mappedField.params)) {
@@ -10759,9 +10765,9 @@ module.exports = {
     pre = null;
     post = null;
     custom = null;
-    _ref1 = this.custom;
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      c = _ref1[_j];
+    ref = this.custom;
+    for (j = 0, len1 = ref.length; j < len1; j++) {
+      c = ref[j];
       o = require("widget/pop/custom/" + c);
       if (o.detect(this.args)) {
         custom = o.create(fields);
@@ -10773,8 +10779,8 @@ module.exports = {
     if (pre) {
       pre.call(custom, this);
     }
-    for (_k = 0, _len2 = fields.length; _k < _len2; _k++) {
-      field = fields[_k];
+    for (k = 0, len2 = fields.length; k < len2; k++) {
+      field = fields[k];
       this._popField(field);
     }
     if (post) {
@@ -10785,13 +10791,13 @@ module.exports = {
     };
   },
   _findField: function(pop_id) {
-    var field, _i, _len, _ref;
+    var field, i, len, ref;
     if (Fields.fields == null) {
       return;
     }
-    _ref = Fields.fields;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      field = _ref[_i];
+    ref = Fields.fields;
+    for (i = 0, len = ref.length; i < len; i++) {
+      field = ref[i];
       if (field.popID() === pop_id.toString()) {
         if (field.ignore()) {
           return;
@@ -10827,6 +10833,21 @@ module.exports = {
       }, 2000);
     }
     return field.helper;
+  },
+  _sort: function(mappedFields) {
+    var countries, f, i, len, sortedMappedFields;
+    sortedMappedFields = [];
+    countries = [];
+    for (i = 0, len = mappedFields.length; i < len; i++) {
+      f = mappedFields[i];
+      if (typeof f.param === 'string' && f.param.split('.').reverse().indexOf("Country") === 0) {
+        countries.push(f);
+      } else {
+        sortedMappedFields.push(f);
+      }
+    }
+    sortedMappedFields = sortedMappedFields.concat(countries);
+    return sortedMappedFields;
   }
 };
 
@@ -10848,15 +10869,15 @@ module.exports = Base = (function() {
 
 require.register("widget/pop/custom/woocommerce", function(exports, require, module) {
 var Base, WooCommerce, jQuery,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 Base = require('widget/pop/custom/base');
 
 jQuery = require('widget/lib/jquery');
 
-module.exports = WooCommerce = (function(_super) {
-  __extends(WooCommerce, _super);
+module.exports = WooCommerce = (function(superClass) {
+  extend(WooCommerce, superClass);
 
   WooCommerce.create = function(fields) {
     return new WooCommerce(fields);
@@ -10874,27 +10895,28 @@ module.exports = WooCommerce = (function(_super) {
   WooCommerce.prototype.preFill = function(pop) {};
 
   WooCommerce.prototype.postFill = function(pop) {
-    var _this = this;
-    return setTimeout(function() {
-      var field, _i, _len, _ref, _results;
-      _ref = _this.fields;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        field = _ref[_i];
-        if (_this.popExpiry(field)) {
-          _results.push(pop._popField(field, true));
-        } else if (field.mapping.length > 0) {
-          if (_this.params.indexOf(field.mapping[0]) > -1) {
-            _results.push(pop._popField(field, true));
+    return setTimeout((function(_this) {
+      return function() {
+        var field, i, len, ref, results;
+        ref = _this.fields;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          field = ref[i];
+          if (_this.popExpiry(field)) {
+            results.push(pop._popField(field, true));
+          } else if (field.mapping.length > 0) {
+            if (_this.params.indexOf(field.mapping[0]) > -1) {
+              results.push(pop._popField(field, true));
+            } else {
+              results.push(void 0);
+            }
           } else {
-            _results.push(void 0);
+            results.push(void 0);
           }
-        } else {
-          _results.push(void 0);
         }
-      }
-      return _results;
-    }, 5000);
+        return results;
+      };
+    })(this), 5000);
   };
 
   WooCommerce.prototype.popExpiry = function(field) {
@@ -11039,12 +11061,12 @@ Punctuator = (function() {
     while (i <= params.length - 2) {
       a = params[i].param_tail;
       b = params[i + 1].param_tail;
-      if (this["" + a + "_" + b]) {
+      if (this[a + "_" + b]) {
         parts.push(params[i].value);
-        parts.push(this["" + a + "_" + b](language, region));
-      } else if (this["" + a + "_ANY"]) {
+        parts.push(this[a + "_" + b](language, region));
+      } else if (this[a + "_ANY"]) {
         parts.push(params[i].value);
-        parts.push(this["" + a + "_ANY"](language, region));
+        parts.push(this[a + "_ANY"](language, region));
       } else {
         parts.push(params[i].value);
         parts.push(' ');
@@ -11128,8 +11150,8 @@ module.exports = Address = (function() {
   function Address() {}
 
   Address.process = function(field, payload, locale) {
-    var language, params, region, result, _ref;
-    _ref = locale.split('-'), language = _ref[0], region = _ref[1];
+    var language, params, ref, region, result;
+    ref = locale.split('-'), language = ref[0], region = ref[1];
     console.log('Address.process', field.params);
     params = this.convertToHashes(field.params, payload, language, region);
     console.log('params', params);
@@ -11139,10 +11161,10 @@ module.exports = Address = (function() {
   };
 
   Address.convertToHashes = function(params, payload, language, region) {
-    var param, param_tail, result, _i, _len;
+    var j, len, param, param_tail, result;
     result = [];
-    for (_i = 0, _len = params.length; _i < _len; _i++) {
-      param = params[_i];
+    for (j = 0, len = params.length; j < len; j++) {
+      param = params[j];
       param_tail = param.split('.').pop();
       result.push({
         param: param,
@@ -11196,14 +11218,14 @@ module.exports = DateFormatter = (function() {
   };
 
   DateFormatter.value = function(field, payload) {
-    var param, res, val, _i, _len, _ref;
+    var j, len, param, ref, res, val;
     res = [];
-    _ref = field.params;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      param = _ref[_i];
+    ref = field.params;
+    for (j = 0, len = ref.length; j < len; j++) {
+      param = ref[j];
       val = payload[param];
       if (val == null) {
-        console.error("" + param + " not in date payload", field, Object.keys(payload));
+        console.error(param + " not in date payload", field, Object.keys(payload));
         return "";
       }
       res.push(this.twoDigits(val));
@@ -11300,11 +11322,11 @@ module.exports = Default = (function() {
   function Default() {}
 
   Default.process = function(field, payload) {
-    var v, val, _i, _len, _ref;
+    var i, len, ref, v, val;
     v = [];
-    _ref = field.params;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      val = _ref[_i];
+    ref = field.params;
+    for (i = 0, len = ref.length; i < len; i++) {
+      val = ref[i];
       if (val.indexOf('NickName') > -1) {
         continue;
       }
@@ -11422,14 +11444,14 @@ module.exports = Phone = (function() {
   };
 
   Phone.parse = function(params) {
-    var param, result, _fn, _i, _len;
+    var fn, i, len, param, result;
     result = {};
-    _fn = function(param) {
+    fn = function(param) {
       return result[param.split('.').pop()] = param;
     };
-    for (_i = 0, _len = params.length; _i < _len; _i++) {
-      param = params[_i];
-      _fn(param);
+    for (i = 0, len = params.length; i < len; i++) {
+      param = params[i];
+      fn(param);
     }
     return result;
   };
@@ -11441,6 +11463,7 @@ module.exports = Phone = (function() {
 });
 
 require.register("widget/pop/helper", function(exports, require, module) {
+
 /*
 TextField = require 'widget/pop/helpers/text'
 RadioField = require 'widget/pop/helpers/radio'
@@ -11449,8 +11472,7 @@ CountryCodeSelectField = require 'widget/pop/helpers/country_code_select'
 CheckboxField = require 'widget/pop/helpers/checkbox'
 NumberField = require 'widget/pop/helpers/number'
 StateSelectField = require 'widget/pop/helpers/state_select'
-*/
-
+ */
 var DefaultHelper, FieldPopHelper, fields;
 
 fields = [require('widget/pop/helpers/jqselect_box'), require('widget/pop/helpers/month_select'), require('widget/pop/helpers/country_code_select'), require('widget/pop/helpers/country_select'), require('widget/pop/helpers/us_state_select'), require('widget/pop/helpers/state_select'), require('widget/pop/helpers/select'), require('widget/pop/helpers/two_digits'), require('widget/pop/helpers/number'), require('widget/pop/helpers/text'), require('widget/pop/helpers/radio'), require('widget/pop/helpers/checkbox')];
@@ -11458,9 +11480,9 @@ fields = [require('widget/pop/helpers/jqselect_box'), require('widget/pop/helper
 DefaultHelper = require('widget/pop/helpers/text');
 
 module.exports = FieldPopHelper = (function() {
-  function FieldPopHelper(field, reload) {
-    this.field = field;
-    this.reload = reload != null ? reload : false;
+  function FieldPopHelper(field1, reload1) {
+    this.field = field1;
+    this.reload = reload1 != null ? reload1 : false;
   }
 
   FieldPopHelper.factory = function(field, reload) {
@@ -11494,9 +11516,9 @@ module.exports = FieldPopHelper = (function() {
   };
 
   FieldPopHelper.prototype.createHelper = function() {
-    var Field, _Field, _i, _len;
-    for (_i = 0, _len = fields.length; _i < _len; _i++) {
-      _Field = fields[_i];
+    var Field, _Field, i, len;
+    for (i = 0, len = fields.length; i < len; i++) {
+      _Field = fields[i];
       if (_Field.detect(this.field)) {
         Field = _Field;
         break;
@@ -11509,13 +11531,13 @@ module.exports = FieldPopHelper = (function() {
   };
 
   FieldPopHelper.prototype.tagName = function() {
-    var _ref;
-    return (_ref = this.field.metadata) != null ? _ref.tag_name : void 0;
+    var ref;
+    return (ref = this.field.metadata) != null ? ref.tag_name : void 0;
   };
 
   FieldPopHelper.prototype.tagType = function() {
-    var _ref, _ref1;
-    return ((_ref = this.field.el) != null ? (_ref1 = _ref.type) != null ? _ref1.toLowerCase() : void 0 : void 0) || 'text';
+    var ref, ref1;
+    return ((ref = this.field.el) != null ? (ref1 = ref.type) != null ? ref1.toLowerCase() : void 0 : void 0) || 'text';
   };
 
   return FieldPopHelper;
@@ -11539,22 +11561,22 @@ module.exports = BaseField = (function() {
   BaseField.prototype.rmonthSelect = /(mth|mnth|month)/i;
 
   BaseField.allStyles = (function() {
-    var _i, _len, _ref, _results;
-    _ref = ['assumed', 'none', 'exact'];
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      val = _ref[_i];
-      _results.push("" + Preferences.page.cssPrefix + "-" + val);
+    var k, len, ref, results;
+    ref = ['assumed', 'none', 'exact'];
+    results = [];
+    for (k = 0, len = ref.length; k < len; k++) {
+      val = ref[k];
+      results.push(Preferences.page.cssPrefix + "-" + val);
     }
-    return _results;
+    return results;
   })();
 
   BaseField.detect = function(field) {
     return false;
   };
 
-  function BaseField(field) {
-    this.field = field;
+  function BaseField(field1) {
+    this.field = field1;
     this.value = void 0;
     this.initialValue = this.field.el.value;
     this.poppedValue = void 0;
@@ -11568,9 +11590,9 @@ module.exports = BaseField = (function() {
   };
 
   BaseField.prototype._applySlice = function() {
-    var end, start, _ref;
+    var end, ref, start;
     if (this.field.slice != null) {
-      _ref = this.field.slice, start = _ref[0], end = _ref[1];
+      ref = this.field.slice, start = ref[0], end = ref[1];
       this.value = this.value.slice(start, end);
       return console.log("Sliced", this.value);
     }
@@ -11600,13 +11622,13 @@ module.exports = BaseField = (function() {
   };
 
   BaseField.prototype.doChange = function(el) {
-    var evName, evtA, evtB, _i, _len, _ref, _ref1, _ref2;
-    _ref = ['keypress', 'keydown', 'keyup', 'input', 'change'];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      evName = _ref[_i];
+    var evName, evtA, evtB, k, len, ref, ref1, ref2;
+    ref = ['keypress', 'keydown', 'keyup', 'input', 'change'];
+    for (k = 0, len = ref.length; k < len; k++) {
+      evName = ref[k];
       evtA = document.createEvent('HTMLEvents');
       evtA.initEvent(evName, true, true);
-      if (((_ref1 = this.field.el) != null ? _ref1.dispatchEvent : void 0) != null) {
+      if (((ref1 = this.field.el) != null ? ref1.dispatchEvent : void 0) != null) {
         this.field.el.dispatchEvent(evtA);
       }
     }
@@ -11615,7 +11637,7 @@ module.exports = BaseField = (function() {
     } else {
       evtB = document.createEvent('HTMLEvents');
       evtB.initEvent('click', true, true);
-      if (((_ref2 = this.field.el) != null ? _ref2.dispatchEvent : void 0) != null) {
+      if (((ref2 = this.field.el) != null ? ref2.dispatchEvent : void 0) != null) {
         return this.field.el.dispatchEvent(evtB);
       }
     }
@@ -11689,13 +11711,13 @@ module.exports = BaseField = (function() {
 
 require.register("widget/pop/helpers/checkbox", function(exports, require, module) {
 var BaseField, CheckboxField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseField = require('widget/pop/helpers/base');
 
-module.exports = CheckboxField = (function(_super) {
-  __extends(CheckboxField, _super);
+module.exports = CheckboxField = (function(superClass) {
+  extend(CheckboxField, superClass);
 
   function CheckboxField(field) {
     CheckboxField.__super__.constructor.call(this, field);
@@ -11706,21 +11728,21 @@ module.exports = CheckboxField = (function(_super) {
   };
 
   CheckboxField.prototype.fill = function(value) {
-    var result, strategy, _i, _len, _ref, _results;
+    var i, len, ref, result, results, strategy;
     CheckboxField.__super__.fill.call(this, value);
     if (this._validate(this.value)) {
-      _ref = this._strategies;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        strategy = _ref[_i];
+      ref = this._strategies;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        strategy = ref[i];
         if (result = this[strategy](this.value)) {
           this.filled = true;
           break;
         } else {
-          _results.push(void 0);
+          results.push(void 0);
         }
       }
-      return _results;
+      return results;
     }
   };
 
@@ -11780,8 +11802,8 @@ require.register("widget/pop/helpers/compound", function(exports, require, modul
 
 ;require.register("widget/pop/helpers/country_code_select", function(exports, require, module) {
 var BaseField, Countries, CountryCodeSelectField, FuzzySet,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 FuzzySet = require('widget/lib/fuzzyset');
 
@@ -11789,11 +11811,11 @@ BaseField = require('widget/pop/helpers/base');
 
 Countries = require('widget/lib/countries');
 
-module.exports = CountryCodeSelectField = (function(_super) {
-  __extends(CountryCodeSelectField, _super);
+module.exports = CountryCodeSelectField = (function(superClass) {
+  extend(CountryCodeSelectField, superClass);
 
   CountryCodeSelectField.detect = function(el) {
-    var checks, option, options, param, vals, _i, _len;
+    var checks, j, len, option, options, param, vals;
     if (el.mapping && el.mapping.length !== 1) {
       return false;
     }
@@ -11804,8 +11826,8 @@ module.exports = CountryCodeSelectField = (function(_super) {
     options = el.el.children;
     vals = [];
     checks = ['AU', 'US', 'GB'];
-    for (_i = 0, _len = options.length; _i < _len; _i++) {
-      option = options[_i];
+    for (j = 0, len = options.length; j < len; j++) {
+      option = options[j];
       vals.push(option.value);
     }
     return checks.every(function(v, i) {
@@ -11819,20 +11841,20 @@ module.exports = CountryCodeSelectField = (function(_super) {
   }
 
   CountryCodeSelectField.prototype.fill = function(value) {
-    var c, i, _results;
+    var c, i, results;
     CountryCodeSelectField.__super__.fill.call(this, value);
     if (this._validate(this.value)) {
-      _results = [];
+      results = [];
       for (i in Countries) {
         c = Countries[i];
         if (c.callingCode === this.value.toString()) {
           this.field.el.value = c.cca2;
-          _results.push(this.filled = true);
+          results.push(this.filled = true);
         } else {
-          _results.push(void 0);
+          results.push(void 0);
         }
       }
-      return _results;
+      return results;
     }
   };
 
@@ -11854,8 +11876,8 @@ module.exports = CountryCodeSelectField = (function(_super) {
 
 require.register("widget/pop/helpers/country_select", function(exports, require, module) {
 var COUNTRY_REGEX, Countries, CountrySelect, FuzzySet, SelectField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 FuzzySet = require('widget/lib/fuzzyset');
 
@@ -11865,8 +11887,8 @@ Countries = require('widget/lib/countries');
 
 COUNTRY_REGEX = /Country$/;
 
-module.exports = CountrySelect = (function(_super) {
-  __extends(CountrySelect, _super);
+module.exports = CountrySelect = (function(superClass) {
+  extend(CountrySelect, superClass);
 
   CountrySelect.detect = function(el) {
     return SelectField.detect(el) && CountrySelect._detect(el);
@@ -11886,51 +11908,51 @@ module.exports = CountrySelect = (function(_super) {
     CountrySelect.__super__.constructor.call(this, field);
     this.options = this.field.el.children;
     this.optionValues = (function() {
-      var _i, _len, _ref, _ref1, _results;
-      _ref = this.options;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        option = _ref[_i];
-        country = (_ref1 = Countries.filter(function(o) {
-          var as, _ref2, _ref3;
-          return o.name.toLowerCase() === (option != null ? (_ref2 = option.value) != null ? _ref2.toLowerCase() : void 0 : void 0) || ~((function() {
-            var _j, _len1, _ref4, _results1;
-            _ref4 = o.altSpellings;
-            _results1 = [];
-            for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
-              as = _ref4[_j];
-              _results1.push(as.toLowerCase());
+      var j, len, ref, ref1, results;
+      ref = this.options;
+      results = [];
+      for (j = 0, len = ref.length; j < len; j++) {
+        option = ref[j];
+        country = (ref1 = Countries.filter(function(o) {
+          var as, ref2, ref3;
+          return o.name.toLowerCase() === (option != null ? (ref2 = option.value) != null ? ref2.toLowerCase() : void 0 : void 0) || ~((function() {
+            var k, len1, ref4, results1;
+            ref4 = o.altSpellings;
+            results1 = [];
+            for (k = 0, len1 = ref4.length; k < len1; k++) {
+              as = ref4[k];
+              results1.push(as.toLowerCase());
             }
-            return _results1;
-          })()).indexOf(option != null ? (_ref3 = option.value) != null ? _ref3.toLowerCase() : void 0 : void 0);
-        })) != null ? _ref1.shift() : void 0;
+            return results1;
+          })()).indexOf(option != null ? (ref3 = option.value) != null ? ref3.toLowerCase() : void 0 : void 0);
+        })) != null ? ref1.shift() : void 0;
         if (country != null) {
           selections = [].concat.apply([], [country.name, option.value].concat([country.altSpellings]));
-          _results.push([
+          results.push([
             option.value, (function() {
-              var _j, _len1, _results1;
-              _results1 = [];
-              for (_j = 0, _len1 = selections.length; _j < _len1; _j++) {
-                o = selections[_j];
-                _results1.push(o.toLowerCase());
+              var k, len1, results1;
+              results1 = [];
+              for (k = 0, len1 = selections.length; k < len1; k++) {
+                o = selections[k];
+                results1.push(o.toLowerCase());
               }
-              return _results1;
+              return results1;
             })()
           ]);
         } else {
-          _results.push([option.value, [option.value]]);
+          results.push([option.value, [option.value]]);
         }
       }
-      return _results;
+      return results;
     }).call(this);
   }
 
   CountrySelect.prototype.fill = function(value) {
-    var c, i, _ref;
+    var c, i, ref;
     if (this._validate(value)) {
-      _ref = this.optionValues;
-      for (i in _ref) {
-        c = _ref[i];
+      ref = this.optionValues;
+      for (i in ref) {
+        c = ref[i];
         if ((c[1] != null) && ~c[1].indexOf(value.toString().toLowerCase())) {
           this.field.el.value = c[0];
           this.filled = true;
@@ -11959,15 +11981,15 @@ module.exports = CountrySelect = (function(_super) {
 
 require.register("widget/pop/helpers/jqselect_box", function(exports, require, module) {
 var JQSelectBoxField, SelectField, jQuery,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 SelectField = require('widget/pop/helpers/select');
 
 jQuery = require('widget/lib/jquery');
 
-module.exports = JQSelectBoxField = (function(_super) {
-  __extends(JQSelectBoxField, _super);
+module.exports = JQSelectBoxField = (function(superClass) {
+  extend(JQSelectBoxField, superClass);
 
   JQSelectBoxField.detect = function(el) {
     return SelectField.detect(el) && this._detect(el);
@@ -11986,7 +12008,7 @@ module.exports = JQSelectBoxField = (function(_super) {
     JQSelectBoxField.__super__.fill.call(this, value);
     newVal = jQuery(this.field.el).val();
     sbId = '#sbOptions_' + this.field.el.getAttribute('sb');
-    el = jQuery("" + sbId + " a[rel=" + newVal + "]");
+    el = jQuery(sbId + " a[rel=" + newVal + "]");
     evt = document.createEvent('HTMLEvents');
     evt.initEvent('click', true, true);
     if (el.length > 0) {
@@ -12002,14 +12024,14 @@ module.exports = JQSelectBoxField = (function(_super) {
 
 require.register("widget/pop/helpers/month_select", function(exports, require, module) {
 var BaseField, MonthSelectField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseField = require('widget/pop/helpers/base');
 
-module.exports = MonthSelectField = (function(_super) {
-  __extends(MonthSelectField, _super);
+module.exports = MonthSelectField = (function(superClass) {
+  extend(MonthSelectField, superClass);
 
   function MonthSelectField(field) {
     MonthSelectField.__super__.constructor.call(this, field);
@@ -12017,23 +12039,23 @@ module.exports = MonthSelectField = (function(_super) {
   }
 
   MonthSelectField.detect = function(field) {
-    var first, januaries, param, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+    var first, januaries, param, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7;
     januaries = ['january', 'januarie', 'januar', 'januari', '一月'];
-    if ((field != null ? (_ref = field.el) != null ? _ref.options : void 0 : void 0) == null) {
+    if ((field != null ? (ref = field.el) != null ? ref.options : void 0 : void 0) == null) {
       return false;
     }
-    if ((field != null ? (_ref1 = field.el) != null ? _ref1.tagName : void 0 : void 0) !== 'SELECT') {
+    if ((field != null ? (ref1 = field.el) != null ? ref1.tagName : void 0 : void 0) !== 'SELECT') {
       return false;
     }
-    if ((field != null ? (_ref2 = field.el) != null ? (_ref3 = _ref2.options) != null ? _ref3.length : void 0 : void 0 : void 0) !== 13) {
+    if ((field != null ? (ref2 = field.el) != null ? (ref3 = ref2.options) != null ? ref3.length : void 0 : void 0 : void 0) !== 13) {
       return false;
     }
-    param = (_ref4 = field.mapping.shift()) != null ? (_ref5 = _ref4.split('.')) != null ? _ref5.pop() : void 0 : void 0;
+    param = (ref4 = field.mapping.shift()) != null ? (ref5 = ref4.split('.')) != null ? ref5.pop() : void 0 : void 0;
     if (param !== 'Month') {
       return false;
     }
-    first = (_ref6 = field.el.options[1].innerText) != null ? _ref6.trim() : void 0;
-    if (_ref7 = first != null ? first.toLowerCase() : void 0, __indexOf.call(januaries, _ref7) < 0) {
+    first = (ref6 = field.el.options[1].innerText) != null ? ref6.trim() : void 0;
+    if (ref7 = first != null ? first.toLowerCase() : void 0, indexOf.call(januaries, ref7) < 0) {
       return false;
     }
     return true;
@@ -12060,21 +12082,21 @@ module.exports = MonthSelectField = (function(_super) {
 
 require.register("widget/pop/helpers/number", function(exports, require, module) {
 var NumberField, TextField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 TextField = require('widget/pop/helpers/text');
 
-module.exports = NumberField = (function(_super) {
-  __extends(NumberField, _super);
+module.exports = NumberField = (function(superClass) {
+  extend(NumberField, superClass);
 
   function NumberField(element) {
     NumberField.__super__.constructor.call(this, element);
   }
 
   NumberField.detect = function(field) {
-    var _ref;
-    return field.el.tagName === 'INPUT' && ((_ref = field.el.type) === 'number' || _ref === 'tel');
+    var ref;
+    return field.el.tagName === 'INPUT' && ((ref = field.el.type) === 'number' || ref === 'tel');
   };
 
   NumberField.prototype.fill = function(value) {
@@ -12089,8 +12111,8 @@ module.exports = NumberField = (function(_super) {
 
 require.register("widget/pop/helpers/radio", function(exports, require, module) {
 var BaseField, Fields, FuzzySet, RadioField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseField = require('widget/pop/helpers/base');
 
@@ -12098,8 +12120,8 @@ FuzzySet = require('widget/lib/fuzzyset');
 
 Fields = require('widget/fields');
 
-module.exports = RadioField = (function(_super) {
-  __extends(RadioField, _super);
+module.exports = RadioField = (function(superClass) {
+  extend(RadioField, superClass);
 
   function RadioField(field) {
     var item;
@@ -12107,14 +12129,14 @@ module.exports = RadioField = (function(_super) {
     this.initialValue = this.field.el.value;
     this.group = this.field.el.form.elements.namedItem(this.field.el.name);
     this.values = (function() {
-      var _i, _len, _ref, _results;
-      _ref = this.group;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        item = _ref[_i];
-        _results.push(item.value);
+      var i, len, ref1, results;
+      ref1 = this.group;
+      results = [];
+      for (i = 0, len = ref1.length; i < len; i++) {
+        item = ref1[i];
+        results.push(item.value);
       }
-      return _results;
+      return results;
     }).call(this);
   }
 
@@ -12123,22 +12145,22 @@ module.exports = RadioField = (function(_super) {
   };
 
   RadioField.prototype.fill = function(value) {
-    var result, strategy, _i, _len, _ref, _results;
+    var i, len, ref1, result, results, strategy;
     RadioField.__super__.fill.call(this, value);
     if (this._validate(this.value)) {
-      _ref = this._strategies;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        strategy = _ref[_i];
+      ref1 = this._strategies;
+      results = [];
+      for (i = 0, len = ref1.length; i < len; i++) {
+        strategy = ref1[i];
         if (result = this[strategy](this.value)) {
           this.filled = true;
           console.info("Filled with " + strategy, result);
           break;
         } else {
-          _results.push(void 0);
+          results.push(void 0);
         }
       }
-      return _results;
+      return results;
     }
   };
 
@@ -12153,10 +12175,10 @@ module.exports = RadioField = (function(_super) {
   RadioField.prototype._strategies = ['_exactStrategy', '_fuzzyValueStrategy', '_fuzzyLabelStrategy'];
 
   RadioField.prototype._exactStrategy = function(value) {
-    var val, _i, _len, _ref;
-    _ref = this.values;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      val = _ref[_i];
+    var i, len, ref1, val;
+    ref1 = this.values;
+    for (i = 0, len = ref1.length; i < len; i++) {
+      val = ref1[i];
       if (val.toLowerCase() === value.toLowerCase()) {
         return this._assignAndCheck(val);
       }
@@ -12174,14 +12196,14 @@ module.exports = RadioField = (function(_super) {
   };
 
   RadioField.prototype._fuzzyLabelStrategy = function(value) {
-    var field, fieldsByLabel, fs, ref, _i, _j, _len, _len1, _ref, _ref1;
+    var field, fieldsByLabel, fs, i, j, len, len1, ref, ref1, ref2;
     fieldsByLabel = {};
-    _ref = this.group;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      ref = _ref[_i];
-      _ref1 = Fields.fields;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        field = _ref1[_j];
+    ref1 = this.group;
+    for (i = 0, len = ref1.length; i < len; i++) {
+      ref = ref1[i];
+      ref2 = Fields.fields;
+      for (j = 0, len1 = ref2.length; j < len1; j++) {
+        field = ref2[j];
         if (ref === field.el) {
           fieldsByLabel[field.metadata.label] = field;
         }
@@ -12207,15 +12229,15 @@ module.exports = RadioField = (function(_super) {
 
 require.register("widget/pop/helpers/select", function(exports, require, module) {
 var BaseField, FuzzySet, SelectField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 FuzzySet = require('widget/lib/fuzzyset');
 
 BaseField = require('widget/pop/helpers/base');
 
-module.exports = SelectField = (function(_super) {
-  __extends(SelectField, _super);
+module.exports = SelectField = (function(superClass) {
+  extend(SelectField, superClass);
 
   SelectField.matchThreshold = 0.3;
 
@@ -12225,29 +12247,29 @@ module.exports = SelectField = (function(_super) {
   }
 
   SelectField.detect = function(field) {
-    var _ref;
-    return (field != null ? (_ref = field.el) != null ? _ref.tagName : void 0 : void 0) === 'SELECT';
+    var ref;
+    return (field != null ? (ref = field.el) != null ? ref.tagName : void 0 : void 0) === 'SELECT';
   };
 
   SelectField.prototype.fill = function(value) {
-    var result, strategy, _i, _len, _ref, _results;
+    var i, len, ref, result, results, strategy;
     SelectField.__super__.fill.call(this, value);
     if (this._validate(value)) {
       if (this.field.el.value === this.value) {
         return this.filled = true;
       } else {
-        _ref = this._strategies;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          strategy = _ref[_i];
+        ref = this._strategies;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          strategy = ref[i];
           if (result = this[strategy](this.value)) {
             this.filled = true;
             break;
           } else {
-            _results.push(void 0);
+            results.push(void 0);
           }
         }
-        return _results;
+        return results;
       }
     }
   };
@@ -12265,36 +12287,36 @@ module.exports = SelectField = (function(_super) {
   SelectField.prototype._strategies = ['_exactStrategy', '_exactNumberStrategy', '_prefixStrategy', '_fuzzyValueStrategy', '_fuzzyTextStrategy'];
 
   SelectField.prototype._exactStrategy = function(value) {
-    var option, v, _i, _len, _ref, _ref1, _ref2;
+    var i, len, option, ref, ref1, ref2, v;
     if (value == null) {
       return;
     }
     v = value != null ? value.toLowerCase() : void 0;
-    _ref = this.options;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      option = _ref[_i];
-      if ((option != null ? (_ref1 = option.value) != null ? _ref1.toLowerCase() : void 0 : void 0) === v) {
+    ref = this.options;
+    for (i = 0, len = ref.length; i < len; i++) {
+      option = ref[i];
+      if ((option != null ? (ref1 = option.value) != null ? ref1.toLowerCase() : void 0 : void 0) === v) {
         return this.field.el.value = option.value;
       }
-      if ((option != null ? (_ref2 = option.text) != null ? _ref2.toLowerCase() : void 0 : void 0) === v) {
+      if ((option != null ? (ref2 = option.text) != null ? ref2.toLowerCase() : void 0 : void 0) === v) {
         return this.field.el.value = option.value;
       }
     }
   };
 
   SelectField.prototype._exactNumberStrategy = function(value) {
-    var intVal, option, v, _i, _len, _ref;
+    var i, intVal, len, option, ref, v;
     if (value == null) {
       return;
     }
     v = value != null ? value.toLowerCase() : void 0;
     intVal = parseInt(v);
-    if (isNaN(v) || intVal === NaN) {
+    if (isNaN(v) || intVal === (0/0)) {
       return;
     }
-    _ref = this.options;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      option = _ref[_i];
+    ref = this.options;
+    for (i = 0, len = ref.length; i < len; i++) {
+      option = ref[i];
       if (intVal === parseInt(option != null ? option.value : void 0, 10)) {
         return this.field.el.value = option.value;
       }
@@ -12305,15 +12327,15 @@ module.exports = SelectField = (function(_super) {
   };
 
   SelectField.prototype._prefixStrategy = function(value) {
-    var option, v, _i, _len, _ref, _ref1, _ref2;
-    _ref = this.options;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      option = _ref[_i];
+    var i, len, option, ref, ref1, ref2, v;
+    ref = this.options;
+    for (i = 0, len = ref.length; i < len; i++) {
+      option = ref[i];
       v = value.toLowerCase();
-      if ((option != null ? (_ref1 = option.value) != null ? _ref1.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
+      if ((option != null ? (ref1 = option.value) != null ? ref1.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
         return this.field.el.value = option.value;
       }
-      if ((option != null ? (_ref2 = option.text) != null ? _ref2.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
+      if ((option != null ? (ref2 = option.text) != null ? ref2.toLowerCase().indexOf(v) : void 0 : void 0) === 0) {
         return this.field.el.value = option.value;
       }
     }
@@ -12322,16 +12344,16 @@ module.exports = SelectField = (function(_super) {
   SelectField.prototype._fuzzyValueStrategy = function(value) {
     var fs, option, vals;
     vals = (function() {
-      var _i, _len, _ref, _results;
-      _ref = this.options;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        option = _ref[_i];
+      var i, len, ref, results;
+      ref = this.options;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        option = ref[i];
         if (option.value != null) {
-          _results.push(option.value);
+          results.push(option.value);
         }
       }
-      return _results;
+      return results;
     }).call(this);
     fs = FuzzySet(vals, false).get(value);
     if ((fs != null) && fs.length > 0 && fs[0].length === 2) {
@@ -12340,24 +12362,24 @@ module.exports = SelectField = (function(_super) {
   };
 
   SelectField.prototype._fuzzyTextStrategy = function(value) {
-    var fs, option, vals, _i, _len, _ref;
+    var fs, i, len, option, ref, vals;
     vals = (function() {
-      var _i, _len, _ref, _results;
-      _ref = this.options;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        option = _ref[_i];
+      var i, len, ref, results;
+      ref = this.options;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        option = ref[i];
         if (option.text != null) {
-          _results.push(option.text);
+          results.push(option.text);
         }
       }
-      return _results;
+      return results;
     }).call(this);
     fs = FuzzySet(vals, false).get(value);
     if ((fs != null) && fs.length > 0 && fs[0].length === 2) {
-      _ref = this.options;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        option = _ref[_i];
+      ref = this.options;
+      for (i = 0, len = ref.length; i < len; i++) {
+        option = ref[i];
         if (option.text === fs[0][1]) {
           return this.field.el.value = option.value;
         }
@@ -12373,13 +12395,13 @@ module.exports = SelectField = (function(_super) {
 
 require.register("widget/pop/helpers/state_select", function(exports, require, module) {
 var SelectField, StateSelectField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 SelectField = require('widget/pop/helpers/select');
 
-module.exports = StateSelectField = (function(_super) {
-  __extends(StateSelectField, _super);
+module.exports = StateSelectField = (function(superClass) {
+  extend(StateSelectField, superClass);
 
   function StateSelectField(field) {
     StateSelectField.__super__.constructor.call(this, field);
@@ -12407,8 +12429,7 @@ module.exports = StateSelectField = (function(_super) {
   };
 
   StateSelectField.prototype._attachObserver = function() {
-    var MAX_FILLS, MutationObserver, blankObserver, config, el, fillCount, observer, target,
-      _this = this;
+    var MAX_FILLS, MutationObserver, blankObserver, config, el, fillCount, observer, target;
     target = this.field.el.parentNode;
     if ((target == null) || target.length === 0) {
       el = document.getElementsByName(this.field.name);
@@ -12434,23 +12455,25 @@ module.exports = StateSelectField = (function(_super) {
     blankObserver.observe(target, config);
     MAX_FILLS = 1;
     fillCount = 0;
-    observer = new MutationObserver(function(mutations) {
-      if (fillCount < MAX_FILLS) {
-        fillCount++;
-        mutations.forEach(function(mutation) {
-          return setTimeout(function() {
-            el = document.getElementsByName(_this.field.name);
-            if (el.length > 0) {
-              _this.field.el = el[0];
-              _this.options = _this.field.el.children;
-              _this.fill(_this.field.newValue);
-              return _this.doChange(_this.field.el);
-            }
-          }, 1000);
-        });
-        return observer.disconnect();
-      }
-    });
+    observer = new MutationObserver((function(_this) {
+      return function(mutations) {
+        if (fillCount < MAX_FILLS) {
+          fillCount++;
+          mutations.forEach(function(mutation) {
+            return setTimeout(function() {
+              el = document.getElementsByName(_this.field.name);
+              if (el.length > 0) {
+                _this.field.el = el[0];
+                _this.options = _this.field.el.children;
+                _this.fill(_this.field.newValue);
+                return _this.doChange(_this.field.el);
+              }
+            }, 1000);
+          });
+          return observer.disconnect();
+        }
+      };
+    })(this));
     return observer.observe(target, config);
   };
 
@@ -12471,24 +12494,24 @@ module.exports = StateSelectField = (function(_super) {
 
 require.register("widget/pop/helpers/text", function(exports, require, module) {
 var BaseField, TextField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseField = require('widget/pop/helpers/base');
 
-module.exports = TextField = (function(_super) {
-  __extends(TextField, _super);
+module.exports = TextField = (function(superClass) {
+  extend(TextField, superClass);
 
   function TextField(field) {
     TextField.__super__.constructor.call(this, field);
   }
 
   TextField.detect = function(field) {
-    var _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
-    if (((_ref = field.el) != null ? (_ref1 = _ref.tagName) != null ? _ref1.toLowerCase() : void 0 : void 0) === 'textarea') {
+    var ref, ref1, ref2, ref3, ref4, ref5;
+    if (((ref = field.el) != null ? (ref1 = ref.tagName) != null ? ref1.toLowerCase() : void 0 : void 0) === 'textarea') {
       return true;
     }
-    return ((_ref2 = field.el) != null ? (_ref3 = _ref2.tagName) != null ? _ref3.toLowerCase() : void 0 : void 0) === 'input' && ((_ref4 = ((_ref5 = field.el) != null ? _ref5.type : void 0) != null) === 'text' || _ref4 === 'email');
+    return ((ref2 = field.el) != null ? (ref3 = ref2.tagName) != null ? ref3.toLowerCase() : void 0 : void 0) === 'input' && ((ref4 = ((ref5 = field.el) != null ? ref5.type : void 0) != null) === 'text' || ref4 === 'email');
   };
 
   TextField.prototype.fill = function(value) {
@@ -12515,31 +12538,31 @@ module.exports = TextField = (function(_super) {
 
 require.register("widget/pop/helpers/two_digits", function(exports, require, module) {
 var BaseField, TwoDigitsField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 BaseField = require('widget/pop/helpers/base');
 
-module.exports = TwoDigitsField = (function(_super) {
-  __extends(TwoDigitsField, _super);
+module.exports = TwoDigitsField = (function(superClass) {
+  extend(TwoDigitsField, superClass);
 
   function TwoDigitsField(field) {
     TwoDigitsField.__super__.constructor.call(this, field);
   }
 
   TwoDigitsField.detect = function(field) {
-    var metadata, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var metadata, ref, ref1, ref2, ref3, ref4, ref5;
     if ((field.category != null) && (field.category != null) === 'Passwords') {
       return false;
     }
-    if ((field.lang != null) && ~(field != null ? (_ref = field.lang) != null ? _ref.indexOf('zh') : void 0 : void 0)) {
+    if ((field.lang != null) && ~(field != null ? (ref = field.lang) != null ? ref.indexOf('zh') : void 0 : void 0)) {
       return false;
     }
     if (isNaN(parseInt(field.newValue))) {
       return false;
     }
     metadata = field.metadata;
-    return metadata.tag_name === 'input' && (((_ref1 = metadata.placeholder) != null ? _ref1.length : void 0) === 2 || metadata.max_length === '2' || ((_ref2 = ((_ref3 = metadata.label) != null ? _ref3.toLowerCase() : void 0) || ((_ref4 = metadata.name) != null ? _ref4.toLowerCase() : void 0) || ((_ref5 = metadata.id) != null ? _ref5.toLowerCase() : void 0)) === 'yy' || _ref2 === 'mm'));
+    return metadata.tag_name === 'input' && (((ref1 = metadata.placeholder) != null ? ref1.length : void 0) === 2 || metadata.max_length === '2' || ((ref2 = ((ref3 = metadata.label) != null ? ref3.toLowerCase() : void 0) || ((ref4 = metadata.name) != null ? ref4.toLowerCase() : void 0) || ((ref5 = metadata.id) != null ? ref5.toLowerCase() : void 0)) === 'yy' || ref2 === 'mm'));
   };
 
   TwoDigitsField.prototype.fill = function(value) {
@@ -12569,13 +12592,13 @@ module.exports = TwoDigitsField = (function(_super) {
 
 require.register("widget/pop/helpers/us_state_select", function(exports, require, module) {
 var StateSelectField, USStateSelectField,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
 
 StateSelectField = require('widget/pop/helpers/state_select');
 
-module.exports = USStateSelectField = (function(_super) {
-  __extends(USStateSelectField, _super);
+module.exports = USStateSelectField = (function(superClass) {
+  extend(USStateSelectField, superClass);
 
   USStateSelectField.states = {
     'Alabama': 'AL',
@@ -12643,19 +12666,19 @@ module.exports = USStateSelectField = (function(_super) {
   }
 
   USStateSelectField.prototype.fill = function(value) {
-    var abbreviation, fullName, key, option, val, _i, _len, _ref, _ref1;
-    _ref = USStateSelectField.states;
-    for (key in _ref) {
-      val = _ref[key];
+    var abbreviation, fullName, i, key, len, option, ref, ref1, val;
+    ref = USStateSelectField.states;
+    for (key in ref) {
+      val = ref[key];
       if (value.toLowerCase() === key.toLowerCase() || value.toLowerCase() === val.toLowerCase()) {
         abbreviation = val.toLowerCase();
         fullName = key.toLowerCase();
         break;
       }
     }
-    _ref1 = this.options;
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      option = _ref1[_i];
+    ref1 = this.options;
+    for (i = 0, len = ref1.length; i < len; i++) {
+      option = ref1[i];
       if (option.value.toLowerCase() === abbreviation || option.text.toLowerCase() === abbreviation) {
         USStateSelectField.__super__.fill.call(this, option.value);
         return;
@@ -12725,13 +12748,13 @@ module.exports = Mappings = (function() {
   };
 
   Mappings.fieldsForMappings = function(fields) {
-    var field, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = fields.length; _i < _len; _i++) {
-      field = fields[_i];
-      _results.push(field.metadata);
+    var field, i, len, results;
+    results = [];
+    for (i = 0, len = fields.length; i < len; i++) {
+      field = fields[i];
+      results.push(field.metadata);
     }
-    return _results;
+    return results;
   };
 
   Mappings.load = function(args) {
@@ -12739,27 +12762,27 @@ module.exports = Mappings = (function() {
   };
 
   Mappings.assignToFields = function(args) {
-    var field, _i, _len, _ref, _ref1, _results;
-    _ref = args.fields;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      field = _ref[_i];
-      _results.push(field.mapping = args.mappings[(_ref1 = field.metadata) != null ? _ref1.pop_id : void 0]);
+    var field, i, len, ref, ref1, results;
+    ref = args.fields;
+    results = [];
+    for (i = 0, len = ref.length; i < len; i++) {
+      field = ref[i];
+      results.push(field.mapping = args.mappings[(ref1 = field.metadata) != null ? ref1.pop_id : void 0]);
     }
-    return _results;
+    return results;
   };
 
   Mappings.mapErrors = function(errors) {
-    var key, _i, _len, _ref, _results;
-    _ref = Object.keys(ErrorCodes);
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      key = _ref[_i];
+    var i, key, len, ref, results;
+    ref = Object.keys(ErrorCodes);
+    results = [];
+    for (i = 0, len = ref.length; i < len; i++) {
+      key = ref[i];
       if (errors & ErrorCodes[key]) {
-        _results.push(key);
+        results.push(key);
       }
     }
-    return _results;
+    return results;
   };
 
   return Mappings;
@@ -12777,13 +12800,13 @@ module.exports = PostProcessors = (function() {
   function PostProcessors() {}
 
   PostProcessors.process = function(fields, unfilled_fields) {
-    var processor, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = processors.length; _i < _len; _i++) {
-      processor = processors[_i];
-      _results.push(processor.process(fields, unfilled_fields));
+    var i, len, processor, results;
+    results = [];
+    for (i = 0, len = processors.length; i < len; i++) {
+      processor = processors[i];
+      results.push(processor.process(fields, unfilled_fields));
     }
-    return _results;
+    return results;
   };
 
   return PostProcessors;
@@ -12799,11 +12822,11 @@ module.exports = AddressLineTwoPostProcessor = (function() {
   function AddressLineTwoPostProcessor() {}
 
   AddressLineTwoPostProcessor.process = function(fields, unfilled_fields) {
-    var field, fields_to_add, fields_to_remove, index, unfilled_line_one_field, _i, _j, _k, _len, _len1, _len2, _results;
+    var field, fields_to_add, fields_to_remove, i, index, j, k, len, len1, len2, results, unfilled_line_one_field;
     fields_to_add = [];
     fields_to_remove = [];
-    for (_i = 0, _len = fields.length; _i < _len; _i++) {
-      field = fields[_i];
+    for (i = 0, len = fields.length; i < len; i++) {
+      field = fields[i];
       if (this._is_line_two(field)) {
         unfilled_line_one_field = this._matching_line_one_field(field, unfilled_fields);
         if (unfilled_line_one_field) {
@@ -12814,17 +12837,17 @@ module.exports = AddressLineTwoPostProcessor = (function() {
         }
       }
     }
-    for (_j = 0, _len1 = fields_to_add.length; _j < _len1; _j++) {
-      field = fields_to_add[_j];
+    for (j = 0, len1 = fields_to_add.length; j < len1; j++) {
+      field = fields_to_add[j];
       fields.push(field);
     }
-    _results = [];
-    for (_k = 0, _len2 = fields_to_remove.length; _k < _len2; _k++) {
-      field = fields_to_remove[_k];
+    results = [];
+    for (k = 0, len2 = fields_to_remove.length; k < len2; k++) {
+      field = fields_to_remove[k];
       index = fields.indexOf(field);
-      _results.push(fields.splice(index, 1));
+      results.push(fields.splice(index, 1));
     }
-    return _results;
+    return results;
   };
 
   AddressLineTwoPostProcessor._is_line_two = function(field) {
@@ -12837,13 +12860,13 @@ module.exports = AddressLineTwoPostProcessor = (function() {
   };
 
   AddressLineTwoPostProcessor._matching_line_one_field = function(line_two_field, fields) {
-    var address_type, field, _i, _len;
+    var address_type, field, i, len;
     if (typeof line_two_field.param !== 'string') {
       return null;
     }
     address_type = line_two_field.param.split('.')[1];
-    for (_i = 0, _len = fields.length; _i < _len; _i++) {
-      field = fields[_i];
+    for (i = 0, len = fields.length; i < len; i++) {
+      field = fields[i];
       if (field.param === ("AddressDetails." + address_type + ".AddressLine1")) {
         return field;
       }
@@ -12914,6 +12937,10 @@ module.exports = PublisherApi = (function() {
 require.register("widget/setup", function(exports, require, module) {
 window.PopWidgetInterface = require('widget/controller');
 
+});
+
+require.register("widget/config/version", function(exports, require, module) {
+module.exports = { "version" : "1.12.26" };
 });
 
 
