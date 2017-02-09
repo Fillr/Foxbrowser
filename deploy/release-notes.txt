@@ -1,3 +1,17 @@
+—- Version 1.0.15 release notes -—
+
+Mixpanel events go to qa project
+Allow delete characters if credit card number exceeds 16
+Fix PIN view from popping up when come from background
+
+—- Version 1.0.13 release notes -—
+
+Fix PIN view UI, wrong Pin timer
+
+Make PIN entry digital only for iPad
+
+Fix can’t import or export profile after linking to dropbox
+
 —- Version 1.0.8 release notes -—
 
 Update to latest widget

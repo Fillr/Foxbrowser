@@ -1214,7 +1214,10 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lresolv",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
@@ -1300,7 +1303,10 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lresolv",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "27f02c93-ac8b-424d-ae50-8036000681a2";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "27f02c93-ac8b-424d-ae50-8036000681a2";
@@ -1336,7 +1342,10 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/FillrEmbededSDKiOS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lresolv",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "1aaf7e6f-a368-406b-8fca-8cf944cef97f";
 				TARGETED_DEVICE_FAMILY = "1,2";
