@@ -22,6 +22,8 @@
 #import "TUSafariActivity.h"
 #import "NJKWebViewProgressView.h"
 
+#import "FillrSDKSettingViewController.h"
+
 @implementation SGToolbarView
 
 - (instancetype)initWithFrame:(CGRect)frame browserDelegate:(SGBrowserViewController *)browser; {
@@ -171,7 +173,7 @@
 }
 
 - (void)_showSyncSettings {
-    BOOL syncReady = [[FXSyncStock sharedInstance] hasUserCredentials];
+    /*BOOL syncReady = [[FXSyncStock sharedInstance] hasUserCredentials];
     if (!syncReady) {
         FXLoginViewController* login = [FXLoginViewController new];
         UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:login];
@@ -183,7 +185,11 @@
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:settings];
         nav.modalPresentationStyle = UIModalPresentationFormSheet;
         [_browser presentViewController:nav animated:YES completion:NULL];
-    }
+    }*/
+    FillrSDKSettingViewController *settings = [[FillrSDKSettingViewController alloc] initWithNibName:nil bundle:nil];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:settings];
+    nav.modalPresentationStyle = UIModalPresentationFormSheet;
+    [_browser presentViewController:nav animated:YES completion:NULL];
 }
 
 - (void)updateInterface {
