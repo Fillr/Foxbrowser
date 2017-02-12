@@ -23,7 +23,8 @@
 #import "Reachability.h"
 #import "Appirater.h"
 
-
+#import "Fillr.h"
+#import "DefaultFillProvider.h"
 
 SGAppDelegate *appDelegate;
 NSString *const kSGEnableStartpageKey = @"org.graetzer.enableStartpage";
@@ -57,6 +58,14 @@ NSString *const kSGDidRunBeforeKey = @"kSGDidRunBeforeKey";
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     _window.restorationIdentifier = NSStringFromClass([UIWindow class]);
     self.window.rootViewController = browser;
+    
+    [DefaultFillProvider sharedInstance].rootViewController = self.window.rootViewController;
+    Fillr * fillr = [Fillr sharedInstance];
+    [[Fillr sharedInstance] initialiseWithDevKey:@"c4a8852ce67427a97330388659e0f2b5" secretKey:@"YTA4MmYyMWRmNTQwNjdjZjFhMGM4YzE=" andUrlScheme:@"com.fillr.foxbrowser"];
+    [Fillr sharedInstance].fillProvider = [DefaultFillProvider sharedInstance];
+    [fillr setBrowserName:@"Fox Browser" toolbarBrowserName:@"Fox"];
+    [fillr setEnabled:YES];
+    [fillr setVisible:YES];
     
     return YES;
 }
@@ -161,6 +170,12 @@ viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents
         [self.browserViewController addTabWithURLRequest:[NSMutableURLRequest requestWithURL:url] title:sourceApplication];
         return YES;
     }
+    
+    if ([[Fillr sharedInstance] canHandleOpenURL:url]) {
+        [[Fillr sharedInstance] handleOpenURL:url];
+        return YES;
+    }
+    
     return NO;
 }
 

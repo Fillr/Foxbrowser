@@ -19,6 +19,8 @@
 #import "NSStringPunycodeAdditions.h"
 #import "GAI.h"
 
+#import "Fillr.h"
+
 @implementation SGWebViewController {
     NSDictionary *_selected;
     NJKWebViewProgress *_progressProxy;
@@ -156,6 +158,10 @@
             [self openRequest:nil];
         }
     }
+    
+    if (![[Fillr sharedInstance] hasWebview]) {
+        [[Fillr sharedInstance] trackWebview:_webView];
+    }
 }
 
 - (void)viewDidLayoutSubviews {
@@ -217,7 +223,20 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
             _request = request;
         }
     }
+    
+    if ([[Fillr sharedInstance] canHandleWebViewRequest:request]) {
+        [[Fillr sharedInstance] handleWebViewRequest:request];
+        return NO;
+    }
+    
     return YES;
+}
+
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if ([[Fillr sharedInstance] canHandleWebViewRequest:navigationAction.request]) {
+        [[Fillr sharedInstance] handleWebViewRequest:navigationAction.request];
+    }
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView {
