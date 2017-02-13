@@ -1,1876 +1,1839 @@
-<xs:schema version="1.3" xmlns:p="http://letspop.com/schema" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
-<xs:element name="Day" type="xs:positiveInteger"/>
-<xs:element name="Month" type="xs:positiveInteger"/>
-<xs:element name="Year" type="xs:positiveInteger"/>
-<xs:simpleType name="YesNoType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="yes"/>
-<xs:enumeration value="no"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="CreditCardNameEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Visa"/>
-<xs:enumeration value="MasterCard"/>
-<xs:enumeration value="American Express"/>
-<xs:enumeration value="Diners Club"/>
-<xs:enumeration value="Discover"/>
-<xs:enumeration value="Cirrus"/>
-<xs:enumeration value="Maestro"/>
-<xs:enumeration value="JCB"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="EmploymentNatureEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Full Time"/>
-<xs:enumeration value="Part Time"/>
-<xs:enumeration value="Contract"/>
-<xs:enumeration value="Casual"/>
-<xs:enumeration value="Unemployed"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="GenderEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Male"/>
-<xs:enumeration value="Female"/>
-<xs:enumeration value="Other"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="HonorificType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Mr."/>
-<xs:enumeration value="Mrs"/>
-<xs:enumeration value="Miss"/>
-<xs:enumeration value="Ms."/>
-<xs:enumeration value="Dr."/>
-<xs:enumeration value="Master"/>
-<xs:enumeration value="Sir"/>
-<xs:enumeration value="Professor"/>
-<xs:enumeration value="Reverend"/>
-<xs:enumeration value="Madam"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="IndustryEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Aerospace (Civil)"/>
-<xs:enumeration value="Advanced Engineering"/>
-<xs:enumeration value="Agriculture, Horticulture and Fisheries"/>
-<xs:enumeration value="Aid-Funded Business"/>
-<xs:enumeration value="Airports"/>
-<xs:enumeration value="Automotive"/>
-<xs:enumeration value="Biotechnology and Pharmaceuticals"/>
-<xs:enumeration value="Business (and Consumer) Services"/>
-<xs:enumeration value="Chemicals"/>
-<xs:enumeration value="Clothing, Footwear and Fashion"/>
-<xs:enumeration value="Communications"/>
-<xs:enumeration value="Construction"/>
-<xs:enumeration value="Creative and Media"/>
-<xs:enumeration value="Defence"/>
-<xs:enumeration value="Education and Training"/>
-<xs:enumeration value="Electronics and IT Hardware"/>
-<xs:enumeration value="Engineering"/>
-<xs:enumeration value="Environment"/>
-<xs:enumeration value="Financial Services"/>
-<xs:enumeration value="Fire, Police and Security"/>
-<xs:enumeration value="Food and Drink"/>
-<xs:enumeration value="Games"/>
-<xs:enumeration value="Giftware, Jewellery and Tableware"/>
-<xs:enumeration value="Healthcare and Medical"/>
-<xs:enumeration value="Household Goods, Furniture and Furnishings"/>
-<xs:enumeration value="ICT"/>
-<xs:enumeration value="Legal Services"/>
-<xs:enumeration value="Leisure and Tourism"/>
-<xs:enumeration value="Marine"/>
-<xs:enumeration value="Mechanical Electrical and Process Engineering"/>
-<xs:enumeration value="Metallurgical Process Plant"/>
-<xs:enumeration value="Metals and Minerals"/>
-<xs:enumeration value="Mining"/>
-<xs:enumeration value="Nanotechnology"/>
-<xs:enumeration value="Oil and Gas"/>
-<xs:enumeration value="Ports and Logistics"/>
-<xs:enumeration value="Power"/>
-<xs:enumeration value="Public-Private Partnerships"/>
-<xs:enumeration value="Railways"/>
-<xs:enumeration value="Research and Development"/>
-<xs:enumeration value="Science and Technology"/>
-<xs:enumeration value="Security"/>
-<xs:enumeration value="Software and Computer Services Business to Business (B2B)"/>
-<xs:enumeration value="Sports and Leisure Infrastructure"/>
-<xs:enumeration value="Textiles, Interior Textiles and Carpets"/>
-<xs:enumeration value="Water"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="ISOCountryCodeEnumType">
-<xs:annotation>  </xs:annotation>
-<xs:restriction base="xs:string">
-<xs:enumeration value="United States"/>
-<xs:enumeration value="United Kingdom"/>
-<xs:enumeration value="Australia"/>
-<xs:enumeration value="India"/>
-<xs:enumeration value="China"/>
-<xs:enumeration value="Philippines"/>
-<xs:enumeration value="Afghanistan"/>
-<xs:enumeration value="Aland Islands"/>
-<xs:enumeration value="Albania"/>
-<xs:enumeration value="Algeria"/>
-<xs:enumeration value="American Samoa"/>
-<xs:enumeration value="Andorra"/>
-<xs:enumeration value="Angola"/>
-<xs:enumeration value="Anguilla"/>
-<xs:enumeration value="Antarctica"/>
-<xs:enumeration value="Antigua And Barbuda"/>
-<xs:enumeration value="Argentina"/>
-<xs:enumeration value="Armenia"/>
-<xs:enumeration value="Aruba"/>
-<xs:enumeration value="Australia"/>
-<xs:enumeration value="Austria"/>
-<xs:enumeration value="Azerbaijan"/>
-<xs:enumeration value="Bahamas"/>
-<xs:enumeration value="Bahrain"/>
-<xs:enumeration value="Bangladesh"/>
-<xs:enumeration value="Barbados"/>
-<xs:enumeration value="Belarus"/>
-<xs:enumeration value="Belgium"/>
-<xs:enumeration value="Belize"/>
-<xs:enumeration value="Benin"/>
-<xs:enumeration value="Bermuda"/>
-<xs:enumeration value="Bhutan"/>
-<xs:enumeration value="Bolivia"/>
-<xs:enumeration value="Bosnia And Herzegovina"/>
-<xs:enumeration value="Botswana"/>
-<xs:enumeration value="Bouvet Island"/>
-<xs:enumeration value="Brazil"/>
-<xs:enumeration value="British Indian Ocean Territory"/>
-<xs:enumeration value="Brunei Darussalam"/>
-<xs:enumeration value="Bulgaria"/>
-<xs:enumeration value="Burkina Faso"/>
-<xs:enumeration value="Burundi"/>
-<xs:enumeration value="Cambodia"/>
-<xs:enumeration value="Cameroon"/>
-<xs:enumeration value="Canada"/>
-<xs:enumeration value="Cape Verde"/>
-<xs:enumeration value="Cayman Islands"/>
-<xs:enumeration value="Central African Republic"/>
-<xs:enumeration value="Chad"/>
-<xs:enumeration value="Chile"/>
-<xs:enumeration value="China"/>
-<xs:enumeration value="Christmas Island"/>
-<xs:enumeration value="Cocos (keeling) Islands"/>
-<xs:enumeration value="Colombia"/>
-<xs:enumeration value="Comoros"/>
-<xs:enumeration value="Congo"/>
-<xs:enumeration value="Congo, The Democratic Republic Of The"/>
-<xs:enumeration value="Cook Islands"/>
-<xs:enumeration value="Costa Rica"/>
-<xs:enumeration value="Cote D'ivoire"/>
-<xs:enumeration value="Croatia"/>
-<xs:enumeration value="Cuba"/>
-<xs:enumeration value="Cyprus"/>
-<xs:enumeration value="Czech Republic"/>
-<xs:enumeration value="Denmark"/>
-<xs:enumeration value="Djibouti"/>
-<xs:enumeration value="Dominica"/>
-<xs:enumeration value="Dominican Republic"/>
-<xs:enumeration value="Ecuador"/>
-<xs:enumeration value="Egypt"/>
-<xs:enumeration value="El Salvador"/>
-<xs:enumeration value="Equatorial Guinea"/>
-<xs:enumeration value="Eritrea"/>
-<xs:enumeration value="Estonia"/>
-<xs:enumeration value="Ethiopia"/>
-<xs:enumeration value="Falkland Islands (malvinas)"/>
-<xs:enumeration value="Faroe Islands"/>
-<xs:enumeration value="Fiji"/>
-<xs:enumeration value="Finland"/>
-<xs:enumeration value="France"/>
-<xs:enumeration value="French Guiana"/>
-<xs:enumeration value="French Polynesia"/>
-<xs:enumeration value="French Southern Territories"/>
-<xs:enumeration value="Gabon"/>
-<xs:enumeration value="Gambia"/>
-<xs:enumeration value="Georgia"/>
-<xs:enumeration value="Germany"/>
-<xs:enumeration value="Ghana"/>
-<xs:enumeration value="Gibraltar"/>
-<xs:enumeration value="Greece"/>
-<xs:enumeration value="Greenland"/>
-<xs:enumeration value="Grenada"/>
-<xs:enumeration value="Guadeloupe"/>
-<xs:enumeration value="Guam"/>
-<xs:enumeration value="Guatemala"/>
-<xs:enumeration value="Guernsey"/>
-<xs:enumeration value="Guinea"/>
-<xs:enumeration value="Guinea-bissau"/>
-<xs:enumeration value="Guyana"/>
-<xs:enumeration value="Haiti"/>
-<xs:enumeration value="Heard Island And Mcdonald Islands"/>
-<xs:enumeration value="Holy See (vatican City State)"/>
-<xs:enumeration value="Honduras"/>
-<xs:enumeration value="Hong Kong"/>
-<xs:enumeration value="Hungary"/>
-<xs:enumeration value="Iceland"/>
-<xs:enumeration value="India"/>
-<xs:enumeration value="Indonesia"/>
-<xs:enumeration value="Iran, Islamic Republic Of"/>
-<xs:enumeration value="Iraq"/>
-<xs:enumeration value="Ireland"/>
-<xs:enumeration value="Isle Of Man"/>
-<xs:enumeration value="Israel"/>
-<xs:enumeration value="Italy"/>
-<xs:enumeration value="Jamaica"/>
-<xs:enumeration value="Japan"/>
-<xs:enumeration value="Jersey"/>
-<xs:enumeration value="Jordan"/>
-<xs:enumeration value="Kazakhstan"/>
-<xs:enumeration value="Kenya"/>
-<xs:enumeration value="Kiribati"/>
-<xs:enumeration value="Korea, Democratic People's Republic Of"/>
-<xs:enumeration value="Korea, Republic Of"/>
-<xs:enumeration value="Kuwait"/>
-<xs:enumeration value="Kyrgyzstan"/>
-<xs:enumeration value="Lao People's Democratic Republic"/>
-<xs:enumeration value="Latvia"/>
-<xs:enumeration value="Lebanon"/>
-<xs:enumeration value="Lesotho"/>
-<xs:enumeration value="Liberia"/>
-<xs:enumeration value="Libyan Arab Jamahiriya"/>
-<xs:enumeration value="Liechtenstein"/>
-<xs:enumeration value="Lithuania"/>
-<xs:enumeration value="Luxembourg"/>
-<xs:enumeration value="Macao"/>
-<xs:enumeration value="Macedonia, The Former Yugoslav Republic Of"/>
-<xs:enumeration value="Madagascar"/>
-<xs:enumeration value="Malawi"/>
-<xs:enumeration value="Malaysia"/>
-<xs:enumeration value="Maldives"/>
-<xs:enumeration value="Mali"/>
-<xs:enumeration value="Malta"/>
-<xs:enumeration value="Marshall Islands"/>
-<xs:enumeration value="Martinique"/>
-<xs:enumeration value="Mauritania"/>
-<xs:enumeration value="Mauritius"/>
-<xs:enumeration value="Mayotte"/>
-<xs:enumeration value="Mexico"/>
-<xs:enumeration value="Micronesia, Federated States Of"/>
-<xs:enumeration value="Moldova, Republic Of"/>
-<xs:enumeration value="Monaco"/>
-<xs:enumeration value="Mongolia"/>
-<xs:enumeration value="Montenegro"/>
-<xs:enumeration value="Montserrat"/>
-<xs:enumeration value="Morocco"/>
-<xs:enumeration value="Mozambique"/>
-<xs:enumeration value="Myanmar"/>
-<xs:enumeration value="Namibia"/>
-<xs:enumeration value="Nauru"/>
-<xs:enumeration value="Nepal"/>
-<xs:enumeration value="Netherlands Antilles"/>
-<xs:enumeration value="Netherlands"/>
-<xs:enumeration value="New Caledonia"/>
-<xs:enumeration value="New Zealand"/>
-<xs:enumeration value="Nicaragua"/>
-<xs:enumeration value="Niger"/>
-<xs:enumeration value="Nigeria"/>
-<xs:enumeration value="Niue"/>
-<xs:enumeration value="Norfolk Island"/>
-<xs:enumeration value="Northern Mariana Islands"/>
-<xs:enumeration value="Norway"/>
-<xs:enumeration value="Oman"/>
-<xs:enumeration value="Pakistan"/>
-<xs:enumeration value="Palau"/>
-<xs:enumeration value="Palestinian Territory, Occupied"/>
-<xs:enumeration value="Panama"/>
-<xs:enumeration value="Papua New Guinea"/>
-<xs:enumeration value="Paraguay"/>
-<xs:enumeration value="Peru"/>
-<xs:enumeration value="Philippines"/>
-<xs:enumeration value="Pitcairn"/>
-<xs:enumeration value="Poland"/>
-<xs:enumeration value="Portugal"/>
-<xs:enumeration value="Puerto Rico"/>
-<xs:enumeration value="Qatar"/>
-<xs:enumeration value="Reunion"/>
-<xs:enumeration value="Romania"/>
-<xs:enumeration value="Russian Federation"/>
-<xs:enumeration value="Rwanda"/>
-<xs:enumeration value="Saint Barthelemy"/>
-<xs:enumeration value="Saint Helena"/>
-<xs:enumeration value="Saint Kitts And Nevis"/>
-<xs:enumeration value="Saint Lucia"/>
-<xs:enumeration value="Saint Martin (french Part)"/>
-<xs:enumeration value="Saint Pierre And Miquelon"/>
-<xs:enumeration value="Saint Vincent And The Grenadines"/>
-<xs:enumeration value="Samoa"/>
-<xs:enumeration value="San Marino"/>
-<xs:enumeration value="Sao Tome And Principe"/>
-<xs:enumeration value="Saudi Arabia"/>
-<xs:enumeration value="Senegal"/>
-<xs:enumeration value="Serbia"/>
-<xs:enumeration value="Seychelles"/>
-<xs:enumeration value="Sierra Leone"/>
-<xs:enumeration value="Singapore"/>
-<xs:enumeration value="Slovakia"/>
-<xs:enumeration value="Slovenia"/>
-<xs:enumeration value="Solomon Islands"/>
-<xs:enumeration value="Somalia"/>
-<xs:enumeration value="South Africa"/>
-<xs:enumeration value="South Georgia And The South Sandwich Islands"/>
-<xs:enumeration value="Spain"/>
-<xs:enumeration value="Sri Lanka"/>
-<xs:enumeration value="Sudan"/>
-<xs:enumeration value="Suriname"/>
-<xs:enumeration value="Svalbard And Jan Mayen"/>
-<xs:enumeration value="Swaziland"/>
-<xs:enumeration value="Sweden"/>
-<xs:enumeration value="Switzerland"/>
-<xs:enumeration value="Syrian Arab Republic"/>
-<xs:enumeration value="Taiwan"/>
-<xs:enumeration value="Tajikistan"/>
-<xs:enumeration value="Tanzania, United Republic Of"/>
-<xs:enumeration value="Thailand"/>
-<xs:enumeration value="Timor-leste"/>
-<xs:enumeration value="Togo"/>
-<xs:enumeration value="Tokelau"/>
-<xs:enumeration value="Tonga"/>
-<xs:enumeration value="Trinidad And Tobago"/>
-<xs:enumeration value="Tunisia"/>
-<xs:enumeration value="Turkey"/>
-<xs:enumeration value="Turkmenistan"/>
-<xs:enumeration value="Turks And Caicos Islands"/>
-<xs:enumeration value="Tuvalu"/>
-<xs:enumeration value="Uganda"/>
-<xs:enumeration value="Ukraine"/>
-<xs:enumeration value="United Arab Emirates"/>
-<xs:enumeration value="United Kingdom"/>
-<xs:enumeration value="United States Minor Outlying Islands"/>
-<xs:enumeration value="United States"/>
-<xs:enumeration value="Uruguay"/>
-<xs:enumeration value="Uzbekistan"/>
-<xs:enumeration value="Vanuatu"/>
-<xs:enumeration value="Venezuela, Plurinational State Of"/>
-<xs:enumeration value="Viet Nam"/>
-<xs:enumeration value="Virgin Islands, British"/>
-<xs:enumeration value="Virgin Islands, U.s."/>
-<xs:enumeration value="Wallis And Futuna"/>
-<xs:enumeration value="Western Sahara"/>
-<xs:enumeration value="Yemen"/>
-<xs:enumeration value="Zambia"/>
-<xs:enumeration value="Zimbabwe"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="MaritalStatusEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Single"/>
-<xs:enumeration value="Married"/>
-<xs:enumeration value="Divorced"/>
-<xs:enumeration value="Never Married"/>
-<xs:enumeration value="Separated"/>
-<xs:enumeration value="Significant Other"/>
-<xs:enumeration value="Widowed"/>
-<xs:enumeration value="Defacto"/>
-<xs:enumeration value="Domestic Partner"/>
-<xs:enumeration value="Unknown"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="PersonEyeColorEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Black"/>
-<xs:enumeration value="Hazel"/>
-<xs:enumeration value="Gray"/>
-<xs:enumeration value="Brown"/>
-<xs:enumeration value="Violet"/>
-<xs:enumeration value="Green"/>
-<xs:enumeration value="Blue"/>
-<xs:enumeration value="Maroon"/>
-<xs:enumeration value="Pink"/>
-<xs:enumeration value="Dichromatic"/>
-<xs:enumeration value="Other"/>
-<xs:enumeration value="Unknown"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="PersonHairColorEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Bald"/>
-<xs:enumeration value="Brown"/>
-<xs:enumeration value="White"/>
-<xs:enumeration value="Blonde"/>
-<xs:enumeration value="Gray"/>
-<xs:enumeration value="Red"/>
-<xs:enumeration value="Auburn"/>
-<xs:enumeration value="Black"/>
-<xs:enumeration value="Silver"/>
-<xs:enumeration value="Other"/>
-<xs:enumeration value="Unknown"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="EthnicityEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="African"/>
-<xs:enumeration value="Asian"/>
-<xs:enumeration value="Caucasian"/>
-<xs:enumeration value="Indigineous"/>
-<xs:enumeration value="Indian"/>
-<xs:enumeration value="Latino"/>
-<xs:enumeration value="Middle Eastern"/>
-<xs:enumeration value="Pacific Islander"/>
-<xs:enumeration value="Mixed"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="LicenseTypeEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Car"/>
-<xs:enumeration value="Motorcycle"/>
-<xs:enumeration value="Marine/Boat"/>
-<xs:enumeration value="Chauffeur"/>
-<xs:enumeration value="Commercial"/>
-<xs:enumeration value="Tractor"/>
-<xs:enumeration value="Light Rigid"/>
-<xs:enumeration value="Medium Rigid"/>
-<xs:enumeration value="Heavy Rigid"/>
-<xs:enumeration value="Heavy Combination"/>
-<xs:enumeration value="Multi Combination"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="NationalityEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Afghan"/>
-<xs:enumeration value="Albanian"/>
-<xs:enumeration value="Algerian"/>
-<xs:enumeration value="American"/>
-<xs:enumeration value="Andorran"/>
-<xs:enumeration value="Angolan"/>
-<xs:enumeration value="Antiguans"/>
-<xs:enumeration value="Argentinean"/>
-<xs:enumeration value="Armenian"/>
-<xs:enumeration value="Australian"/>
-<xs:enumeration value="Austrian"/>
-<xs:enumeration value="Azerbaijani"/>
-<xs:enumeration value="Bahamian"/>
-<xs:enumeration value="Bahraini"/>
-<xs:enumeration value="Bangladeshi"/>
-<xs:enumeration value="Barbadian"/>
-<xs:enumeration value="Barbudans"/>
-<xs:enumeration value="Batswana"/>
-<xs:enumeration value="Belarusian"/>
-<xs:enumeration value="Belgian"/>
-<xs:enumeration value="Belizean"/>
-<xs:enumeration value="Beninese"/>
-<xs:enumeration value="Bhutanese"/>
-<xs:enumeration value="Bolivian"/>
-<xs:enumeration value="Bosnian"/>
-<xs:enumeration value="Brazilian"/>
-<xs:enumeration value="British"/>
-<xs:enumeration value="Bruneian"/>
-<xs:enumeration value="Bulgarian"/>
-<xs:enumeration value="Burkinabe"/>
-<xs:enumeration value="Burmese"/>
-<xs:enumeration value="Burundian"/>
-<xs:enumeration value="Cambodian"/>
-<xs:enumeration value="Cameroonian"/>
-<xs:enumeration value="Canadian"/>
-<xs:enumeration value="Cape Verdean"/>
-<xs:enumeration value="Central African"/>
-<xs:enumeration value="Chadian"/>
-<xs:enumeration value="Chilean"/>
-<xs:enumeration value="Chinese"/>
-<xs:enumeration value="Colombian"/>
-<xs:enumeration value="Comoran"/>
-<xs:enumeration value="Congolese"/>
-<xs:enumeration value="Congolese"/>
-<xs:enumeration value="Costa Rican"/>
-<xs:enumeration value="Croatian"/>
-<xs:enumeration value="Cuban"/>
-<xs:enumeration value="Cypriot"/>
-<xs:enumeration value="Czech"/>
-<xs:enumeration value="Danish"/>
-<xs:enumeration value="Djibouti"/>
-<xs:enumeration value="Dominican"/>
-<xs:enumeration value="Dutch"/>
-<xs:enumeration value="Dutchman"/>
-<xs:enumeration value="Dutchwoman"/>
-<xs:enumeration value="East Timorese"/>
-<xs:enumeration value="Ecuadorean"/>
-<xs:enumeration value="Egyptian"/>
-<xs:enumeration value="Emirian"/>
-<xs:enumeration value="Equatorial Guinean"/>
-<xs:enumeration value="Eritrean"/>
-<xs:enumeration value="Estonian"/>
-<xs:enumeration value="Ethiopian"/>
-<xs:enumeration value="Fijian"/>
-<xs:enumeration value="Filipino"/>
-<xs:enumeration value="Finnish"/>
-<xs:enumeration value="French"/>
-<xs:enumeration value="Gabonese"/>
-<xs:enumeration value="Gambian"/>
-<xs:enumeration value="Georgian"/>
-<xs:enumeration value="German"/>
-<xs:enumeration value="Ghanaian"/>
-<xs:enumeration value="Greek"/>
-<xs:enumeration value="Grenadian"/>
-<xs:enumeration value="Guatemalan"/>
-<xs:enumeration value="Guinea-Bissauan"/>
-<xs:enumeration value="Guinean"/>
-<xs:enumeration value="Guyanese"/>
-<xs:enumeration value="Haitian"/>
-<xs:enumeration value="Herzegovinian"/>
-<xs:enumeration value="Honduran"/>
-<xs:enumeration value="Hungarian"/>
-<xs:enumeration value="I-Kiribati"/>
-<xs:enumeration value="Icelander"/>
-<xs:enumeration value="Indian"/>
-<xs:enumeration value="Indonesian"/>
-<xs:enumeration value="Iranian"/>
-<xs:enumeration value="Iraqi"/>
-<xs:enumeration value="Irish"/>
-<xs:enumeration value="Irish"/>
-<xs:enumeration value="Israeli"/>
-<xs:enumeration value="Italian"/>
-<xs:enumeration value="Ivorian"/>
-<xs:enumeration value="Jamaican"/>
-<xs:enumeration value="Japanese"/>
-<xs:enumeration value="Jordanian"/>
-<xs:enumeration value="Kazakhstani"/>
-<xs:enumeration value="Kenyan"/>
-<xs:enumeration value="Kittian and Nevisian"/>
-<xs:enumeration value="Kuwaiti"/>
-<xs:enumeration value="Kyrgyz"/>
-<xs:enumeration value="Laotian"/>
-<xs:enumeration value="Latvian"/>
-<xs:enumeration value="Lebanese"/>
-<xs:enumeration value="Liberian"/>
-<xs:enumeration value="Libyan"/>
-<xs:enumeration value="Liechtensteiner"/>
-<xs:enumeration value="Lithuanian"/>
-<xs:enumeration value="Luxembourger"/>
-<xs:enumeration value="Macedonian"/>
-<xs:enumeration value="Malagasy"/>
-<xs:enumeration value="Malawian"/>
-<xs:enumeration value="Malaysian"/>
-<xs:enumeration value="Maldivan"/>
-<xs:enumeration value="Malian"/>
-<xs:enumeration value="Maltese"/>
-<xs:enumeration value="Marshallese"/>
-<xs:enumeration value="Mauritanian"/>
-<xs:enumeration value="Mauritian"/>
-<xs:enumeration value="Mexican"/>
-<xs:enumeration value="Micronesian"/>
-<xs:enumeration value="Moldovan"/>
-<xs:enumeration value="Monacan"/>
-<xs:enumeration value="Mongolian"/>
-<xs:enumeration value="Moroccan"/>
-<xs:enumeration value="Mosotho"/>
-<xs:enumeration value="Motswana"/>
-<xs:enumeration value="Mozambican"/>
-<xs:enumeration value="Namibian"/>
-<xs:enumeration value="Nauruan"/>
-<xs:enumeration value="Nepalese"/>
-<xs:enumeration value="Netherlander"/>
-<xs:enumeration value="New Zealander"/>
-<xs:enumeration value="Ni-Vanuatu"/>
-<xs:enumeration value="Nicaraguan"/>
-<xs:enumeration value="Nigerian"/>
-<xs:enumeration value="Nigerien"/>
-<xs:enumeration value="North Korean"/>
-<xs:enumeration value="Northern Irish"/>
-<xs:enumeration value="Norwegian"/>
-<xs:enumeration value="Omani"/>
-<xs:enumeration value="Pakistani"/>
-<xs:enumeration value="Palauan"/>
-<xs:enumeration value="Panamanian"/>
-<xs:enumeration value="Papua New Guinean"/>
-<xs:enumeration value="Paraguayan"/>
-<xs:enumeration value="Peruvian"/>
-<xs:enumeration value="Polish"/>
-<xs:enumeration value="Portuguese"/>
-<xs:enumeration value="Qatari"/>
-<xs:enumeration value="Romanian"/>
-<xs:enumeration value="Russian"/>
-<xs:enumeration value="Rwandan"/>
-<xs:enumeration value="Saint Lucian"/>
-<xs:enumeration value="Salvadoran"/>
-<xs:enumeration value="Samoan"/>
-<xs:enumeration value="San Marinese"/>
-<xs:enumeration value="Sao Tomean"/>
-<xs:enumeration value="Saudi"/>
-<xs:enumeration value="Scottish"/>
-<xs:enumeration value="Senegalese"/>
-<xs:enumeration value="Serbian"/>
-<xs:enumeration value="Seychellois"/>
-<xs:enumeration value="Sierra Leonean"/>
-<xs:enumeration value="Singaporean"/>
-<xs:enumeration value="Slovakian"/>
-<xs:enumeration value="Slovenian"/>
-<xs:enumeration value="Solomon Islander"/>
-<xs:enumeration value="Somali"/>
-<xs:enumeration value="South African"/>
-<xs:enumeration value="South Korean"/>
-<xs:enumeration value="Spanish"/>
-<xs:enumeration value="Sri Lankan"/>
-<xs:enumeration value="Sudanese"/>
-<xs:enumeration value="Surinamer"/>
-<xs:enumeration value="Swazi"/>
-<xs:enumeration value="Swedish"/>
-<xs:enumeration value="Swiss"/>
-<xs:enumeration value="Syrian"/>
-<xs:enumeration value="Taiwanese"/>
-<xs:enumeration value="Tajik"/>
-<xs:enumeration value="Tanzanian"/>
-<xs:enumeration value="Thai"/>
-<xs:enumeration value="Togolese"/>
-<xs:enumeration value="Tongan"/>
-<xs:enumeration value="Trinidadian or Tobagonian"/>
-<xs:enumeration value="Tunisian"/>
-<xs:enumeration value="Turkish"/>
-<xs:enumeration value="Tuvaluan"/>
-<xs:enumeration value="Ugandan"/>
-<xs:enumeration value="Ukrainian"/>
-<xs:enumeration value="Uruguayan"/>
-<xs:enumeration value="Uzbekistani"/>
-<xs:enumeration value="Venezuelan"/>
-<xs:enumeration value="Vietnamese"/>
-<xs:enumeration value="Welsh"/>
-<xs:enumeration value="Welsh"/>
-<xs:enumeration value="Yemenite"/>
-<xs:enumeration value="Zambian"/>
-<xs:enumeration value="Zimbabwean"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="StreetTypeEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="Street"/>
-<xs:enumeration value="Road"/>
-<xs:enumeration value="Avenue"/>
-<xs:enumeration value="Abbottswood"/>
-<xs:enumeration value="Access"/>
-<xs:enumeration value="Acres"/>
-<xs:enumeration value="Afield"/>
-<xs:enumeration value="Alley"/>
-<xs:enumeration value="Annex"/>
-<xs:enumeration value="Approach"/>
-<xs:enumeration value="Arborway"/>
-<xs:enumeration value="Arcade"/>
-<xs:enumeration value="Arch"/>
-<xs:enumeration value="Archway"/>
-<xs:enumeration value="Artery"/>
-<xs:enumeration value="Bank"/>
-<xs:enumeration value="Bates"/>
-<xs:enumeration value="Bay"/>
-<xs:enumeration value="Bayberry"/>
-<xs:enumeration value="Beachview"/>
-<xs:enumeration value="Beachway"/>
-<xs:enumeration value="Beausoliel"/>
-<xs:enumeration value="Beechwood"/>
-<xs:enumeration value="Bend"/>
-<xs:enumeration value="Bluff"/>
-<xs:enumeration value="Bluffs"/>
-<xs:enumeration value="Boardwalk"/>
-<xs:enumeration value="Boulders"/>
-<xs:enumeration value="Boulevard"/>
-<xs:enumeration value="Bow"/>
-<xs:enumeration value="Bran"/>
-<xs:enumeration value="Branch"/>
-<xs:enumeration value="Bridge"/>
-<xs:enumeration value="Broadway"/>
-<xs:enumeration value="Brook"/>
-<xs:enumeration value="Brookway"/>
-<xs:enumeration value="Brucewood"/>
-<xs:enumeration value="Bull"/>
-<xs:enumeration value="Bypass"/>
-<xs:enumeration value="Byway"/>
-<xs:enumeration value="Camp"/>
-<xs:enumeration value="Cartway"/>
-<xs:enumeration value="Causeway"/>
-<xs:enumeration value="Cedarway"/>
-<xs:enumeration value="Cemetery"/>
-<xs:enumeration value="Center"/>
-<xs:enumeration value="Centre"/>
-<xs:enumeration value="Charlesgate"/>
-<xs:enumeration value="Chase"/>
-<xs:enumeration value="Chestnut"/>
-<xs:enumeration value="Cir"/>
-<xs:enumeration value="Circle"/>
-<xs:enumeration value="Circuit"/>
-<xs:enumeration value="City"/>
-<xs:enumeration value="Clearing"/>
-<xs:enumeration value="Close"/>
-<xs:enumeration value="Cobble"/>
-<xs:enumeration value="Colony"/>
-<xs:enumeration value="Common"/>
-<xs:enumeration value="Commons"/>
-<xs:enumeration value="Connector"/>
-<xs:enumeration value="Corner"/>
-<xs:enumeration value="Cornfield"/>
-<xs:enumeration value="Countryside"/>
-<xs:enumeration value="Court"/>
-<xs:enumeration value="Courts"/>
-<xs:enumeration value="Cove"/>
-<xs:enumeration value="Crag"/>
-<xs:enumeration value="Creedway"/>
-<xs:enumeration value="Crescent"/>
-<xs:enumeration value="Crest"/>
-<xs:enumeration value="Crook"/>
-<xs:enumeration value="Cross"/>
-<xs:enumeration value="Crossing"/>
-<xs:enumeration value="Crossover"/>
-<xs:enumeration value="Crossway"/>
-<xs:enumeration value="Curve"/>
-<xs:enumeration value="Cutoff"/>
-<xs:enumeration value="Daniels"/>
-<xs:enumeration value="Darylane"/>
-<xs:enumeration value="Dell"/>
-<xs:enumeration value="Dingle"/>
-<xs:enumeration value="Downing"/>
-<xs:enumeration value="Driftway"/>
-<xs:enumeration value="Drive"/>
-<xs:enumeration value="Driveway"/>
-<xs:enumeration value="Dump"/>
-<xs:enumeration value="Durkin"/>
-<xs:enumeration value="Earle"/>
-<xs:enumeration value="Eastover"/>
-<xs:enumeration value="Eastway"/>
-<xs:enumeration value="Edge"/>
-<xs:enumeration value="Elkway"/>
-<xs:enumeration value="Elliston"/>
-<xs:enumeration value="Elm"/>
-<xs:enumeration value="Elmavenue"/>
-<xs:enumeration value="End"/>
-<xs:enumeration value="Entrance"/>
-<xs:enumeration value="Estate"/>
-<xs:enumeration value="Estates"/>
-<xs:enumeration value="Exit"/>
-<xs:enumeration value="Expressway"/>
-<xs:enumeration value="Extension"/>
-<xs:enumeration value="Extention"/>
-<xs:enumeration value="Fairview"/>
-<xs:enumeration value="Fairway"/>
-<xs:enumeration value="Farm"/>
-<xs:enumeration value="Farrel"/>
-<xs:enumeration value="Federation"/>
-<xs:enumeration value="Fellsway"/>
-<xs:enumeration value="Fenway"/>
-<xs:enumeration value="Fernway"/>
-<xs:enumeration value="Field"/>
-<xs:enumeration value="Fin"/>
-<xs:enumeration value="Forest"/>
-<xs:enumeration value="Front"/>
-<xs:enumeration value="Furlong"/>
-<xs:enumeration value="Garden"/>
-<xs:enumeration value="Gardens"/>
-<xs:enumeration value="Gate"/>
-<xs:enumeration value="Gateway"/>
-<xs:enumeration value="Geryk"/>
-<xs:enumeration value="Glen"/>
-<xs:enumeration value="Glenfeld"/>
-<xs:enumeration value="Grant"/>
-<xs:enumeration value="Green"/>
-<xs:enumeration value="Greene"/>
-<xs:enumeration value="Greenway"/>
-<xs:enumeration value="Greywood"/>
-<xs:enumeration value="Grove"/>
-<xs:enumeration value="Harnch"/>
-<xs:enumeration value="Haven"/>
-<xs:enumeration value="Hawley"/>
-<xs:enumeration value="Hayway"/>
-<xs:enumeration value="Heath"/>
-<xs:enumeration value="Hedgeway"/>
-<xs:enumeration value="Height"/>
-<xs:enumeration value="Heights"/>
-<xs:enumeration value="Highgate"/>
-<xs:enumeration value="Highlands"/>
-<xs:enumeration value="Highway"/>
-<xs:enumeration value="Hill"/>
-<xs:enumeration value="Hills"/>
-<xs:enumeration value="Hillway"/>
-<xs:enumeration value="Hollow"/>
-<xs:enumeration value="Island"/>
-<xs:enumeration value="Isle"/>
-<xs:enumeration value="Jamaicaway"/>
-<xs:enumeration value="Jib"/>
-<xs:enumeration value="Joanne"/>
-<xs:enumeration value="Kelley"/>
-<xs:enumeration value="Kenway"/>
-<xs:enumeration value="Knob"/>
-<xs:enumeration value="Knoll"/>
-<xs:enumeration value="Knolls"/>
-<xs:enumeration value="Knox"/>
-<xs:enumeration value="Lakeview"/>
-<xs:enumeration value="Lakeway"/>
-<xs:enumeration value="Land"/>
-<xs:enumeration value="Landing"/>
-<xs:enumeration value="Lane"/>
-<xs:enumeration value="Lanes"/>
-<xs:enumeration value="Lawn"/>
-<xs:enumeration value="Ledgeway"/>
-<xs:enumeration value="Ledgeways"/>
-<xs:enumeration value="Lift"/>
-<xs:enumeration value="Lily"/>
-<xs:enumeration value="Line"/>
-<xs:enumeration value="Look"/>
-<xs:enumeration value="Loop"/>
-<xs:enumeration value="Lope"/>
-<xs:enumeration value="Lowellterrace"/>
-<xs:enumeration value="Lower"/>
-<xs:enumeration value="Lupinwood"/>
-<xs:enumeration value="Lynnway"/>
-<xs:enumeration value="Mall"/>
-<xs:enumeration value="Manor"/>
-<xs:enumeration value="Mansfield"/>
-<xs:enumeration value="Marshes"/>
-<xs:enumeration value="Meade"/>
-<xs:enumeration value="Meadow"/>
-<xs:enumeration value="Meadows"/>
-<xs:enumeration value="Mews"/>
-<xs:enumeration value="Midway"/>
-<xs:enumeration value="Mill"/>
-<xs:enumeration value="Mills"/>
-<xs:enumeration value="Millway"/>
-<xs:enumeration value="Morningside"/>
-<xs:enumeration value="Naushon"/>
-<xs:enumeration value="Nichols"/>
-<xs:enumeration value="Nob"/>
-<xs:enumeration value="Nook"/>
-<xs:enumeration value="Northway"/>
-<xs:enumeration value="Notch"/>
-<xs:enumeration value="Oak"/>
-<xs:enumeration value="Oakmont"/>
-<xs:enumeration value="Orchard"/>
-<xs:enumeration value="Oval"/>
-<xs:enumeration value="Overpass"/>
-<xs:enumeration value="Paglione"/>
-<xs:enumeration value="Parade"/>
-<xs:enumeration value="Park"/>
-<xs:enumeration value="Parkway"/>
-<xs:enumeration value="Pass"/>
-<xs:enumeration value="Passage"/>
-<xs:enumeration value="Passway"/>
-<xs:enumeration value="Path"/>
-<xs:enumeration value="Pathe"/>
-<xs:enumeration value="Pathway"/>
-<xs:enumeration value="Peak"/>
-<xs:enumeration value="Pier"/>
-<xs:enumeration value="Pike"/>
-<xs:enumeration value="Pine"/>
-<xs:enumeration value="Pines"/>
-<xs:enumeration value="Pioneer"/>
-<xs:enumeration value="Place"/>
-<xs:enumeration value="Plain"/>
-<xs:enumeration value="Plaza"/>
-<xs:enumeration value="Point"/>
-<xs:enumeration value="Pond"/>
-<xs:enumeration value="Press"/>
-<xs:enumeration value="Prim"/>
-<xs:enumeration value="Promenade"/>
-<xs:enumeration value="Prospect"/>
-<xs:enumeration value="Race"/>
-<xs:enumeration value="Ramp"/>
-<xs:enumeration value="Raymond"/>
-<xs:enumeration value="Reach"/>
-<xs:enumeration value="Reilly"/>
-<xs:enumeration value="Ridge"/>
-<xs:enumeration value="Ridgecrest"/>
-<xs:enumeration value="Ridges"/>
-<xs:enumeration value="Ridgeway"/>
-<xs:enumeration value="Riding"/>
-<xs:enumeration value="Rise"/>
-<xs:enumeration value="River"/>
-<xs:enumeration value="Riverdale"/>
-<xs:enumeration value="Riverside"/>
-<xs:enumeration value="Riverway"/>
-<xs:enumeration value="Roadway"/>
-<xs:enumeration value="Rock"/>
-<xs:enumeration value="Roseway"/>
-<xs:enumeration value="Rotary"/>
-<xs:enumeration value="Route"/>
-<xs:enumeration value="Row"/>
-<xs:enumeration value="Rowe"/>
-<xs:enumeration value="Royal"/>
-<xs:enumeration value="Rue"/>
-<xs:enumeration value="Run"/>
-<xs:enumeration value="Rune"/>
-<xs:enumeration value="Sarafina"/>
-<xs:enumeration value="Seaway"/>
-<xs:enumeration value="Sedgeway"/>
-<xs:enumeration value="Shore"/>
-<xs:enumeration value="Shores"/>
-<xs:enumeration value="Shoreway"/>
-<xs:enumeration value="Skyway"/>
-<xs:enumeration value="Slip"/>
-<xs:enumeration value="Slope"/>
-<xs:enumeration value="Southover"/>
-<xs:enumeration value="Spring"/>
-<xs:enumeration value="Spur"/>
-<xs:enumeration value="Square"/>
-<xs:enumeration value="Station"/>
-<xs:enumeration value="Stoneway"/>
-<xs:enumeration value="Straits"/>
-<xs:enumeration value="Strand"/>
-<xs:enumeration value="Strandway"/>
-<xs:enumeration value="Strasse"/>
-<xs:enumeration value="Stret"/>
-<xs:enumeration value="Strip"/>
-<xs:enumeration value="Summit"/>
-<xs:enumeration value="Terrace"/>
-<xs:enumeration value="Throw"/>
-<xs:enumeration value="Timberlane"/>
-<xs:enumeration value="Trace"/>
-<xs:enumeration value="Trail"/>
-<xs:enumeration value="Traincroft"/>
-<xs:enumeration value="Tunnel"/>
-<xs:enumeration value="Turnabout"/>
-<xs:enumeration value="Turnaround"/>
-<xs:enumeration value="Turnpike"/>
-<xs:enumeration value="Uncatena"/>
-<xs:enumeration value="Underpass"/>
-<xs:enumeration value="Vale"/>
-<xs:enumeration value="Valley"/>
-<xs:enumeration value="Vernon"/>
-<xs:enumeration value="Via"/>
-<xs:enumeration value="View"/>
-<xs:enumeration value="Village"/>
-<xs:enumeration value="Vista"/>
-<xs:enumeration value="Walk"/>
-<xs:enumeration value="Walnut"/>
-<xs:enumeration value="Warbler"/>
-<xs:enumeration value="Wardwellplace"/>
-<xs:enumeration value="Watch"/>
-<xs:enumeration value="Waterway"/>
-<xs:enumeration value="Way"/>
-<xs:enumeration value="Waye"/>
-<xs:enumeration value="Ways"/>
-<xs:enumeration value="Wayside"/>
-<xs:enumeration value="Westgate"/>
-<xs:enumeration value="Westway"/>
-<xs:enumeration value="Westwood"/>
-<xs:enumeration value="Wharf"/>
-<xs:enumeration value="Willows"/>
-<xs:enumeration value="Wood"/>
-<xs:enumeration value="Woodland"/>
-<xs:enumeration value="Woods"/>
-<xs:enumeration value="Works"/>
-<xs:enumeration value="Yard"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:simpleType name="QuadrantEnumType">
-<xs:restriction base="xs:string">
-<xs:enumeration value="N"/>
-<xs:enumeration value="NE"/>
-<xs:enumeration value="E"/>
-<xs:enumeration value="SE"/>
-<xs:enumeration value="S"/>
-<xs:enumeration value="SW"/>
-<xs:enumeration value="W"/>
-<xs:enumeration value="NW"/>
-</xs:restriction>
-</xs:simpleType>
-<xs:complexType name="AddressType">
-<xs:sequence>
-<xs:element name="LevelNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Level Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="UnitNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Unit Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetNumber" type="xs:string" p:keyboard="numeric">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetName" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetType" type="StreetTypeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Type"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Quadrant" type="QuadrantEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Quadrant"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Suburb" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="City/Suburb/Town"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="AdministrativeArea" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="State"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="PostalCode" type="xs:string" p:keyboard="numeric">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Zip/Postal Code"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Country" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="BuildingName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Building Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CompanyName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Company Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="PostalAddressType">
-<xs:sequence>
-<xs:element name="POBox" type="xs:string" p:keyboard="numeric" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Mail/Post Box"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="LevelNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Level Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="UnitNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Unit Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetNumber" type="xs:string" p:keyboard="numeric">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetName" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="StreetType" type="StreetTypeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Street Type"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Quadrant" type="QuadrantEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Quadrant"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Suburb" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="City/Suburb/Town"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="AdministrativeArea" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="State"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="PostalCode" type="xs:string" p:keyboard="numeric">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Zip/Postal Code"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Country" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="BuildingName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Building Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CompanyName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Company Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="CellPhoneNumberType" p:recurse="false" p:display="expanded">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nickname"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CountryCode" type="xs:positiveInteger">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country Code"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:positiveInteger" p:key="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="CreditCardType">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nickname"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Type" type="CreditCardNameEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Type of Card"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="NameOnCard" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Name on Card"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:integer" p:key="true" p:mask="-4">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Card Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="ValidFrom" type="MonthYearType" p:firstYear="-5">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Valid From"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Expiry" type="MonthYearType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Expiry Date"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CCV" type="xs:integer" p:mask="0">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="CCV Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Issuer" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Issuing Partner"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType p:recurse="false" name="DateType">
-<xs:sequence>
-<xs:element ref="Day">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Day"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="Month">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Month"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="Year">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Year"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="IDCardInfoType">
-<xs:sequence>
-<xs:element name="IssuerName" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Issuer Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="ID Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Type" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Type"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueCity" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="City of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueState" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="State of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueCountry" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueDate" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Date of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="ExpiryDate" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Expiry Date"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="NameOnCard" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Name on Card"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Status" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Status"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Restrictions" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Restrictions"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType p:recurse="false" name="MonthYearType">
-<xs:sequence>
-<xs:element ref="Month">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Month"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="Year">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Year"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="TelephoneNumberType" p:recurse="false" p:display="expanded">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nickname"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CountryCode" type="xs:positiveInteger">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country Code"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="AreaCode" type="xs:positiveInteger">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Area Code"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:positiveInteger" p:key="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Extension" type="xs:positiveInteger" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Extension"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="LicenseType">
-<xs:sequence>
-<xs:element name="Type" type="LicenseTypeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="License Type"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="License Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssuerName" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Issuer Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Name" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Name on License"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueCity" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="City of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueState" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="State of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueCountry" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="IssueDate" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Date of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="ExpiryDate" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Expiry Date"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Status" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Status"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Restrictions" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Restrictions"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="PassportType">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nick Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Number" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Passport Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Name" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Name on Passport"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CountryOfIssue" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="PlaceOfIssue" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Place of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CountryOfCitizenship" type="ISOCountryCodeEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Country of Citizenship"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="DateOfIssue" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Date of Issue"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="ExpiryDate" type="DateType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Expiry Date"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Authority" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Issuing Authority"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="EmailType">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nickname"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element type="xs:string" p:key="true" name="Address" p:keyboard="email">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Email"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:complexType name="PasswordType">
-<xs:sequence>
-<xs:element name="NickName" type="xs:string" p:dashboardStat="false" p:key="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Nickname"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Password" type="xs:string" p:mask="0" p:history="false">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Password"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-<xs:element name="Profile">
-<xs:annotation>  </xs:annotation>
-<xs:complexType>
-<xs:sequence>
-<xs:element ref="PersonalDetails">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Personal Details"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="ContactDetails">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Contact Details"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="AddressDetails">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Addresses"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="CreditCards">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Credit Cards"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="IdentificationDetails">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Identification"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element ref="Passwords">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Passwords"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="PersonalDetails">
-<xs:complexType>
-<xs:sequence>
-<xs:element name="Honorific" type="HonorificType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Title"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="FirstName" type="xs:string" p:key="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="First Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="MiddleName" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Middle Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="LastName" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Last Name"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="BirthDate" type="DateType" p:minAge="13" p:firstYear="-20">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Date of Birth"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Gender" type="GenderEnumType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Gender"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="Role" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Occupation"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="SocialSecurityNumber" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Social Security Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="TaxFileNumber" type="xs:string">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Tax File Number"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="CompanyName" type="xs:string" p:caps="first">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Name of Employer"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="ContactDetails">
-<xs:complexType>
-<xs:sequence>
-<xs:element name="Emails">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Email Addresses"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded" p:mutableKey="true">
-<xs:element name="Email" type="EmailType" p:defaultChild="Address">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Email Address"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="CellPhones">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Mobile Phone Numbers"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded" p:mutableKey="true">
-<xs:element name="CellPhone" type="CellPhoneNumberType" p:defaultChild="Number">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Mobile Phone"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="LandlinePhones">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Landline Phone Numbers"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded" p:mutableKey="true">
-<xs:element name="LandlinePhone" type="TelephoneNumberType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Landline Phone"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="IdentificationDetails">
-<xs:complexType>
-<xs:sequence>
-<xs:element name="Licenses">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Licenses"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded">
-<xs:element name="License" type="LicenseType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="License"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="Passports">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Passports"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded">
-<xs:element name="Passport" type="PassportType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Passport"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="CreditCards">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Credit Cards"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded">
-<xs:element name="CreditCard" type="CreditCardType" p:secure="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Credit Card"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="AddressDetails">
-<xs:complexType>
-<xs:sequence>
-<xs:element name="HomeAddress" type="AddressType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Residential Address"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="PostalAddress" type="PostalAddressType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Shipping Address"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="BillingAddress" type="PostalAddressType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Billing Address"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-<xs:element name="WorkAddress" type="PostalAddressType">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Work Address"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
-<xs:element name="Passwords">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Passwords"/>
-</xs:appinfo>
-</xs:annotation>
-<xs:complexType>
-<xs:sequence maxOccurs="unbounded">
-<xs:element name="Password" type="PasswordType" p:secure="true">
-<xs:annotation>
-<xs:appinfo>
-<xs:attribute name="Label" default="Password"/>
-</xs:appinfo>
-</xs:annotation>
-</xs:element>
-</xs:sequence>
-</xs:complexType>
-</xs:element>
+<xs:schema version="4.65" xmlns:p="http://letspop.com/schema" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:element name="Day" type="xs:positiveInteger"/>
+  <xs:element name="Month" type="xs:positiveInteger"/>
+  <xs:element name="Year" type="xs:positiveInteger"/>
+  <xs:simpleType name="YesNoType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="yes"/>
+      <xs:enumeration value="no"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="CreditCardNameEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Visa"/>
+      <xs:enumeration value="MasterCard"/>
+      <xs:enumeration value="American Express"/>
+      <xs:enumeration value="Diners Club"/>
+      <xs:enumeration value="Discover"/>
+      <xs:enumeration value="Cirrus"/>
+      <xs:enumeration value="Maestro"/>
+      <xs:enumeration value="JCB"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EmploymentNatureEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Full Time"/>
+      <xs:enumeration value="Part Time"/>
+      <xs:enumeration value="Contract"/>
+      <xs:enumeration value="Casual"/>
+      <xs:enumeration value="Unemployed"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GenderEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Male"/>
+      <xs:enumeration value="Female"/>
+      <xs:enumeration value="Other"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="HonorificType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Mr."/>
+      <xs:enumeration value="Mrs"/>
+      <xs:enumeration value="Miss"/>
+      <xs:enumeration value="Ms."/>
+      <xs:enumeration value="Dr."/>
+      <xs:enumeration value="Master"/>
+      <xs:enumeration value="Sir"/>
+      <xs:enumeration value="Professor"/>
+      <xs:enumeration value="Reverend"/>
+      <xs:enumeration value="Madam"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="IndustryEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Aerospace (Civil)"/>
+      <xs:enumeration value="Advanced Engineering"/>
+      <xs:enumeration value="Agriculture, Horticulture and Fisheries"/>
+      <xs:enumeration value="Aid-Funded Business"/>
+      <xs:enumeration value="Airports"/>
+      <xs:enumeration value="Automotive"/>
+      <xs:enumeration value="Biotechnology and Pharmaceuticals"/>
+      <xs:enumeration value="Business (and Consumer) Services"/>
+      <xs:enumeration value="Chemicals"/>
+      <xs:enumeration value="Clothing, Footwear and Fashion"/>
+      <xs:enumeration value="Communications"/>
+      <xs:enumeration value="Construction"/>
+      <xs:enumeration value="Creative and Media"/>
+      <xs:enumeration value="Defence"/>
+      <xs:enumeration value="Education and Training"/>
+      <xs:enumeration value="Electronics and IT Hardware"/>
+      <xs:enumeration value="Engineering"/>
+      <xs:enumeration value="Environment"/>
+      <xs:enumeration value="Financial Services"/>
+      <xs:enumeration value="Fire, Police and Security"/>
+      <xs:enumeration value="Food and Drink"/>
+      <xs:enumeration value="Games"/>
+      <xs:enumeration value="Giftware, Jewellery and Tableware"/>
+      <xs:enumeration value="Healthcare and Medical"/>
+      <xs:enumeration value="Household Goods, Furniture and Furnishings"/>
+      <xs:enumeration value="ICT"/>
+      <xs:enumeration value="Legal Services"/>
+      <xs:enumeration value="Leisure and Tourism"/>
+      <xs:enumeration value="Marine"/>
+      <xs:enumeration value="Mechanical Electrical and Process Engineering"/>
+      <xs:enumeration value="Metallurgical Process Plant"/>
+      <xs:enumeration value="Metals and Minerals"/>
+      <xs:enumeration value="Mining"/>
+      <xs:enumeration value="Nanotechnology"/>
+      <xs:enumeration value="Oil and Gas"/>
+      <xs:enumeration value="Ports and Logistics"/>
+      <xs:enumeration value="Power"/>
+      <xs:enumeration value="Public-Private Partnerships"/>
+      <xs:enumeration value="Railways"/>
+      <xs:enumeration value="Research and Development"/>
+      <xs:enumeration value="Science and Technology"/>
+      <xs:enumeration value="Security"/>
+      <xs:enumeration value="Software and Computer Services Business to Business (B2B)"/>
+      <xs:enumeration value="Sports and Leisure Infrastructure"/>
+      <xs:enumeration value="Textiles, Interior Textiles and Carpets"/>
+      <xs:enumeration value="Water"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ISOCountryCodeEnumType">
+    <xs:annotation>  </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="United States"/>
+      <xs:enumeration value="United Kingdom"/>
+      <xs:enumeration value="Australia"/>
+      <xs:enumeration value="India"/>
+      <xs:enumeration value="China"/>
+      <xs:enumeration value="Philippines"/>
+      <xs:enumeration value="Afghanistan"/>
+      <xs:enumeration value="Aland Islands"/>
+      <xs:enumeration value="Albania"/>
+      <xs:enumeration value="Algeria"/>
+      <xs:enumeration value="American Samoa"/>
+      <xs:enumeration value="Andorra"/>
+      <xs:enumeration value="Angola"/>
+      <xs:enumeration value="Anguilla"/>
+      <xs:enumeration value="Antarctica"/>
+      <xs:enumeration value="Antigua And Barbuda"/>
+      <xs:enumeration value="Argentina"/>
+      <xs:enumeration value="Armenia"/>
+      <xs:enumeration value="Aruba"/>
+      <xs:enumeration value="Australia"/>
+      <xs:enumeration value="Austria"/>
+      <xs:enumeration value="Azerbaijan"/>
+      <xs:enumeration value="Bahamas"/>
+      <xs:enumeration value="Bahrain"/>
+      <xs:enumeration value="Bangladesh"/>
+      <xs:enumeration value="Barbados"/>
+      <xs:enumeration value="Belarus"/>
+      <xs:enumeration value="Belgium"/>
+      <xs:enumeration value="Belize"/>
+      <xs:enumeration value="Benin"/>
+      <xs:enumeration value="Bermuda"/>
+      <xs:enumeration value="Bhutan"/>
+      <xs:enumeration value="Bolivia"/>
+      <xs:enumeration value="Bosnia And Herzegovina"/>
+      <xs:enumeration value="Botswana"/>
+      <xs:enumeration value="Bouvet Island"/>
+      <xs:enumeration value="Brazil"/>
+      <xs:enumeration value="British Indian Ocean Territory"/>
+      <xs:enumeration value="Brunei Darussalam"/>
+      <xs:enumeration value="Bulgaria"/>
+      <xs:enumeration value="Burkina Faso"/>
+      <xs:enumeration value="Burundi"/>
+      <xs:enumeration value="Cambodia"/>
+      <xs:enumeration value="Cameroon"/>
+      <xs:enumeration value="Canada"/>
+      <xs:enumeration value="Cape Verde"/>
+      <xs:enumeration value="Cayman Islands"/>
+      <xs:enumeration value="Central African Republic"/>
+      <xs:enumeration value="Chad"/>
+      <xs:enumeration value="Chile"/>
+      <xs:enumeration value="China"/>
+      <xs:enumeration value="Christmas Island"/>
+      <xs:enumeration value="Cocos (keeling) Islands"/>
+      <xs:enumeration value="Colombia"/>
+      <xs:enumeration value="Comoros"/>
+      <xs:enumeration value="Congo"/>
+      <xs:enumeration value="Congo, The Democratic Republic Of The"/>
+      <xs:enumeration value="Cook Islands"/>
+      <xs:enumeration value="Costa Rica"/>
+      <xs:enumeration value="Cote D'ivoire"/>
+      <xs:enumeration value="Croatia"/>
+      <xs:enumeration value="Cuba"/>
+      <xs:enumeration value="Cyprus"/>
+      <xs:enumeration value="Czech Republic"/>
+      <xs:enumeration value="Denmark"/>
+      <xs:enumeration value="Djibouti"/>
+      <xs:enumeration value="Dominica"/>
+      <xs:enumeration value="Dominican Republic"/>
+      <xs:enumeration value="Ecuador"/>
+      <xs:enumeration value="Egypt"/>
+      <xs:enumeration value="El Salvador"/>
+      <xs:enumeration value="Equatorial Guinea"/>
+      <xs:enumeration value="Eritrea"/>
+      <xs:enumeration value="Estonia"/>
+      <xs:enumeration value="Ethiopia"/>
+      <xs:enumeration value="Falkland Islands (malvinas)"/>
+      <xs:enumeration value="Faroe Islands"/>
+      <xs:enumeration value="Fiji"/>
+      <xs:enumeration value="Finland"/>
+      <xs:enumeration value="France"/>
+      <xs:enumeration value="French Guiana"/>
+      <xs:enumeration value="French Polynesia"/>
+      <xs:enumeration value="French Southern Territories"/>
+      <xs:enumeration value="Gabon"/>
+      <xs:enumeration value="Gambia"/>
+      <xs:enumeration value="Georgia"/>
+      <xs:enumeration value="Germany"/>
+      <xs:enumeration value="Ghana"/>
+      <xs:enumeration value="Gibraltar"/>
+      <xs:enumeration value="Greece"/>
+      <xs:enumeration value="Greenland"/>
+      <xs:enumeration value="Grenada"/>
+      <xs:enumeration value="Guadeloupe"/>
+      <xs:enumeration value="Guam"/>
+      <xs:enumeration value="Guatemala"/>
+      <xs:enumeration value="Guernsey"/>
+      <xs:enumeration value="Guinea"/>
+      <xs:enumeration value="Guinea-bissau"/>
+      <xs:enumeration value="Guyana"/>
+      <xs:enumeration value="Haiti"/>
+      <xs:enumeration value="Heard Island And Mcdonald Islands"/>
+      <xs:enumeration value="Holy See (vatican City State)"/>
+      <xs:enumeration value="Honduras"/>
+      <xs:enumeration value="Hong Kong"/>
+      <xs:enumeration value="Hungary"/>
+      <xs:enumeration value="Iceland"/>
+      <xs:enumeration value="India"/>
+      <xs:enumeration value="Indonesia"/>
+      <xs:enumeration value="Iran, Islamic Republic Of"/>
+      <xs:enumeration value="Iraq"/>
+      <xs:enumeration value="Ireland"/>
+      <xs:enumeration value="Isle Of Man"/>
+      <xs:enumeration value="Israel"/>
+      <xs:enumeration value="Italy"/>
+      <xs:enumeration value="Jamaica"/>
+      <xs:enumeration value="Japan"/>
+      <xs:enumeration value="Jersey"/>
+      <xs:enumeration value="Jordan"/>
+      <xs:enumeration value="Kazakhstan"/>
+      <xs:enumeration value="Kenya"/>
+      <xs:enumeration value="Kiribati"/>
+      <xs:enumeration value="Korea, Democratic People's Republic Of"/>
+      <xs:enumeration value="Korea, Republic Of"/>
+      <xs:enumeration value="Kuwait"/>
+      <xs:enumeration value="Kyrgyzstan"/>
+      <xs:enumeration value="Lao People's Democratic Republic"/>
+      <xs:enumeration value="Latvia"/>
+      <xs:enumeration value="Lebanon"/>
+      <xs:enumeration value="Lesotho"/>
+      <xs:enumeration value="Liberia"/>
+      <xs:enumeration value="Libyan Arab Jamahiriya"/>
+      <xs:enumeration value="Liechtenstein"/>
+      <xs:enumeration value="Lithuania"/>
+      <xs:enumeration value="Luxembourg"/>
+      <xs:enumeration value="Macao"/>
+      <xs:enumeration value="Macedonia, The Former Yugoslav Republic Of"/>
+      <xs:enumeration value="Madagascar"/>
+      <xs:enumeration value="Malawi"/>
+      <xs:enumeration value="Malaysia"/>
+      <xs:enumeration value="Maldives"/>
+      <xs:enumeration value="Mali"/>
+      <xs:enumeration value="Malta"/>
+      <xs:enumeration value="Marshall Islands"/>
+      <xs:enumeration value="Martinique"/>
+      <xs:enumeration value="Mauritania"/>
+      <xs:enumeration value="Mauritius"/>
+      <xs:enumeration value="Mayotte"/>
+      <xs:enumeration value="Mexico"/>
+      <xs:enumeration value="Micronesia, Federated States Of"/>
+      <xs:enumeration value="Moldova, Republic Of"/>
+      <xs:enumeration value="Monaco"/>
+      <xs:enumeration value="Mongolia"/>
+      <xs:enumeration value="Montenegro"/>
+      <xs:enumeration value="Montserrat"/>
+      <xs:enumeration value="Morocco"/>
+      <xs:enumeration value="Mozambique"/>
+      <xs:enumeration value="Myanmar"/>
+      <xs:enumeration value="Namibia"/>
+      <xs:enumeration value="Nauru"/>
+      <xs:enumeration value="Nepal"/>
+      <xs:enumeration value="Netherlands Antilles"/>
+      <xs:enumeration value="Netherlands"/>
+      <xs:enumeration value="New Caledonia"/>
+      <xs:enumeration value="New Zealand"/>
+      <xs:enumeration value="Nicaragua"/>
+      <xs:enumeration value="Niger"/>
+      <xs:enumeration value="Nigeria"/>
+      <xs:enumeration value="Niue"/>
+      <xs:enumeration value="Norfolk Island"/>
+      <xs:enumeration value="Northern Mariana Islands"/>
+      <xs:enumeration value="Norway"/>
+      <xs:enumeration value="Oman"/>
+      <xs:enumeration value="Pakistan"/>
+      <xs:enumeration value="Palau"/>
+      <xs:enumeration value="Palestinian Territory, Occupied"/>
+      <xs:enumeration value="Panama"/>
+      <xs:enumeration value="Papua New Guinea"/>
+      <xs:enumeration value="Paraguay"/>
+      <xs:enumeration value="Peru"/>
+      <xs:enumeration value="Philippines"/>
+      <xs:enumeration value="Pitcairn"/>
+      <xs:enumeration value="Poland"/>
+      <xs:enumeration value="Portugal"/>
+      <xs:enumeration value="Puerto Rico"/>
+      <xs:enumeration value="Qatar"/>
+      <xs:enumeration value="Reunion"/>
+      <xs:enumeration value="Romania"/>
+      <xs:enumeration value="Russian Federation"/>
+      <xs:enumeration value="Rwanda"/>
+      <xs:enumeration value="Saint Barthelemy"/>
+      <xs:enumeration value="Saint Helena"/>
+      <xs:enumeration value="Saint Kitts And Nevis"/>
+      <xs:enumeration value="Saint Lucia"/>
+      <xs:enumeration value="Saint Martin (french Part)"/>
+      <xs:enumeration value="Saint Pierre And Miquelon"/>
+      <xs:enumeration value="Saint Vincent And The Grenadines"/>
+      <xs:enumeration value="Samoa"/>
+      <xs:enumeration value="San Marino"/>
+      <xs:enumeration value="Sao Tome And Principe"/>
+      <xs:enumeration value="Saudi Arabia"/>
+      <xs:enumeration value="Senegal"/>
+      <xs:enumeration value="Serbia"/>
+      <xs:enumeration value="Seychelles"/>
+      <xs:enumeration value="Sierra Leone"/>
+      <xs:enumeration value="Singapore"/>
+      <xs:enumeration value="Slovakia"/>
+      <xs:enumeration value="Slovenia"/>
+      <xs:enumeration value="Solomon Islands"/>
+      <xs:enumeration value="Somalia"/>
+      <xs:enumeration value="South Africa"/>
+      <xs:enumeration value="South Georgia And The South Sandwich Islands"/>
+      <xs:enumeration value="Spain"/>
+      <xs:enumeration value="Sri Lanka"/>
+      <xs:enumeration value="Sudan"/>
+      <xs:enumeration value="Suriname"/>
+      <xs:enumeration value="Svalbard And Jan Mayen"/>
+      <xs:enumeration value="Swaziland"/>
+      <xs:enumeration value="Sweden"/>
+      <xs:enumeration value="Switzerland"/>
+      <xs:enumeration value="Syrian Arab Republic"/>
+      <xs:enumeration value="Taiwan"/>
+      <xs:enumeration value="Tajikistan"/>
+      <xs:enumeration value="Tanzania, United Republic Of"/>
+      <xs:enumeration value="Thailand"/>
+      <xs:enumeration value="Timor-leste"/>
+      <xs:enumeration value="Togo"/>
+      <xs:enumeration value="Tokelau"/>
+      <xs:enumeration value="Tonga"/>
+      <xs:enumeration value="Trinidad And Tobago"/>
+      <xs:enumeration value="Tunisia"/>
+      <xs:enumeration value="Turkey"/>
+      <xs:enumeration value="Turkmenistan"/>
+      <xs:enumeration value="Turks And Caicos Islands"/>
+      <xs:enumeration value="Tuvalu"/>
+      <xs:enumeration value="Uganda"/>
+      <xs:enumeration value="Ukraine"/>
+      <xs:enumeration value="United Arab Emirates"/>
+      <xs:enumeration value="United Kingdom"/>
+      <xs:enumeration value="United States Minor Outlying Islands"/>
+      <xs:enumeration value="United States"/>
+      <xs:enumeration value="Uruguay"/>
+      <xs:enumeration value="Uzbekistan"/>
+      <xs:enumeration value="Vanuatu"/>
+      <xs:enumeration value="Venezuela, Plurinational State Of"/>
+      <xs:enumeration value="Viet Nam"/>
+      <xs:enumeration value="Virgin Islands, British"/>
+      <xs:enumeration value="Virgin Islands, U.s."/>
+      <xs:enumeration value="Wallis And Futuna"/>
+      <xs:enumeration value="Western Sahara"/>
+      <xs:enumeration value="Yemen"/>
+      <xs:enumeration value="Zambia"/>
+      <xs:enumeration value="Zimbabwe"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="MaritalStatusEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Single"/>
+      <xs:enumeration value="Married"/>
+      <xs:enumeration value="Divorced"/>
+      <xs:enumeration value="Never Married"/>
+      <xs:enumeration value="Separated"/>
+      <xs:enumeration value="Significant Other"/>
+      <xs:enumeration value="Widowed"/>
+      <xs:enumeration value="Defacto"/>
+      <xs:enumeration value="Domestic Partner"/>
+      <xs:enumeration value="Unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PersonEyeColorEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Black"/>
+      <xs:enumeration value="Hazel"/>
+      <xs:enumeration value="Gray"/>
+      <xs:enumeration value="Brown"/>
+      <xs:enumeration value="Violet"/>
+      <xs:enumeration value="Green"/>
+      <xs:enumeration value="Blue"/>
+      <xs:enumeration value="Maroon"/>
+      <xs:enumeration value="Pink"/>
+      <xs:enumeration value="Dichromatic"/>
+      <xs:enumeration value="Other"/>
+      <xs:enumeration value="Unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PersonHairColorEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Bald"/>
+      <xs:enumeration value="Brown"/>
+      <xs:enumeration value="White"/>
+      <xs:enumeration value="Blonde"/>
+      <xs:enumeration value="Gray"/>
+      <xs:enumeration value="Red"/>
+      <xs:enumeration value="Auburn"/>
+      <xs:enumeration value="Black"/>
+      <xs:enumeration value="Silver"/>
+      <xs:enumeration value="Other"/>
+      <xs:enumeration value="Unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EthnicityEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="African"/>
+      <xs:enumeration value="Asian"/>
+      <xs:enumeration value="Caucasian"/>
+      <xs:enumeration value="Indigineous"/>
+      <xs:enumeration value="Indian"/>
+      <xs:enumeration value="Latino"/>
+      <xs:enumeration value="Middle Eastern"/>
+      <xs:enumeration value="Pacific Islander"/>
+      <xs:enumeration value="Mixed"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="LicenseTypeEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Car"/>
+      <xs:enumeration value="Motorcycle"/>
+      <xs:enumeration value="Marine/Boat"/>
+      <xs:enumeration value="Chauffeur"/>
+      <xs:enumeration value="Commercial"/>
+      <xs:enumeration value="Tractor"/>
+      <xs:enumeration value="Light Rigid"/>
+      <xs:enumeration value="Medium Rigid"/>
+      <xs:enumeration value="Heavy Rigid"/>
+      <xs:enumeration value="Heavy Combination"/>
+      <xs:enumeration value="Multi Combination"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="NationalityEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Afghan"/>
+      <xs:enumeration value="Albanian"/>
+      <xs:enumeration value="Algerian"/>
+      <xs:enumeration value="American"/>
+      <xs:enumeration value="Andorran"/>
+      <xs:enumeration value="Angolan"/>
+      <xs:enumeration value="Antiguans"/>
+      <xs:enumeration value="Argentinean"/>
+      <xs:enumeration value="Armenian"/>
+      <xs:enumeration value="Australian"/>
+      <xs:enumeration value="Austrian"/>
+      <xs:enumeration value="Azerbaijani"/>
+      <xs:enumeration value="Bahamian"/>
+      <xs:enumeration value="Bahraini"/>
+      <xs:enumeration value="Bangladeshi"/>
+      <xs:enumeration value="Barbadian"/>
+      <xs:enumeration value="Barbudans"/>
+      <xs:enumeration value="Batswana"/>
+      <xs:enumeration value="Belarusian"/>
+      <xs:enumeration value="Belgian"/>
+      <xs:enumeration value="Belizean"/>
+      <xs:enumeration value="Beninese"/>
+      <xs:enumeration value="Bhutanese"/>
+      <xs:enumeration value="Bolivian"/>
+      <xs:enumeration value="Bosnian"/>
+      <xs:enumeration value="Brazilian"/>
+      <xs:enumeration value="British"/>
+      <xs:enumeration value="Bruneian"/>
+      <xs:enumeration value="Bulgarian"/>
+      <xs:enumeration value="Burkinabe"/>
+      <xs:enumeration value="Burmese"/>
+      <xs:enumeration value="Burundian"/>
+      <xs:enumeration value="Cambodian"/>
+      <xs:enumeration value="Cameroonian"/>
+      <xs:enumeration value="Canadian"/>
+      <xs:enumeration value="Cape Verdean"/>
+      <xs:enumeration value="Central African"/>
+      <xs:enumeration value="Chadian"/>
+      <xs:enumeration value="Chilean"/>
+      <xs:enumeration value="Chinese"/>
+      <xs:enumeration value="Colombian"/>
+      <xs:enumeration value="Comoran"/>
+      <xs:enumeration value="Congolese"/>
+      <xs:enumeration value="Congolese"/>
+      <xs:enumeration value="Costa Rican"/>
+      <xs:enumeration value="Croatian"/>
+      <xs:enumeration value="Cuban"/>
+      <xs:enumeration value="Cypriot"/>
+      <xs:enumeration value="Czech"/>
+      <xs:enumeration value="Danish"/>
+      <xs:enumeration value="Djibouti"/>
+      <xs:enumeration value="Dominican"/>
+      <xs:enumeration value="Dutch"/>
+      <xs:enumeration value="Dutchman"/>
+      <xs:enumeration value="Dutchwoman"/>
+      <xs:enumeration value="East Timorese"/>
+      <xs:enumeration value="Ecuadorean"/>
+      <xs:enumeration value="Egyptian"/>
+      <xs:enumeration value="Emirian"/>
+      <xs:enumeration value="Equatorial Guinean"/>
+      <xs:enumeration value="Eritrean"/>
+      <xs:enumeration value="Estonian"/>
+      <xs:enumeration value="Ethiopian"/>
+      <xs:enumeration value="Fijian"/>
+      <xs:enumeration value="Filipino"/>
+      <xs:enumeration value="Finnish"/>
+      <xs:enumeration value="French"/>
+      <xs:enumeration value="Gabonese"/>
+      <xs:enumeration value="Gambian"/>
+      <xs:enumeration value="Georgian"/>
+      <xs:enumeration value="German"/>
+      <xs:enumeration value="Ghanaian"/>
+      <xs:enumeration value="Greek"/>
+      <xs:enumeration value="Grenadian"/>
+      <xs:enumeration value="Guatemalan"/>
+      <xs:enumeration value="Guinea-Bissauan"/>
+      <xs:enumeration value="Guinean"/>
+      <xs:enumeration value="Guyanese"/>
+      <xs:enumeration value="Haitian"/>
+      <xs:enumeration value="Herzegovinian"/>
+      <xs:enumeration value="Honduran"/>
+      <xs:enumeration value="Hungarian"/>
+      <xs:enumeration value="I-Kiribati"/>
+      <xs:enumeration value="Icelander"/>
+      <xs:enumeration value="Indian"/>
+      <xs:enumeration value="Indonesian"/>
+      <xs:enumeration value="Iranian"/>
+      <xs:enumeration value="Iraqi"/>
+      <xs:enumeration value="Irish"/>
+      <xs:enumeration value="Irish"/>
+      <xs:enumeration value="Israeli"/>
+      <xs:enumeration value="Italian"/>
+      <xs:enumeration value="Ivorian"/>
+      <xs:enumeration value="Jamaican"/>
+      <xs:enumeration value="Japanese"/>
+      <xs:enumeration value="Jordanian"/>
+      <xs:enumeration value="Kazakhstani"/>
+      <xs:enumeration value="Kenyan"/>
+      <xs:enumeration value="Kittian and Nevisian"/>
+      <xs:enumeration value="Kuwaiti"/>
+      <xs:enumeration value="Kyrgyz"/>
+      <xs:enumeration value="Laotian"/>
+      <xs:enumeration value="Latvian"/>
+      <xs:enumeration value="Lebanese"/>
+      <xs:enumeration value="Liberian"/>
+      <xs:enumeration value="Libyan"/>
+      <xs:enumeration value="Liechtensteiner"/>
+      <xs:enumeration value="Lithuanian"/>
+      <xs:enumeration value="Luxembourger"/>
+      <xs:enumeration value="Macedonian"/>
+      <xs:enumeration value="Malagasy"/>
+      <xs:enumeration value="Malawian"/>
+      <xs:enumeration value="Malaysian"/>
+      <xs:enumeration value="Maldivan"/>
+      <xs:enumeration value="Malian"/>
+      <xs:enumeration value="Maltese"/>
+      <xs:enumeration value="Marshallese"/>
+      <xs:enumeration value="Mauritanian"/>
+      <xs:enumeration value="Mauritian"/>
+      <xs:enumeration value="Mexican"/>
+      <xs:enumeration value="Micronesian"/>
+      <xs:enumeration value="Moldovan"/>
+      <xs:enumeration value="Monacan"/>
+      <xs:enumeration value="Mongolian"/>
+      <xs:enumeration value="Moroccan"/>
+      <xs:enumeration value="Mosotho"/>
+      <xs:enumeration value="Motswana"/>
+      <xs:enumeration value="Mozambican"/>
+      <xs:enumeration value="Namibian"/>
+      <xs:enumeration value="Nauruan"/>
+      <xs:enumeration value="Nepalese"/>
+      <xs:enumeration value="Netherlander"/>
+      <xs:enumeration value="New Zealander"/>
+      <xs:enumeration value="Ni-Vanuatu"/>
+      <xs:enumeration value="Nicaraguan"/>
+      <xs:enumeration value="Nigerian"/>
+      <xs:enumeration value="Nigerien"/>
+      <xs:enumeration value="North Korean"/>
+      <xs:enumeration value="Northern Irish"/>
+      <xs:enumeration value="Norwegian"/>
+      <xs:enumeration value="Omani"/>
+      <xs:enumeration value="Pakistani"/>
+      <xs:enumeration value="Palauan"/>
+      <xs:enumeration value="Panamanian"/>
+      <xs:enumeration value="Papua New Guinean"/>
+      <xs:enumeration value="Paraguayan"/>
+      <xs:enumeration value="Peruvian"/>
+      <xs:enumeration value="Polish"/>
+      <xs:enumeration value="Portuguese"/>
+      <xs:enumeration value="Qatari"/>
+      <xs:enumeration value="Romanian"/>
+      <xs:enumeration value="Russian"/>
+      <xs:enumeration value="Rwandan"/>
+      <xs:enumeration value="Saint Lucian"/>
+      <xs:enumeration value="Salvadoran"/>
+      <xs:enumeration value="Samoan"/>
+      <xs:enumeration value="San Marinese"/>
+      <xs:enumeration value="Sao Tomean"/>
+      <xs:enumeration value="Saudi"/>
+      <xs:enumeration value="Scottish"/>
+      <xs:enumeration value="Senegalese"/>
+      <xs:enumeration value="Serbian"/>
+      <xs:enumeration value="Seychellois"/>
+      <xs:enumeration value="Sierra Leonean"/>
+      <xs:enumeration value="Singaporean"/>
+      <xs:enumeration value="Slovakian"/>
+      <xs:enumeration value="Slovenian"/>
+      <xs:enumeration value="Solomon Islander"/>
+      <xs:enumeration value="Somali"/>
+      <xs:enumeration value="South African"/>
+      <xs:enumeration value="South Korean"/>
+      <xs:enumeration value="Spanish"/>
+      <xs:enumeration value="Sri Lankan"/>
+      <xs:enumeration value="Sudanese"/>
+      <xs:enumeration value="Surinamer"/>
+      <xs:enumeration value="Swazi"/>
+      <xs:enumeration value="Swedish"/>
+      <xs:enumeration value="Swiss"/>
+      <xs:enumeration value="Syrian"/>
+      <xs:enumeration value="Taiwanese"/>
+      <xs:enumeration value="Tajik"/>
+      <xs:enumeration value="Tanzanian"/>
+      <xs:enumeration value="Thai"/>
+      <xs:enumeration value="Togolese"/>
+      <xs:enumeration value="Tongan"/>
+      <xs:enumeration value="Trinidadian or Tobagonian"/>
+      <xs:enumeration value="Tunisian"/>
+      <xs:enumeration value="Turkish"/>
+      <xs:enumeration value="Tuvaluan"/>
+      <xs:enumeration value="Ugandan"/>
+      <xs:enumeration value="Ukrainian"/>
+      <xs:enumeration value="Uruguayan"/>
+      <xs:enumeration value="Uzbekistani"/>
+      <xs:enumeration value="Venezuelan"/>
+      <xs:enumeration value="Vietnamese"/>
+      <xs:enumeration value="Welsh"/>
+      <xs:enumeration value="Welsh"/>
+      <xs:enumeration value="Yemenite"/>
+      <xs:enumeration value="Zambian"/>
+      <xs:enumeration value="Zimbabwean"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="StreetTypeEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Street"/>
+      <xs:enumeration value="Road"/>
+      <xs:enumeration value="Avenue"/>
+      <xs:enumeration value="Abbottswood"/>
+      <xs:enumeration value="Access"/>
+      <xs:enumeration value="Acres"/>
+      <xs:enumeration value="Afield"/>
+      <xs:enumeration value="Alley"/>
+      <xs:enumeration value="Annex"/>
+      <xs:enumeration value="Approach"/>
+      <xs:enumeration value="Arborway"/>
+      <xs:enumeration value="Arcade"/>
+      <xs:enumeration value="Arch"/>
+      <xs:enumeration value="Archway"/>
+      <xs:enumeration value="Artery"/>
+      <xs:enumeration value="Bank"/>
+      <xs:enumeration value="Bates"/>
+      <xs:enumeration value="Bay"/>
+      <xs:enumeration value="Bayberry"/>
+      <xs:enumeration value="Beachview"/>
+      <xs:enumeration value="Beachway"/>
+      <xs:enumeration value="Beausoliel"/>
+      <xs:enumeration value="Beechwood"/>
+      <xs:enumeration value="Bend"/>
+      <xs:enumeration value="Bluff"/>
+      <xs:enumeration value="Bluffs"/>
+      <xs:enumeration value="Boardwalk"/>
+      <xs:enumeration value="Boulders"/>
+      <xs:enumeration value="Boulevard"/>
+      <xs:enumeration value="Bow"/>
+      <xs:enumeration value="Bran"/>
+      <xs:enumeration value="Branch"/>
+      <xs:enumeration value="Bridge"/>
+      <xs:enumeration value="Broadway"/>
+      <xs:enumeration value="Brook"/>
+      <xs:enumeration value="Brookway"/>
+      <xs:enumeration value="Brucewood"/>
+      <xs:enumeration value="Bull"/>
+      <xs:enumeration value="Bypass"/>
+      <xs:enumeration value="Byway"/>
+      <xs:enumeration value="Camp"/>
+      <xs:enumeration value="Cartway"/>
+      <xs:enumeration value="Causeway"/>
+      <xs:enumeration value="Cedarway"/>
+      <xs:enumeration value="Cemetery"/>
+      <xs:enumeration value="Center"/>
+      <xs:enumeration value="Centre"/>
+      <xs:enumeration value="Charlesgate"/>
+      <xs:enumeration value="Chase"/>
+      <xs:enumeration value="Chestnut"/>
+      <xs:enumeration value="Cir"/>
+      <xs:enumeration value="Circle"/>
+      <xs:enumeration value="Circuit"/>
+      <xs:enumeration value="City"/>
+      <xs:enumeration value="Clearing"/>
+      <xs:enumeration value="Close"/>
+      <xs:enumeration value="Cobble"/>
+      <xs:enumeration value="Colony"/>
+      <xs:enumeration value="Common"/>
+      <xs:enumeration value="Commons"/>
+      <xs:enumeration value="Connector"/>
+      <xs:enumeration value="Corner"/>
+      <xs:enumeration value="Cornfield"/>
+      <xs:enumeration value="Countryside"/>
+      <xs:enumeration value="Court"/>
+      <xs:enumeration value="Courts"/>
+      <xs:enumeration value="Cove"/>
+      <xs:enumeration value="Crag"/>
+      <xs:enumeration value="Creedway"/>
+      <xs:enumeration value="Crescent"/>
+      <xs:enumeration value="Crest"/>
+      <xs:enumeration value="Crook"/>
+      <xs:enumeration value="Cross"/>
+      <xs:enumeration value="Crossing"/>
+      <xs:enumeration value="Crossover"/>
+      <xs:enumeration value="Crossway"/>
+      <xs:enumeration value="Curve"/>
+      <xs:enumeration value="Cutoff"/>
+      <xs:enumeration value="Daniels"/>
+      <xs:enumeration value="Darylane"/>
+      <xs:enumeration value="Dell"/>
+      <xs:enumeration value="Dingle"/>
+      <xs:enumeration value="Downing"/>
+      <xs:enumeration value="Driftway"/>
+      <xs:enumeration value="Drive"/>
+      <xs:enumeration value="Driveway"/>
+      <xs:enumeration value="Dump"/>
+      <xs:enumeration value="Durkin"/>
+      <xs:enumeration value="Earle"/>
+      <xs:enumeration value="Eastover"/>
+      <xs:enumeration value="Eastway"/>
+      <xs:enumeration value="Edge"/>
+      <xs:enumeration value="Elkway"/>
+      <xs:enumeration value="Elliston"/>
+      <xs:enumeration value="Elm"/>
+      <xs:enumeration value="Elmavenue"/>
+      <xs:enumeration value="End"/>
+      <xs:enumeration value="Entrance"/>
+      <xs:enumeration value="Estate"/>
+      <xs:enumeration value="Estates"/>
+      <xs:enumeration value="Exit"/>
+      <xs:enumeration value="Expressway"/>
+      <xs:enumeration value="Extension"/>
+      <xs:enumeration value="Extention"/>
+      <xs:enumeration value="Fairview"/>
+      <xs:enumeration value="Fairway"/>
+      <xs:enumeration value="Farm"/>
+      <xs:enumeration value="Farrel"/>
+      <xs:enumeration value="Federation"/>
+      <xs:enumeration value="Fellsway"/>
+      <xs:enumeration value="Fenway"/>
+      <xs:enumeration value="Fernway"/>
+      <xs:enumeration value="Field"/>
+      <xs:enumeration value="Fin"/>
+      <xs:enumeration value="Forest"/>
+      <xs:enumeration value="Front"/>
+      <xs:enumeration value="Furlong"/>
+      <xs:enumeration value="Garden"/>
+      <xs:enumeration value="Gardens"/>
+      <xs:enumeration value="Gate"/>
+      <xs:enumeration value="Gateway"/>
+      <xs:enumeration value="Geryk"/>
+      <xs:enumeration value="Glen"/>
+      <xs:enumeration value="Glenfeld"/>
+      <xs:enumeration value="Grant"/>
+      <xs:enumeration value="Green"/>
+      <xs:enumeration value="Greene"/>
+      <xs:enumeration value="Greenway"/>
+      <xs:enumeration value="Greywood"/>
+      <xs:enumeration value="Grove"/>
+      <xs:enumeration value="Harnch"/>
+      <xs:enumeration value="Haven"/>
+      <xs:enumeration value="Hawley"/>
+      <xs:enumeration value="Hayway"/>
+      <xs:enumeration value="Heath"/>
+      <xs:enumeration value="Hedgeway"/>
+      <xs:enumeration value="Height"/>
+      <xs:enumeration value="Heights"/>
+      <xs:enumeration value="Highgate"/>
+      <xs:enumeration value="Highlands"/>
+      <xs:enumeration value="Highway"/>
+      <xs:enumeration value="Hill"/>
+      <xs:enumeration value="Hills"/>
+      <xs:enumeration value="Hillway"/>
+      <xs:enumeration value="Hollow"/>
+      <xs:enumeration value="Island"/>
+      <xs:enumeration value="Isle"/>
+      <xs:enumeration value="Jamaicaway"/>
+      <xs:enumeration value="Jib"/>
+      <xs:enumeration value="Joanne"/>
+      <xs:enumeration value="Kelley"/>
+      <xs:enumeration value="Kenway"/>
+      <xs:enumeration value="Knob"/>
+      <xs:enumeration value="Knoll"/>
+      <xs:enumeration value="Knolls"/>
+      <xs:enumeration value="Knox"/>
+      <xs:enumeration value="Lakeview"/>
+      <xs:enumeration value="Lakeway"/>
+      <xs:enumeration value="Land"/>
+      <xs:enumeration value="Landing"/>
+      <xs:enumeration value="Lane"/>
+      <xs:enumeration value="Lanes"/>
+      <xs:enumeration value="Lawn"/>
+      <xs:enumeration value="Ledgeway"/>
+      <xs:enumeration value="Ledgeways"/>
+      <xs:enumeration value="Lift"/>
+      <xs:enumeration value="Lily"/>
+      <xs:enumeration value="Line"/>
+      <xs:enumeration value="Look"/>
+      <xs:enumeration value="Loop"/>
+      <xs:enumeration value="Lope"/>
+      <xs:enumeration value="Lowellterrace"/>
+      <xs:enumeration value="Lower"/>
+      <xs:enumeration value="Lupinwood"/>
+      <xs:enumeration value="Lynnway"/>
+      <xs:enumeration value="Mall"/>
+      <xs:enumeration value="Manor"/>
+      <xs:enumeration value="Mansfield"/>
+      <xs:enumeration value="Marshes"/>
+      <xs:enumeration value="Meade"/>
+      <xs:enumeration value="Meadow"/>
+      <xs:enumeration value="Meadows"/>
+      <xs:enumeration value="Mews"/>
+      <xs:enumeration value="Midway"/>
+      <xs:enumeration value="Mill"/>
+      <xs:enumeration value="Mills"/>
+      <xs:enumeration value="Millway"/>
+      <xs:enumeration value="Morningside"/>
+      <xs:enumeration value="Naushon"/>
+      <xs:enumeration value="Nichols"/>
+      <xs:enumeration value="Nob"/>
+      <xs:enumeration value="Nook"/>
+      <xs:enumeration value="Northway"/>
+      <xs:enumeration value="Notch"/>
+      <xs:enumeration value="Oak"/>
+      <xs:enumeration value="Oakmont"/>
+      <xs:enumeration value="Orchard"/>
+      <xs:enumeration value="Oval"/>
+      <xs:enumeration value="Overpass"/>
+      <xs:enumeration value="Paglione"/>
+      <xs:enumeration value="Parade"/>
+      <xs:enumeration value="Park"/>
+      <xs:enumeration value="Parkway"/>
+      <xs:enumeration value="Pass"/>
+      <xs:enumeration value="Passage"/>
+      <xs:enumeration value="Passway"/>
+      <xs:enumeration value="Path"/>
+      <xs:enumeration value="Pathe"/>
+      <xs:enumeration value="Pathway"/>
+      <xs:enumeration value="Peak"/>
+      <xs:enumeration value="Pier"/>
+      <xs:enumeration value="Pike"/>
+      <xs:enumeration value="Pine"/>
+      <xs:enumeration value="Pines"/>
+      <xs:enumeration value="Pioneer"/>
+      <xs:enumeration value="Place"/>
+      <xs:enumeration value="Plain"/>
+      <xs:enumeration value="Plaza"/>
+      <xs:enumeration value="Point"/>
+      <xs:enumeration value="Pond"/>
+      <xs:enumeration value="Press"/>
+      <xs:enumeration value="Prim"/>
+      <xs:enumeration value="Promenade"/>
+      <xs:enumeration value="Prospect"/>
+      <xs:enumeration value="Race"/>
+      <xs:enumeration value="Ramp"/>
+      <xs:enumeration value="Raymond"/>
+      <xs:enumeration value="Reach"/>
+      <xs:enumeration value="Reilly"/>
+      <xs:enumeration value="Ridge"/>
+      <xs:enumeration value="Ridgecrest"/>
+      <xs:enumeration value="Ridges"/>
+      <xs:enumeration value="Ridgeway"/>
+      <xs:enumeration value="Riding"/>
+      <xs:enumeration value="Rise"/>
+      <xs:enumeration value="River"/>
+      <xs:enumeration value="Riverdale"/>
+      <xs:enumeration value="Riverside"/>
+      <xs:enumeration value="Riverway"/>
+      <xs:enumeration value="Roadway"/>
+      <xs:enumeration value="Rock"/>
+      <xs:enumeration value="Roseway"/>
+      <xs:enumeration value="Rotary"/>
+      <xs:enumeration value="Route"/>
+      <xs:enumeration value="Row"/>
+      <xs:enumeration value="Rowe"/>
+      <xs:enumeration value="Royal"/>
+      <xs:enumeration value="Rue"/>
+      <xs:enumeration value="Run"/>
+      <xs:enumeration value="Rune"/>
+      <xs:enumeration value="Sarafina"/>
+      <xs:enumeration value="Seaway"/>
+      <xs:enumeration value="Sedgeway"/>
+      <xs:enumeration value="Shore"/>
+      <xs:enumeration value="Shores"/>
+      <xs:enumeration value="Shoreway"/>
+      <xs:enumeration value="Skyway"/>
+      <xs:enumeration value="Slip"/>
+      <xs:enumeration value="Slope"/>
+      <xs:enumeration value="Southover"/>
+      <xs:enumeration value="Spring"/>
+      <xs:enumeration value="Spur"/>
+      <xs:enumeration value="Square"/>
+      <xs:enumeration value="Station"/>
+      <xs:enumeration value="Stoneway"/>
+      <xs:enumeration value="Straits"/>
+      <xs:enumeration value="Strand"/>
+      <xs:enumeration value="Strandway"/>
+      <xs:enumeration value="Strasse"/>
+      <xs:enumeration value="Stret"/>
+      <xs:enumeration value="Strip"/>
+      <xs:enumeration value="Summit"/>
+      <xs:enumeration value="Terrace"/>
+      <xs:enumeration value="Throw"/>
+      <xs:enumeration value="Timberlane"/>
+      <xs:enumeration value="Trace"/>
+      <xs:enumeration value="Trail"/>
+      <xs:enumeration value="Traincroft"/>
+      <xs:enumeration value="Tunnel"/>
+      <xs:enumeration value="Turnabout"/>
+      <xs:enumeration value="Turnaround"/>
+      <xs:enumeration value="Turnpike"/>
+      <xs:enumeration value="Uncatena"/>
+      <xs:enumeration value="Underpass"/>
+      <xs:enumeration value="Vale"/>
+      <xs:enumeration value="Valley"/>
+      <xs:enumeration value="Vernon"/>
+      <xs:enumeration value="Via"/>
+      <xs:enumeration value="View"/>
+      <xs:enumeration value="Village"/>
+      <xs:enumeration value="Vista"/>
+      <xs:enumeration value="Walk"/>
+      <xs:enumeration value="Walnut"/>
+      <xs:enumeration value="Warbler"/>
+      <xs:enumeration value="Wardwellplace"/>
+      <xs:enumeration value="Watch"/>
+      <xs:enumeration value="Waterway"/>
+      <xs:enumeration value="Way"/>
+      <xs:enumeration value="Waye"/>
+      <xs:enumeration value="Ways"/>
+      <xs:enumeration value="Wayside"/>
+      <xs:enumeration value="Westgate"/>
+      <xs:enumeration value="Westway"/>
+      <xs:enumeration value="Westwood"/>
+      <xs:enumeration value="Wharf"/>
+      <xs:enumeration value="Willows"/>
+      <xs:enumeration value="Wood"/>
+      <xs:enumeration value="Woodland"/>
+      <xs:enumeration value="Woods"/>
+      <xs:enumeration value="Works"/>
+      <xs:enumeration value="Yard"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="QuadrantEnumType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="N"/>
+      <xs:enumeration value="NE"/>
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="SE"/>
+      <xs:enumeration value="S"/>
+      <xs:enumeration value="SW"/>
+      <xs:enumeration value="W"/>
+      <xs:enumeration value="NW"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AddressLineTwoType">
+    <xs:restriction base="xs:string"> </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="LevelNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Level Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UnitNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Unit Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetNumber" type="xs:string" p:keyboard="numeric">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetName" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetType" type="StreetTypeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Type"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Quadrant" type="QuadrantEnumType" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Quadrant"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Suburb" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="City/Suburb/Town"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AdministrativeArea" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="State"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PostalCode" type="xs:string" p:keyboard="numeric">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Zip/Postal Code"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Country" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BuildingName" type="xs:string" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Building Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CompanyName" type="xs:string" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Company Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PostalAddressType">
+    <xs:sequence>
+      <xs:element name="POBox" type="xs:string" p:keyboard="numeric" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Mail/Post Box"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LevelNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Level Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UnitNumber" type="xs:string" p:keyboard="numeric" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Unit Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetNumber" type="xs:string" p:keyboard="numeric">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetName" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="StreetType" type="StreetTypeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Street Type"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Quadrant" type="QuadrantEnumType" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Quadrant"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Suburb" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="City/Suburb/Town"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AdministrativeArea" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="State"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PostalCode" type="xs:string" p:keyboard="numeric">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Zip/Postal Code"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Country" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BuildingName" type="xs:string" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Building Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CompanyName" type="xs:string" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Company Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CellPhoneNumberType" p:recurse="false" p:display="expanded">
+    <xs:sequence>
+      <xs:element name="Number" type="xs:positiveInteger" p:key="true">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CountryCode" type="xs:positiveInteger">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country Code"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CreditCardType">
+    <xs:sequence>
+      <xs:element name="NickName" type="xs:string" p:dashboardStat="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Nickname"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Type" type="CreditCardNameEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Type of Card"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="NameOnCard" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Name on Card"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Number" type="xs:integer" p:key="true" p:mask="-4" p:maxLength="16">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Card Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ValidFrom" type="MonthYearType" p:firstYear="-5">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Valid From"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Expiry" type="MonthYearType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Expiry Date"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CCV" type="xs:integer" p:mask="0">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="CCV Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Issuer" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Issuing Partner"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType p:recurse="false" name="DateType">
+    <xs:sequence>
+      <xs:element ref="Day">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Day"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element ref="Month">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Month"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element ref="Year">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Year"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="IDCardInfoType">
+    <xs:sequence>
+      <xs:element name="IssuerName" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Issuer Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Number" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="ID Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Type" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Type"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueCity" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="City of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueState" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="State of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueCountry" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueDate" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Date of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExpiryDate" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Expiry Date"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="NameOnCard" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Name on Card"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Status" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Status"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Restrictions" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Restrictions"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType p:recurse="false" name="MonthYearType">
+    <xs:sequence>
+      <xs:element ref="Month">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Month"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element ref="Year">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Year"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="TelephoneNumberType" p:recurse="false" p:display="expanded">
+    <xs:sequence>
+      <xs:element name="Number" type="xs:positiveInteger" p:key="true">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CountryCode" type="xs:positiveInteger">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country Code"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AreaCode" type="xs:positiveInteger">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Area Code"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Extension" type="xs:positiveInteger" p:dashboardStat="false" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Extension"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="LicenseType">
+    <xs:sequence>
+      <xs:element name="Type" type="LicenseTypeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="License Type"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Number" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="License Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssuerName" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Issuer Name"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Name" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Name on License"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueCity" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="City of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueState" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="State of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueCountry" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="IssueDate" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Date of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExpiryDate" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Expiry Date"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Status" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Status"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Restrictions" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Restrictions"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PassportType">
+    <xs:sequence>
+      <xs:element name="Number" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Passport Number"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Name" type="xs:string" p:caps="first">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Name on Passport"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CountryOfIssue" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PlaceOfIssue" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Place of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CountryOfCitizenship" type="ISOCountryCodeEnumType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Country of Citizenship"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="DateOfIssue" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Date of Issue"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExpiryDate" type="DateType">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Expiry Date"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Authority" type="xs:string">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Issuing Authority"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EmailType">
+    <xs:sequence>
+      <xs:element type="xs:string" p:key="true" name="Address" p:keyboard="email">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Email"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PasswordType">
+    <xs:sequence>
+      <xs:element name="NickName" type="xs:string" p:dashboardStat="false" p:key="true" p:incompletePrompt="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Nickname"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Password" type="xs:string" p:mask="0" p:history="false">
+        <xs:annotation>
+          <xs:appinfo>
+            <xs:attribute name="Label" default="Password"/>
+          </xs:appinfo>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Profile">
+    <xs:annotation>  </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PersonalDetails">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Personal Details"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="ContactDetails">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Contact Details"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="AddressDetails">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Addresses"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="CreditCards">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Credit Cards"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="IdentificationDetails">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Identification"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element ref="Passwords">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Passwords"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PersonalDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Honorific" type="HonorificType">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Title"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="FirstName" type="xs:string" p:key="true">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="First Name"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="MiddleName" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Middle Name"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="LastName" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Last Name"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="BirthDate" type="DateType" p:minAge="13" p:firstYear="-20">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Date of Birth"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="Gender" type="GenderEnumType">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Gender"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="Role" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Occupation"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="SocialSecurityNumber" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Social Security Number"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="TaxFileNumber" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Tax File Number"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="CompanyName" type="xs:string" p:caps="first">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Name of Employer"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ContactDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Emails">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Email Addresses"/>
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded" p:mutableKey="true">
+              <xs:element name="Email" type="EmailType" p:defaultChild="Address">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <xs:attribute name="Label" default="Email Address"/>
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="CellPhones">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Mobile Phone Numbers"/>
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded" p:mutableKey="true">
+              <xs:element name="CellPhone" type="CellPhoneNumberType" p:defaultChild="Number">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <xs:attribute name="Label" default="Mobile Phone"/>
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="LandlinePhones">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Landline Phone Numbers"/>
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded" p:mutableKey="true">
+              <xs:element name="LandlinePhone" type="TelephoneNumberType">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <xs:attribute name="Label" default="Landline Phone"/>
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="IdentificationDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Licenses">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Licenses"/>
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+              <xs:element name="License" type="LicenseType">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <xs:attribute name="Label" default="License"/>
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Passports">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Passports"/>
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+              <xs:element name="Passport" type="PassportType">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <xs:attribute name="Label" default="Passport"/>
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CreditCards">
+    <xs:annotation>
+      <xs:appinfo>
+        <xs:attribute name="Label" default="Credit Cards"/>
+      </xs:appinfo>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element name="CreditCard" type="CreditCardType" p:secure="true">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Credit Card"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="AddressDetails" p:appOnly="true">
+    <xs:annotation>
+      <xs:appinfo>
+        <xs:attribute name="Label" default="Addresses"/>
+        <xs:attribute name="HomeAddressTranslation" default="Residential Address"/>
+        <xs:attribute name="PostalAddressTranslation" default="Shipping Address"/>
+        <xs:attribute name="BillingAddressTranslation" default="Billing Address"/>
+        <xs:attribute name="WorkAddressTranslation" default="Work Address"/>
+      </xs:appinfo>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element name="Address" type="PostalAddressType">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Address"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Passwords">
+    <xs:annotation>
+      <xs:appinfo>
+        <xs:attribute name="Label" default="Passwords"/>
+      </xs:appinfo>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element name="Password" type="PasswordType" p:secure="true">
+          <xs:annotation>
+            <xs:appinfo>
+              <xs:attribute name="Label" default="Password"/>
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
